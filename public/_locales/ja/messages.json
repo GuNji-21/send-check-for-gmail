@@ -1,0 +1,18 @@
+{
+  "extName": {
+    "message": "Gmail 送信前チェック（仮）",
+    "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）"
+  },
+  "extDescription": {
+    "message": "送信前に宛先・本文・添付を確認し、誤送信を防ぐ拡張機能",
+    "description": "拡張機能の説明（Chrome Web Store・拡張機能一覧に表示）"
+  },
+  "optionsTitle": {
+    "message": "Gmail 送信前チェック（仮）の設定",
+    "description": "設定画面のタイトル"
+  },
+  "errorCheckFailed": {
+    "message": "チェックできませんでした。送信を止めています。",
+    "description": "拡張機能側でエラーが起きて送信前チェックを完了できなかったときの表示"
+  }
+}

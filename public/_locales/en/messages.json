@@ -1,0 +1,18 @@
+{
+  "extName": {
+    "message": "Gmail Send Guard",
+    "description": "Extension name shown in the Chrome Web Store and the extensions list"
+  },
+  "extDescription": {
+    "message": "Review recipients, body and attachments before sending in Gmail to prevent mis-sends.",
+    "description": "Extension description shown in the Chrome Web Store and the extensions list"
+  },
+  "optionsTitle": {
+    "message": "Gmail Send Guard Settings",
+    "description": "Title of the options page"
+  },
+  "errorCheckFailed": {
+    "message": "The check could not be completed. Sending has been stopped.",
+    "description": "Shown when an error in the extension prevented the pre-send check from completing"
+  }
+}
