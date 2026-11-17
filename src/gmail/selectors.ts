@@ -9,7 +9,7 @@
  * - セレクタを追加・変更したら tests/fixtures/gmail/ の HTML で動作を確認するテストを付ける
  * - Gmail の変更で要素が見つからない場合は、送信を通さず「チェックできませんでした」として扱う
  *
- * TODO(フェーズ1): 作成画面・宛先欄・本文・添付・送信ボタンのセレクタを定義する。
+ * TODO(フェーズ1): 作成画面・送信元・宛先欄・本文・引用部分・添付・送信ボタン・予約送信のセレクタを定義する。
  */
 
 export const SELECTORS = {} as const satisfies Record<string, string>;
