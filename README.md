@@ -18,7 +18,7 @@ Gmail の送信前に宛先（To / Cc / Bcc）・本文・添付を確認させ�
 
 **フェーズ1**
 
-- 送信操作の捕捉と、送信前の確認ダイアログ
+- 送信操作の捕捉（送信ボタン、ショートカット、予約送信）と、送信前の確認ダイアログ
 - 宛先の分類（社内・要注意・確認省略の指定）
 - 添付漏れの検知（本文に「添付」等があるのにファイルが無い場合など）
 - プレースホルダー（「〇〇様」など）の消し忘れの検知
@@ -26,15 +26,18 @@ Gmail の送信前に宛先（To / Cc / Bcc）・本文・添付を確認させ�
 
 **フェーズ2**
 
-- 連絡先・会社台帳（送信したことのある相手を画面から蓄積）
+- 連絡先・会社台帳の自動作成（送信した相手と、その相手から届いたメールの Cc・署名を画面から蓄積）
+- 会社名検索
 - 宛名と宛先の照合
-- Cc 漏れの検知
+- 添付ファイル名・本文中の他社名のチェック
+- Cc 漏れの通知
 - 初めて送るドメインの警告
+- 会社名での宛先表示
 
 **フェーズ3**
 
-- 誤字辞書による検知
-- AI 校正
+- 誤字辞書の拡充
+- AI による校正と署名抽出の精度向上
 
 ### 開発環境の準備
 
@@ -89,7 +92,7 @@ A Chrome extension (Manifest V3) that prompts you to review recipients (To / Cc 
 
 **Phase 1**
 
-- Intercepting the send action and showing a pre-send confirmation dialog
+- Intercepting the send action (Send button, keyboard shortcut, scheduled send) and showing a pre-send confirmation dialog
 - Recipient classification (internal, caution, skip confirmation)
 - Missing attachment detection
 - Leftover placeholder detection
@@ -97,15 +100,18 @@ A Chrome extension (Manifest V3) that prompts you to review recipients (To / Cc 
 
 **Phase 2**
 
-- Contact and company directory (built from people you have sent email to)
+- Automatically built contact and company directory (from people you have sent email to, plus the Cc lines and signatures of email received from them)
+- Company name search
 - Salutation vs. recipient matching
-- Missing Cc detection
+- Attachment file name and other-company-name checks
+- Missing Cc notification
 - First-time domain warning
+- Showing recipients grouped by company name
 
 **Phase 3**
 
-- Typo dictionary
-- AI proofreading
+- Expanded typo dictionary
+- AI proofreading and more accurate signature extraction
 
 ### Development setup
 

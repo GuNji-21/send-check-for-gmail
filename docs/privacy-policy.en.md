@@ -10,11 +10,18 @@ Last updated: <!-- TODO: fill in at publication -->
 
 To perform pre-send checks in Gmail, the Extension reads the following information from the email being composed:
 
+- The sender email address
 - Recipient email addresses and display names (To / Cc / Bcc)
 - Subject and body
 - Information about attachments, such as file names
-- Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, etc.)
-- Contact information (company name, person's name, email address, etc.; planned for a future version and limited to people you have sent email to)
+
+The Extension also handles the following:
+
+- Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, attachment keywords, warning levels, etc.)
+- Contact information (planned for a future version)
+  - Who: people you have sent email to (To / Cc), and people in the Cc line of email you receive whose domain matches a company already registered
+  - What: email address, name, company name, department and title, phone number, how many times the person appeared in To / Cc, and the date of the last exchange
+  - Source: the recipients and salutations of email you compose, and the sender, Cc line and signature of email received from the people above (read from what Gmail displays on screen)
 
 ## 2. Processing and transmission
 
