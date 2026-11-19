@@ -65,7 +65,8 @@ describe('すべての作成画面のフィクスチャ', () => {
     const snapshot = readComposeSnapshot(load(name), AT);
     expect(snapshot.fromAddress).toMatch(/^user\d+@company\d+\.example$/);
     expect(snapshot.capturedAt).toMatch(/^2026-11-20T09:30:00[+-]\d{2}:\d{2}$/);
-    expect(snapshot.bodyText.length).toBeGreaterThan(0);
+    // 本文は、何も書いていない返信・転送では空になる（署名の無いアカウントの場合）
+    expect(typeof snapshot.bodyText).toBe('string');
     for (const recipient of snapshot.recipients) {
       expect(recipient.address).toContain('@');
     }
@@ -157,6 +158,26 @@ describe('readComposeSnapshot', () => {
     expect(snapshot.bodyText).toBe(
       readComposeSnapshot(load('reply-inline.ja.20261120.html'), AT).bodyText,
     );
+  });
+
+  it('全員に返信では、To と Cc の宛先を読む', () => {
+    const snapshot = readComposeSnapshot(load('reply-all.ja.20261120.html'), AT);
+    expect(snapshot.recipients.map((recipient) => recipient.field)).toEqual(['to', 'cc']);
+  });
+
+  it('最初から転送を押した場合も、転送元のメール（引用部分）を本文から除く', () => {
+    const compose = load('forward--from-button.ja.20261120.html');
+    expect(compose.querySelector('[g_editable="true"] .gmail_quote')).not.toBeNull();
+    const snapshot = readComposeSnapshot(compose, AT);
+    expect(snapshot.recipients).toEqual([]);
+    // 自分では何も書いていないので、転送元のメール（引用）を除くと本文は空になる
+    expect(snapshot.bodyText).toBe('');
+  });
+
+  it('ドライブのボタンから挿入したファイル（チップ）を、ドライブのリンクとして数える', () => {
+    const snapshot = readComposeSnapshot(load('compose-new--drive-chip.ja.20261120.html'), AT);
+    expect(snapshot.driveLinkCount).toBe(1);
+    expect(snapshot.attachments).toEqual([]);
   });
 
   describe('Google ドライブのリンク', () => {
