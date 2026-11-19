@@ -53,6 +53,7 @@ export const MESSAGE_KEYS = [
   'detectMultipleExternalCompanies',
   // 設定画面
   'optionsTitle',
+  'optionsReloadTip',
   'optionsOnePerLine',
   'optionsSectionRecipients',
   'optionsInternalDomains',

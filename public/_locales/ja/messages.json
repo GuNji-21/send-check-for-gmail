@@ -151,6 +151,10 @@
     "message": "Gmail 送信前チェック（仮）の設定",
     "description": "設定画面のタイトル"
   },
+  "optionsReloadTip": {
+    "message": "インストールした直後は、開いている Gmail のタブを再読み込みしてください。再読み込みするまで、そのタブでは送信前チェックが働きません。",
+    "description": "インストール直後に Gmail のタブの再読み込みが必要なことを知らせる文（設定画面の先頭に表示）"
+  },
   "optionsOnePerLine": {
     "message": "1行に1件ずつ入力してください。",
     "description": "テキスト欄の入力方法の案内"

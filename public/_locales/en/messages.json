@@ -151,6 +151,10 @@
     "message": "Gmail Send Guard Settings",
     "description": "設定画面のタイトル"
   },
+  "optionsReloadTip": {
+    "message": "Right after installing, reload any Gmail tabs that are already open. The pre-send check does not work in a tab until it is reloaded.",
+    "description": "インストール直後に Gmail のタブの再読み込みが必要なことを知らせる文（設定画面の先頭に表示）"
+  },
   "optionsOnePerLine": {
     "message": "Enter one item per line.",
     "description": "テキスト欄の入力方法の案内"
