@@ -17,7 +17,7 @@ To perform pre-send checks in Gmail, the Extension reads the following informati
 
 The Extension also handles the following:
 
-- Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, attachment keywords, warning levels, etc.)
+- Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, attachment keywords, which warnings are turned on, etc.)
 - Contact information (planned for a future version)
   - Who: people you have sent email to (To / Cc), and people in the Cc line of email you receive whose domain matches a company already registered
   - What: email address, name, company name, department and title, phone number, how many times the person appeared in To / Cc, and the date of the last exchange
