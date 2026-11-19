@@ -2,4 +2,6 @@
 
 export declare function listFixtureFiles(): string[];
 
+export declare function readFixture(name: string): string;
+
 export declare function findFixtureProblems(): string[];

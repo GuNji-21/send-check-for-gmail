@@ -1,18 +1,282 @@
 {
   "extName": {
     "message": "Gmail Send Guard",
-    "description": "Extension name shown in the Chrome Web Store and the extensions list"
+    "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）"
   },
   "extDescription": {
     "message": "Review recipients, body and attachments before sending in Gmail to prevent mis-sends.",
-    "description": "Extension description shown in the Chrome Web Store and the extensions list"
-  },
-  "optionsTitle": {
-    "message": "Gmail Send Guard Settings",
-    "description": "Title of the options page"
+    "description": "拡張機能の説明（Chrome Web Store・拡張機能一覧に表示）"
   },
   "errorCheckFailed": {
     "message": "The check could not be completed. Sending has been stopped.",
-    "description": "Shown when an error in the extension prevented the pre-send check from completing"
+    "description": "拡張機能側でエラーが起きて送信前チェックを完了できなかったときの表示"
+  },
+  "errorCheckFailedHint": {
+    "message": "Reload Gmail and try again. If the problem continues, Gmail may have changed its screen layout. Update the extension or turn it off temporarily.",
+    "description": "チェックできなかったときの対処方法の案内"
+  },
+  "errorSendButtonNotFound": {
+    "message": "The Send button could not be recognized, so the pre-send check may not work. Gmail may have changed its screen layout.",
+    "description": "作成画面の送信ボタンを見つけられなかったときに、画面の隅に出す注意書き"
+  },
+  "dialogTitle": {
+    "message": "Check before sending",
+    "description": "確認ダイアログのタイトル"
+  },
+  "dialogFrom": {
+    "message": "From",
+    "description": "確認ダイアログの送信元アドレスの見出し"
+  },
+  "dialogRecipients": {
+    "message": "Recipients",
+    "description": "確認ダイアログの宛先の見出し"
+  },
+  "dialogNoRecipients": {
+    "message": "There are no recipients.",
+    "description": "宛先が1件も無いときの表示"
+  },
+  "dialogFieldTo": {
+    "message": "To",
+    "description": "宛先欄 To の見出し"
+  },
+  "dialogFieldCc": {
+    "message": "Cc",
+    "description": "宛先欄 Cc の見出し"
+  },
+  "dialogFieldBcc": {
+    "message": "Bcc",
+    "description": "宛先欄 Bcc の見出し"
+  },
+  "dialogBadgeExternal": {
+    "message": "External",
+    "description": "社外の宛先に付ける印"
+  },
+  "dialogBadgeInternal": {
+    "message": "Internal",
+    "description": "社内の宛先に付ける印"
+  },
+  "dialogBadgeCaution": {
+    "message": "Caution",
+    "description": "要注意として登録した宛先に付ける印"
+  },
+  "dialogExternalSummary": {
+    "message": "External recipients: $1",
+    "description": "社外の宛先をドメインごとにまとめた表示。$1 はドメインと人数の一覧"
+  },
+  "dialogCompanyCount": {
+    "message": "$1 ($2)",
+    "description": "ドメインと人数。$1 はドメイン、$2 は人数"
+  },
+  "dialogCheckAllInternal": {
+    "message": "Check all internal recipients ($1)",
+    "description": "社内の宛先をまとめてチェックするボタン。$1 は件数"
+  },
+  "dialogSubject": {
+    "message": "Subject",
+    "description": "確認ダイアログの件名の見出し"
+  },
+  "dialogSubjectEmpty": {
+    "message": "(No subject)",
+    "description": "件名が空のときの表示"
+  },
+  "dialogBody": {
+    "message": "Body (beginning)",
+    "description": "確認ダイアログの本文プレビューの見出し"
+  },
+  "dialogBodyEmpty": {
+    "message": "(No body)",
+    "description": "本文が空のときの表示"
+  },
+  "dialogAttachments": {
+    "message": "Attachments",
+    "description": "確認ダイアログの添付ファイルの見出し"
+  },
+  "dialogNoAttachments": {
+    "message": "There are no attachments.",
+    "description": "添付ファイルが無いときの表示"
+  },
+  "dialogWarnings": {
+    "message": "Items to review",
+    "description": "検知結果の見出し"
+  },
+  "dialogLevelWarn": {
+    "message": "Warning",
+    "description": "検知結果に付ける印"
+  },
+  "dialogRemaining": {
+    "message": "Unchecked items: $1",
+    "description": "未チェックの項目の件数。$1 は件数"
+  },
+  "dialogSend": {
+    "message": "Send",
+    "description": "確認ダイアログの送信ボタン"
+  },
+  "dialogSchedule": {
+    "message": "Continue to schedule",
+    "description": "予約送信のときの、確認ダイアログの続行ボタン"
+  },
+  "dialogCancel": {
+    "message": "Cancel (back to editing)",
+    "description": "確認ダイアログのキャンセルボタン"
+  },
+  "dialogClose": {
+    "message": "Close",
+    "description": "エラー表示・注意書きを閉じるボタン"
+  },
+  "detectAttachmentMissing": {
+    "message": "The body mentions \"$1\", but there are no attachments.",
+    "description": "添付漏れの検知結果。$1 は見つかったキーワード"
+  },
+  "detectPlaceholder": {
+    "message": "Possible leftover placeholders: $1",
+    "description": "プレースホルダーの検知結果。$1 は見つかった記号"
+  },
+  "detectDateWeekdayMismatch": {
+    "message": "The day of the week in \"$1\" does not match the calendar (that date is $2).",
+    "description": "日付と曜日の不一致の検知結果。$1 は本文中の表記、$2 は実際の曜日（日本語の1文字）"
+  },
+  "detectDateInvalid": {
+    "message": "\"$1\" is not a valid date.",
+    "description": "存在しない日付の検知結果。$1 は本文中の表記"
+  },
+  "detectSubjectEmpty": {
+    "message": "The subject is empty.",
+    "description": "件名が空の検知結果"
+  },
+  "detectMultipleExternalCompanies": {
+    "message": "External recipients span $1 companies (domains): $2",
+    "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
+  },
+  "optionsTitle": {
+    "message": "Gmail Send Guard Settings",
+    "description": "設定画面のタイトル"
+  },
+  "optionsOnePerLine": {
+    "message": "Enter one item per line.",
+    "description": "テキスト欄の入力方法の案内"
+  },
+  "optionsSectionRecipients": {
+    "message": "Recipient categories",
+    "description": "設定画面の宛先区分の見出し"
+  },
+  "optionsInternalDomains": {
+    "message": "Domains treated as internal",
+    "description": "社内ドメインの入力欄"
+  },
+  "optionsInternalDomainsHelp": {
+    "message": "The domain of your sender address is always treated as internal, without registering it (e.g. example.com).",
+    "description": "社内ドメインの補足説明"
+  },
+  "optionsInternalAddresses": {
+    "message": "Addresses treated as internal",
+    "description": "社内アドレスの入力欄"
+  },
+  "optionsCautionDomains": {
+    "message": "Caution domains",
+    "description": "要注意ドメインの入力欄"
+  },
+  "optionsCautionAddresses": {
+    "message": "Caution addresses",
+    "description": "要注意アドレスの入力欄"
+  },
+  "optionsCautionHelp": {
+    "message": "Recipients registered as caution are highlighted in the confirmation dialog every time (important clients, people with similar names, people who have left, etc.).",
+    "description": "要注意の補足説明"
+  },
+  "optionsSkipEnabled": {
+    "message": "Enable recipients that skip confirmation",
+    "description": "確認省略を有効にするチェックボックス"
+  },
+  "optionsSkipAddresses": {
+    "message": "Addresses that skip confirmation",
+    "description": "確認省略アドレスの入力欄"
+  },
+  "optionsSkipHelp": {
+    "message": "The confirmation dialog is skipped only when every recipient is registered here (e.g. notes to yourself). Domains cannot be used.",
+    "description": "確認省略の補足説明"
+  },
+  "optionsFreemailNote": {
+    "message": "Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not per domain. Registering their domains has no effect.",
+    "description": "フリーメールの扱いの説明"
+  },
+  "optionsSectionAttachment": {
+    "message": "Missing attachment check",
+    "description": "設定画面の添付漏れの見出し"
+  },
+  "optionsAttachmentKeywords": {
+    "message": "Keywords that suggest an attachment",
+    "description": "添付キーワードの入力欄"
+  },
+  "optionsDriveLinks": {
+    "message": "Treat a Google Drive link in the body as an attachment",
+    "description": "ドライブのリンクを添付とみなすチェックボックス"
+  },
+  "optionsSectionLevels": {
+    "message": "Items to warn about",
+    "description": "設定画面の、警告のオン・オフの見出し"
+  },
+  "optionsLevelsHelp": {
+    "message": "Checked items are examined before sending, and a warning is shown in the confirmation dialog when one applies. You can still send when a warning is shown.",
+    "description": "警告のオン・オフの説明"
+  },
+  "detectorNameAttachmentMissing": {
+    "message": "Missing attachment",
+    "description": "検知項目の名前：添付漏れ"
+  },
+  "detectorNamePlaceholder": {
+    "message": "Leftover placeholders (XX, {name}, etc.)",
+    "description": "検知項目の名前：プレースホルダー"
+  },
+  "detectorNameDateWeekday": {
+    "message": "Date and day-of-week mismatch",
+    "description": "検知項目の名前：日付と曜日"
+  },
+  "detectorNameSubjectEmpty": {
+    "message": "Empty subject",
+    "description": "検知項目の名前：件名が空"
+  },
+  "detectorNameMultipleCompanies": {
+    "message": "Recipients from multiple external companies",
+    "description": "検知項目の名前：複数社混在"
+  },
+  "optionsSave": {
+    "message": "Save",
+    "description": "設定の保存ボタン"
+  },
+  "optionsSaved": {
+    "message": "Saved.",
+    "description": "設定を保存したときの表示"
+  },
+  "optionsInvalidEntries": {
+    "message": "Not saved because some lines are not valid: $1",
+    "description": "入力の形式が正しくないときの表示。$1 は該当する行"
+  },
+  "optionsLoadFailed": {
+    "message": "The settings could not be loaded. Reload this page.",
+    "description": "設定の読み込みに失敗したときの表示"
+  },
+  "optionsSaveFailed": {
+    "message": "Could not save. Please try again.",
+    "description": "設定の保存・削除に失敗したときの表示"
+  },
+  "optionsSectionData": {
+    "message": "Stored data",
+    "description": "設定画面の保存データの見出し"
+  },
+  "optionsClearData": {
+    "message": "Delete all stored data",
+    "description": "保存データの削除ボタン"
+  },
+  "optionsClearConfirm": {
+    "message": "Click again to delete (cannot be undone)",
+    "description": "削除ボタンを1回押したあとの表示"
+  },
+  "optionsCleared": {
+    "message": "Stored data was deleted and settings were reset.",
+    "description": "保存データを削除したときの表示"
+  },
+  "optionsUndoSendTip": {
+    "message": "We also recommend setting the Gmail \"Undo Send\" cancellation period to 30 seconds (Gmail Settings → General → Undo Send).",
+    "description": "Gmail 標準の送信取り消しを案内する文"
   }
 }

@@ -8,6 +8,33 @@
  * 連絡先・会社台帳（フェーズ2）は background にメッセージ通信で読み書きを依頼する。
  */
 
+import { type Settings, loadSettings, watchSettings } from '../storage/settings';
 import { startInterceptor } from './interceptor';
 
-startInterceptor();
+/** 読み込み済みの設定。送信操作のたびに読み込みを待たないよう、ここに保持する */
+let cachedSettings: Settings | undefined;
+
+/** 設定を返す。まだ読み込めていない（または前回失敗した）場合は読み込む */
+async function getSettings(): Promise<Settings> {
+  cachedSettings ??= await loadSettings();
+  return cachedSettings;
+}
+
+// 送信操作の捕捉は、設定の読み込みを待たずにすぐ始める（読み込み前の送信操作も止められるようにする）
+startInterceptor({ view: window, getSettings });
+
+// 設定を先に読み込んでおく。失敗した場合は、送信操作のときに読み込み直す
+// （そこでも失敗すれば「チェックできませんでした」として送信を止める）
+getSettings().catch((error: unknown) => {
+  console.error('[gmail-send-guard] failed to load settings', error);
+});
+
+try {
+  watchSettings((settings) => {
+    cachedSettings = settings;
+  });
+} catch (error) {
+  // 変更を受け取れない場合は、次の送信操作で読み込み直す
+  cachedSettings = undefined;
+  console.error('[gmail-send-guard] failed to watch settings', error);
+}

@@ -1,22 +1,198 @@
 /**
  * 設定画面のスクリプト（ビルド後は dist/options.js）。
  *
- * 予定している設定項目（フェーズ1）：
+ * 設定項目（フェーズ1）：
  * - 社内ドメイン・社内アドレス（送信元アドレスのドメインは登録不要で自動的に社内扱い）
  * - 要注意のドメイン・アドレス
  * - 確認省略のアドレス（アドレス単位のみ）と、確認省略の有効・無効（初期設定は無効）
  * - 添付キーワードの編集、Google ドライブのリンクを添付ありとみなすか
- * - 検知項目ごとの警告レベル（ブロック／警告／オフ）
+ * - 検知項目ごとの警告のオン・オフ
  * - 保存データの削除
  *
  * 画面文言は options.html に直接書かず、data-i18n 属性のキーで _locales から差し込む。
- *
- * TODO(フェーズ1): 実装する。
  */
 
-/** 設定画面を初期化する */
-function initOptionsPage(): void {
-  // TODO(フェーズ1): data-i18n の文言差し込み、設定の読み込み・保存を実装する
+import type { DetectorId, WarningLevel } from '../core/types';
+import { MESSAGE_KEYS, type MessageKey, t } from '../shared/i18n';
+import {
+  DEFAULT_SETTINGS,
+  DETECTOR_IDS,
+  type Settings,
+  clearAllData,
+  loadSettings,
+  saveSettings,
+} from '../storage/settings';
+import { type OptionsFormValues, parseFormValues, toFormValues } from './form';
+
+const DETECTOR_NAMES: Readonly<Record<DetectorId, MessageKey>> = {
+  'multiple-external-companies': 'detectorNameMultipleCompanies',
+  'subject-empty': 'detectorNameSubjectEmpty',
+  'attachment-missing': 'detectorNameAttachmentMissing',
+  placeholder: 'detectorNamePlaceholder',
+  'date-weekday-mismatch': 'detectorNameDateWeekday',
+};
+
+const TEXT_FIELDS = [
+  'internalDomains',
+  'internalAddresses',
+  'cautionDomains',
+  'cautionAddresses',
+  'skipAddresses',
+  'attachmentKeywords',
+] as const;
+
+const CHECK_FIELDS = ['skipConfirmationEnabled', 'treatDriveLinksAsAttachment'] as const;
+
+// 呼び出し側が要素の種類を指定できるようにするための型引数（戻り値の型にだけ使う）
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+function byId<T extends HTMLElement>(id: string): T {
+  const element = document.getElementById(id);
+  if (element === null) throw new Error(`Element not found: #${id}`);
+  return element as T;
 }
 
-document.addEventListener('DOMContentLoaded', initOptionsPage);
+function isMessageKey(value: string): value is MessageKey {
+  return (MESSAGE_KEYS as readonly string[]).includes(value);
+}
+
+/** data-i18n 属性のキーで、文言を差し込む */
+function applyMessages(): void {
+  document.title = t('optionsTitle');
+  for (const element of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const key = element.dataset.i18n ?? '';
+    if (!isMessageKey(key)) throw new Error(`Unknown message key: ${key}`);
+    element.textContent = t(key);
+  }
+}
+
+function levelCheckboxId(id: DetectorId): string {
+  return `level-${id}`;
+}
+
+/** 検知項目ごとの警告のオン・オフのチェックボックスを作る */
+function renderLevelRows(): void {
+  const list = byId('warningLevels');
+  list.replaceChildren();
+  for (const id of DETECTOR_IDS) {
+    const label = document.createElement('label');
+    label.className = 'check';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.id = levelCheckboxId(id);
+    const name = document.createElement('span');
+    name.textContent = t(DETECTOR_NAMES[id]);
+    label.append(box, name);
+    list.append(label);
+  }
+}
+
+function showForm(settings: Settings): void {
+  const values = toFormValues(settings);
+  for (const field of TEXT_FIELDS) byId<HTMLTextAreaElement>(field).value = values[field];
+  for (const field of CHECK_FIELDS) byId<HTMLInputElement>(field).checked = values[field];
+  for (const id of DETECTOR_IDS) {
+    byId<HTMLInputElement>(levelCheckboxId(id)).checked = values.warningLevels[id] !== 'off';
+  }
+}
+
+function readLevel(id: DetectorId): WarningLevel {
+  return byId<HTMLInputElement>(levelCheckboxId(id)).checked ? 'warn' : 'off';
+}
+
+function readForm(): OptionsFormValues {
+  const text = (field: (typeof TEXT_FIELDS)[number]): string =>
+    byId<HTMLTextAreaElement>(field).value;
+  const checked = (field: (typeof CHECK_FIELDS)[number]): boolean =>
+    byId<HTMLInputElement>(field).checked;
+  return {
+    internalDomains: text('internalDomains'),
+    internalAddresses: text('internalAddresses'),
+    cautionDomains: text('cautionDomains'),
+    cautionAddresses: text('cautionAddresses'),
+    skipAddresses: text('skipAddresses'),
+    skipConfirmationEnabled: checked('skipConfirmationEnabled'),
+    attachmentKeywords: text('attachmentKeywords'),
+    treatDriveLinksAsAttachment: checked('treatDriveLinksAsAttachment'),
+    warningLevels: Object.fromEntries(DETECTOR_IDS.map((id) => [id, readLevel(id)])) as Record<
+      DetectorId,
+      WarningLevel
+    >,
+  };
+}
+
+function showStatus(message: string, isError = false): void {
+  const status = byId('status');
+  status.textContent = message;
+  status.classList.toggle('error', isError);
+}
+
+async function save(): Promise<void> {
+  const result = parseFormValues(readForm());
+  if (!result.ok) {
+    showStatus(t('optionsInvalidEntries', [result.invalid.join(', ')]), true);
+    return;
+  }
+  try {
+    await saveSettings(result.settings);
+    // 正規化された内容（小文字化・重複の除去）を画面にも反映する
+    showForm(result.settings);
+    showStatus(t('optionsSaved'));
+  } catch (error) {
+    console.error('[gmail-send-guard] failed to save settings', error);
+    showStatus(t('optionsSaveFailed'), true);
+  }
+}
+
+/** 削除ボタンは、2回押して初めて削除する（確認のダイアログの代わり） */
+function setUpClearButton(): void {
+  const button = byId<HTMLButtonElement>('clear');
+  let armed = false;
+  const disarm = (): void => {
+    armed = false;
+    button.textContent = t('optionsClearData');
+  };
+  button.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      button.textContent = t('optionsClearConfirm');
+      return;
+    }
+    disarm();
+    clearAllData()
+      .then(() => {
+        showForm(DEFAULT_SETTINGS);
+        showStatus(t('optionsCleared'));
+      })
+      .catch((error: unknown) => {
+        console.error('[gmail-send-guard] failed to clear data', error);
+        showStatus(t('optionsSaveFailed'), true);
+      });
+  });
+  button.addEventListener('blur', disarm);
+}
+
+/** 設定画面を初期化する */
+async function initOptionsPage(): Promise<void> {
+  applyMessages();
+  renderLevelRows();
+  setUpClearButton();
+  const saveButton = byId<HTMLButtonElement>('save');
+  saveButton.addEventListener('click', () => {
+    void save();
+  });
+  try {
+    showForm(await loadSettings());
+  } catch (error) {
+    // 読み込めないまま保存すると、既存の設定を初期値で上書きしてしまうため、保存できないようにする
+    console.error('[gmail-send-guard] failed to load settings', error);
+    saveButton.disabled = true;
+    showStatus(t('optionsLoadFailed'), true);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initOptionsPage().catch((error: unknown) => {
+    console.error('[gmail-send-guard] failed to initialize the options page', error);
+    showStatus(t('optionsLoadFailed'), true);
+  });
+});

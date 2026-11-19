@@ -7,12 +7,8 @@
  *
  * 外部への通信は行わない。
  *
- * TODO(フェーズ1): メッセージの受信処理を実装する。
+ * フェーズ1では、background に依頼する処理は無い（設定は content script と設定画面が
+ * chrome.storage.local を直接読み書きする）。メッセージの受信処理はフェーズ2で追加する。
  */
 
-/** メッセージの受信処理を登録する */
-function registerMessageHandlers(): void {
-  // TODO(フェーズ1): chrome.runtime.onMessage にハンドラを登録する
-}
-
-registerMessageHandlers();
+export {};

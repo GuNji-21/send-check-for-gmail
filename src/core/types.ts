@@ -60,7 +60,7 @@ export interface ComposeSnapshot {
  * 確認省略は宛先の分類ではなく、送信全体に対する別の判定（classify.ts の shouldSkipConfirmation）。
  */
 export type RecipientCategory =
-  /** 要注意（特に慎重に確認したい相手として登録済み）。確認はブロック扱いにする */
+  /** 要注意（特に慎重に確認したい相手として登録済み）。毎回強調して表示し、確認省略より優先する */
   | 'caution'
   /** 社内（送信元と同じドメイン、または社内ドメイン・社内アドレスとして登録済み） */
   | 'internal'
@@ -86,12 +86,11 @@ export interface ClassificationRules {
 }
 
 /**
- * 警告レベル。検知項目ごとに利用者が設定画面で選ぶ（docs/requirements.md「6. 警告レベルと設定画面」）。
- * - block：該当項目を解消するか、明示的に承認しないと送信できない
- * - warn ：ダイアログに表示するが、そのまま送信できる
- * - off  ：チェックしない（検知器を実行しない）
+ * 警告のオン・オフ。検知項目ごとに利用者が設定画面で選ぶ（docs/requirements.md「6. 警告の設定」）。
+ * - warn：検知したらダイアログに表示する（そのまま送信できる）
+ * - off ：チェックしない（検知器を実行しない）
  */
-export type WarningLevel = 'block' | 'warn' | 'off';
+export type WarningLevel = 'warn' | 'off';
 
 /** 検知項目のID（フェーズ1）。検知項目を追加したらここにも追加する */
 export type DetectorId =
@@ -106,25 +105,36 @@ export type DetectorId =
   /** 社外の会社が2社以上含まれる（複数社混在） */
   | 'multiple-external-companies';
 
-/** 検知項目ごとの警告レベル */
+/**
+ * 検知結果の表示文言のキー（public/_locales の messages.json に定義する）。
+ * src/shared/i18n.ts の MessageKey に含まれる。
+ */
+export type DetectionMessageKey =
+  /** $1 = 見つかったキーワード */
+  | 'detectAttachmentMissing'
+  /** $1 = 見つかったプレースホルダー */
+  | 'detectPlaceholder'
+  /** $1 = 本文中の表記、$2 = 実際の曜日 */
+  | 'detectDateWeekdayMismatch'
+  /** $1 = 本文中の表記 */
+  | 'detectDateInvalid'
+  | 'detectSubjectEmpty'
+  /** $1 = 社外の会社（ドメイン）の数、$2 = その一覧 */
+  | 'detectMultipleExternalCompanies';
+
+/** 検知項目ごとの警告のオン・オフ */
 export type WarningLevels = Readonly<Record<DetectorId, WarningLevel>>;
 
 /**
  * 検知結果1件。検知器の出力（配列）の要素。
- * 警告レベルは検知器が決めず、利用者の設定から runDetectors が付ける（LeveledDetection）。
+ * 警告するかどうかは検知器が決めず、利用者の設定に従って runDetectors がオフの検知器を飛ばす。
  */
 export interface Detection {
   readonly detectorId: DetectorId;
   /** 表示文言の _locales のキー。文言そのものは持たない */
-  readonly messageKey: string;
+  readonly messageKey: DetectionMessageKey;
   /** 文言の差し込み値（chrome.i18n.getMessage の substitutions） */
   readonly substitutions?: readonly string[];
-}
-
-/** 警告レベルを付けた検知結果。確認ダイアログに渡す */
-export interface LeveledDetection extends Detection {
-  /** off の項目は実行しないため、ここには現れない */
-  readonly level: Exclude<WarningLevel, 'off'>;
 }
 
 /** 検知器が参照する設定など、スナップショット以外の入力 */

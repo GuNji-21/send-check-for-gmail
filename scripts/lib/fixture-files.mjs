@@ -23,6 +23,15 @@ export function listFixtureFiles() {
 }
 
 /**
+ * フィクスチャの HTML を読む
+ * @param {string} name ファイル名（例：compose-new.ja.20261119.html）
+ * @returns {string}
+ */
+export function readFixture(name) {
+  return readFileSync(path.join(fixtureDir, name), 'utf8');
+}
+
+/**
  * すべてのフィクスチャを検査し、問題を「ファイル名: 内容」の配列で返す（問題が無ければ空配列）。
  * 見つかった値そのものは含めない（テストの出力や CI のログに残さないため）。
  * @returns {string[]}

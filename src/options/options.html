@@ -5,12 +5,202 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- タイトル・文言は options.ts が _locales（data-i18n のキー）から差し込む -->
     <title></title>
+    <style>
+      body {
+        margin: 0;
+        background: #f6f8fc;
+        color: #1f1f1f;
+        font:
+          14px/1.6 system-ui,
+          -apple-system,
+          'Segoe UI',
+          'Hiragino Sans',
+          'Yu Gothic UI',
+          Meiryo,
+          sans-serif;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 24px 16px 96px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      section {
+        margin-top: 20px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      label.field {
+        display: block;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+      textarea {
+        box-sizing: border-box;
+        display: block;
+        width: 100%;
+        margin-top: 4px;
+        padding: 8px;
+        border: 1px solid #747775;
+        border-radius: 6px;
+        font: inherit;
+        font-weight: 400;
+        resize: vertical;
+      }
+      .help {
+        margin: 4px 0 0;
+        color: #5f6368;
+        font-size: 12px;
+      }
+      label.check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 6px 0;
+        border-top: 1px solid #e0e0e0;
+      }
+      td:last-child {
+        text-align: right;
+      }
+      select {
+        padding: 4px 8px;
+        font: inherit;
+      }
+      button {
+        padding: 8px 20px;
+        border: 1px solid #747775;
+        border-radius: 999px;
+        background: #fff;
+        color: #0b57d0;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.primary {
+        border-color: #0b57d0;
+        background: #0b57d0;
+        color: #fff;
+      }
+      button.danger {
+        border-color: #b3261e;
+        color: #b3261e;
+      }
+      .bar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 12px 16px;
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+      }
+      .status {
+        min-height: 1.6em;
+      }
+      .status.error {
+        color: #b3261e;
+        font-weight: 600;
+      }
+      .tip {
+        margin-top: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: #e8f0fe;
+        color: #174ea6;
+      }
+    </style>
   </head>
   <body>
     <main>
       <h1 data-i18n="optionsTitle"></h1>
-      <!-- TODO(フェーズ1): 設定項目を追加する -->
+
+      <section>
+        <h2 data-i18n="optionsSectionRecipients"></h2>
+        <p class="help" data-i18n="optionsOnePerLine"></p>
+
+        <label class="field">
+          <span data-i18n="optionsInternalDomains"></span>
+          <textarea id="internalDomains" rows="3" spellcheck="false"></textarea>
+        </label>
+        <p class="help" data-i18n="optionsInternalDomainsHelp"></p>
+        <label class="field">
+          <span data-i18n="optionsInternalAddresses"></span>
+          <textarea id="internalAddresses" rows="3" spellcheck="false"></textarea>
+        </label>
+
+        <label class="field">
+          <span data-i18n="optionsCautionDomains"></span>
+          <textarea id="cautionDomains" rows="3" spellcheck="false"></textarea>
+        </label>
+        <label class="field">
+          <span data-i18n="optionsCautionAddresses"></span>
+          <textarea id="cautionAddresses" rows="3" spellcheck="false"></textarea>
+        </label>
+        <p class="help" data-i18n="optionsCautionHelp"></p>
+
+        <label class="check">
+          <input id="skipConfirmationEnabled" type="checkbox" />
+          <span data-i18n="optionsSkipEnabled"></span>
+        </label>
+        <label class="field">
+          <span data-i18n="optionsSkipAddresses"></span>
+          <textarea id="skipAddresses" rows="3" spellcheck="false"></textarea>
+        </label>
+        <p class="help" data-i18n="optionsSkipHelp"></p>
+
+        <p class="help" data-i18n="optionsFreemailNote"></p>
+      </section>
+
+      <section>
+        <h2 data-i18n="optionsSectionAttachment"></h2>
+        <label class="field">
+          <span data-i18n="optionsAttachmentKeywords"></span>
+          <textarea id="attachmentKeywords" rows="8" spellcheck="false"></textarea>
+        </label>
+        <p class="help" data-i18n="optionsOnePerLine"></p>
+        <label class="check">
+          <input id="treatDriveLinksAsAttachment" type="checkbox" />
+          <span data-i18n="optionsDriveLinks"></span>
+        </label>
+      </section>
+
+      <section>
+        <h2 data-i18n="optionsSectionLevels"></h2>
+        <p class="help" data-i18n="optionsLevelsHelp"></p>
+        <div id="warningLevels"></div>
+      </section>
+
+      <section>
+        <h2 data-i18n="optionsSectionData"></h2>
+        <button id="clear" type="button" class="danger" data-i18n="optionsClearData"></button>
+      </section>
+
+      <p class="tip" data-i18n="optionsUndoSendTip"></p>
     </main>
+
+    <div class="bar">
+      <span id="status" class="status" role="status" aria-live="polite"></span>
+      <button id="save" type="button" class="primary" data-i18n="optionsSave"></button>
+    </div>
     <script src="options.js"></script>
   </body>
 </html>
