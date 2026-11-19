@@ -35,16 +35,19 @@
 
 ## コマンド
 
-| コマンド             | 内容                                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| `npm run build`      | 本番ビルド。`dist/` を作り直し、`content.js` / `background.js` / `options.js` と静的ファイルを出力 |
-| `npm run dev`        | 監視ビルド（`--watch`）。ソース変更のたびに再ビルドする                                            |
-| `npm test`           | `vitest run`。テストを1回実行する                                                                  |
-| `npm run test:watch` | `vitest`。変更を監視してテストを再実行する                                                         |
-| `npm run lint`       | `eslint .`。禁止事項（外部通信・eval・core の DOM 依存など）の一部も検出する                       |
-| `npm run typecheck`  | `tsc --noEmit`。型チェックのみ（出力なし）                                                         |
-| `npm run format`     | `prettier --write .`。全ファイルを整形する                                                         |
-| `npm run package`    | ビルド後、`dist/` を zip 化して `release/gmail-send-guard-v<version>.zip` に出力                   |
+| コマンド                       | 内容                                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `npm run build`                | 本番ビルド。`dist/` を作り直し、`content.js` / `background.js` / `options.js` と静的ファイルを出力        |
+| `npm run dev`                  | 監視ビルド（`--watch`）。ソース変更のたびに再ビルドする                                                   |
+| `npm test`                     | `vitest run`。テストを1回実行する                                                                         |
+| `npm run test:watch`           | `vitest`。変更を監視してテストを再実行する                                                                |
+| `npm run lint`                 | `eslint .`。禁止事項（外部通信・eval・core の DOM 依存など）の一部も検出する                              |
+| `npm run typecheck`            | `tsc --noEmit`。型チェックのみ（出力なし）                                                                |
+| `npm run format`               | `prettier --write .`。全ファイルを整形する                                                                |
+| `npm run fixtures:anonymize`   | `tests/fixtures/gmail/raw/` の HTML を匿名化して `tests/fixtures/gmail/` に出力し、置き換え漏れを検査する |
+| `npm run fixtures:save <画面>` | クリップボードの HTML を `tests/fixtures/gmail/raw/` に保存し、続けて匿名化と検査をする                   |
+| `npm run fixtures:check`       | 匿名化済みのフィクスチャに置き換え漏れがないか検査する                                                    |
+| `npm run package`              | ビルド後、`dist/` を zip 化して `release/gmail-send-guard-v<version>.zip` に出力                          |
 
 ## フォルダ構成
 
@@ -84,6 +87,7 @@ store/            Chrome Web Store 掲載用の素材
 - **複数アカウントに対応する。** 送信元アドレスは作成画面ごとに読み取る（`ComposeSnapshot.fromAddress`、必須）。設定はアカウント共通とする。
 - **送信操作から 0.5 秒以内に確認ダイアログを表示する。** 検知器は同期処理にし、設定は content script の起動時に読み込んで保持する（送信操作のたびに非同期の読み込みを待たない）。
 - DOM を扱うテストは、テストファイルの先頭に `// @vitest-environment jsdom` を書いて jsdom で実行する。Gmail の HTML の断片は `tests/fixtures/gmail/` に置く。
+- **Gmail から採取した HTML は、必ず `npm run fixtures:anonymize` で匿名化したものだけをコミットする。** 採取したままの HTML は `tests/fixtures/gmail/raw/`（`.gitignore` 済み）に置く。採取の手順とファイル名の決まりは `tests/fixtures/gmail/README.md` に従う。匿名化後は画面文言も伏せ字になるため、テストで本文や宛先名が必要なときはテストコード側で DOM に値を入れる。
 
 ## 宛先区分と警告レベル
 

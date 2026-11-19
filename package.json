@@ -17,6 +17,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "fixtures:anonymize": "node scripts/anonymize-fixture.mjs",
+    "fixtures:save": "node scripts/anonymize-fixture.mjs --save",
+    "fixtures:check": "node scripts/anonymize-fixture.mjs --check",
     "package": "npm run build && node scripts/package.mjs"
   },
   "devDependencies": {

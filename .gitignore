@@ -7,6 +7,9 @@ release/
 *.zip
 coverage/
 
+# Gmail から採取したままの HTML（実在のアドレス・氏名・本文を含むため、コミットしない）
+tests/fixtures/gmail/raw/
+
 # logs
 npm-debug.log*
 *.log

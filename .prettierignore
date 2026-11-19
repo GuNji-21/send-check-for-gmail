@@ -1,0 +1,2 @@
+# Gmail の HTML は整形すると空白が変わり、実際の画面と一致しなくなるため対象外にする
+tests/fixtures/gmail/*.html
