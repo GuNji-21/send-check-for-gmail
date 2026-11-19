@@ -38,7 +38,11 @@ export interface ComposeSnapshot {
    */
   readonly bodyText: string;
   readonly attachments: readonly Attachment[];
-  /** 本文（引用部分を除く）に含まれる Google ドライブのリンク・ファイルチップの件数 */
+  /**
+   * 本文（引用部分を除く）に含まれる Google ドライブのリンクの件数。
+   * 対象は drive.google.com と docs.google.com のみ（script.google.com などは含めない）。
+   * 作成画面では、貼り付けただけの URL は <a> にならず文字列のままなので、リンク要素だけでなく本文の文字列からも数える。
+   */
   readonly driveLinkCount: number;
   /** 送信操作を捕捉した日時（ISO 8601）。日付と曜日の照合などの基準にする */
   readonly capturedAt: string;
