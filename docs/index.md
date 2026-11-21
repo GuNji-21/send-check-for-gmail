@@ -14,4 +14,4 @@ A Chrome extension that reviews recipients, body and attachments before sending 
 
 GitHub リポジトリで公開しています（MIT License）。
 
-<!-- TODO: GitHub リポジトリ作成後に URL を記載する -->
+<https://github.com/GuNji-21/send-check-for-gmail>

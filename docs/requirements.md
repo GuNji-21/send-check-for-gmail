@@ -241,9 +241,10 @@ Chrome内蔵AI（Gemini Nano）のPrompt APIのみを使う。利用者のAPIキ
 - [x] AI校正の方式：Chrome内蔵AI（Gemini Nano）のPrompt APIのみ。APIキー方式は採用しない
 - [x] 拡張機能の名称：Send Check for Gmail（日本語・英語とも同じ）
   - 名前に「Gmail」を使えない場合（ストアの規約・商標の都合）は「Send Check for mail」とする
-  - GitHub のリポジトリ名は、作成時に拡張機能の名称に合わせる（send-check-for-gmail）。あわせてパッケージ名（package.json の name）も揃える
-- [ ] プライバシーポリシーの文面
-- [ ] ストア掲載文（「単一用途」の説明を含む）
+  - 商標の決まりに合わせ、ストアと拡張機能一覧での表記は「Send Check for Gmail™」とする
+  - GitHub のリポジトリ名とパッケージ名は send-check-for-gmail
+- [x] プライバシーポリシーの文面：docs/privacy-policy.md（英語版は privacy-policy.en.md）。GitHub Pages で公開する
+- [x] ストア掲載文（「単一用途」の説明を含む）：store/listing.md
 
 **ストア審査上の留意点**
 

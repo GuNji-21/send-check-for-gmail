@@ -1,10 +1,8 @@
-# Privacy Policy (Draft)
-
-> **[DRAFT — REVIEW BEFORE PUBLISHING]** This page is a draft. Review its content, effective date and contact information before publishing on the Chrome Web Store.
+# Privacy Policy
 
 Applies to: the Chrome extension "Send Check for Gmail" (the "Extension")
 
-Last updated: <!-- TODO: fill in at publication -->
+Last updated: November 21, 2026
 
 ## 1. Information the Extension handles
 
@@ -51,4 +49,6 @@ Any changes to this policy will be announced on this page.
 
 ## 7. Contact
 
-<!-- TODO: add a contact point (e.g. the GitHub Issues URL) before publishing -->
+For questions about this policy or the Extension, please open an issue on GitHub.
+
+<https://github.com/GuNji-21/send-check-for-gmail/issues>

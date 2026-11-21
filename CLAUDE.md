@@ -47,7 +47,7 @@
 | `npm run fixtures:anonymize`   | `tests/fixtures/gmail/raw/` の HTML を匿名化して `tests/fixtures/gmail/` に出力し、置き換え漏れを検査する |
 | `npm run fixtures:save <画面>` | クリップボードの HTML を `tests/fixtures/gmail/raw/` に保存し、続けて匿名化と検査をする                   |
 | `npm run fixtures:check`       | 匿名化済みのフィクスチャに置き換え漏れがないか検査する                                                    |
-| `npm run package`              | ビルド後、`dist/` を zip 化して `release/gmail-send-guard-v<version>.zip` に出力                          |
+| `npm run package`              | ビルド後、`dist/` を zip 化して `release/send-check-for-gmail-v<version>.zip` に出力                      |
 
 ## フォルダ構成
 

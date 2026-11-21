@@ -12,7 +12,8 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 - 対象：PC 版 Chrome 上の Gmail（mail.google.com）
 - Gmail API は使いません。外部への通信は一切行わず、設定は利用者の端末内にのみ保存します。
-- 現在はフェーズ1（v0.1.0）を実装済みです。Chrome Web Store にはまだ公開していません。
+- 現在はフェーズ1（v1.0.0）を実装済みです。Chrome Web Store への公開を準備しています。
+- Gmail は Google LLC の商標です。この拡張機能は Google が提供・公認するものではありません。
 
 ### できること（フェーズ1・実装済み）
 
@@ -97,8 +98,8 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 - Google Chrome
 
 ```bash
-git clone <リポジトリのURL>
-cd gmail-send-guard
+git clone https://github.com/GuNji-21/send-check-for-gmail.git
+cd send-check-for-gmail
 npm install
 ```
 
@@ -144,7 +145,8 @@ A Chrome extension (Manifest V3) that stops the send action in Gmail and makes y
 
 - Target: Gmail (mail.google.com) on desktop Chrome
 - Does not use the Gmail API. Makes no external network requests; settings are stored only on your device.
-- Phase 1 (v0.1.0) is implemented. Not yet published on the Chrome Web Store.
+- Phase 1 (v1.0.0) is implemented. Publication on the Chrome Web Store is being prepared.
+- Gmail is a trademark of Google LLC. This extension is not provided or endorsed by Google.
 
 ### What it does (Phase 1, implemented)
 
@@ -229,8 +231,8 @@ Requirements:
 - Google Chrome
 
 ```bash
-git clone <repository URL>
-cd gmail-send-guard
+git clone https://github.com/GuNji-21/send-check-for-gmail.git
+cd send-check-for-gmail
 npm install
 ```
 
