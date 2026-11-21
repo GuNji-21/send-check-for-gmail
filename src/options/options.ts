@@ -7,6 +7,7 @@
  * - 確認省略のアドレス（アドレス単位のみ）と、確認省略の有効・無効（初期設定は無効）
  * - 添付キーワードの編集、Google ドライブのリンクを添付ありとみなすか
  * - 検知項目ごとの警告のオン・オフ
+ * - AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックの有効・無効、モデルの状態の表示とダウンロード
  * - 保存データの削除
  *
  * 画面文言は options.html に直接書かず、data-i18n 属性のキーで _locales から差し込む。
@@ -14,6 +15,7 @@
 
 import type { DetectorId, WarningLevel } from '../core/types';
 import { MESSAGE_KEYS, type MessageKey, t } from '../shared/i18n';
+import { type AiAvailability, downloadAiModel, getAiAvailability } from '../shared/language-model';
 import {
   DEFAULT_SETTINGS,
   DETECTOR_IDS,
@@ -41,7 +43,11 @@ const TEXT_FIELDS = [
   'attachmentKeywords',
 ] as const;
 
-const CHECK_FIELDS = ['skipConfirmationEnabled', 'treatDriveLinksAsAttachment'] as const;
+const CHECK_FIELDS = [
+  'skipConfirmationEnabled',
+  'treatDriveLinksAsAttachment',
+  'aiTypoCheckEnabled',
+] as const;
 
 // 呼び出し側が要素の種類を指定できるようにするための型引数（戻り値の型にだけ使う）
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
@@ -113,6 +119,7 @@ function readForm(): OptionsFormValues {
     skipConfirmationEnabled: checked('skipConfirmationEnabled'),
     attachmentKeywords: text('attachmentKeywords'),
     treatDriveLinksAsAttachment: checked('treatDriveLinksAsAttachment'),
+    aiTypoCheckEnabled: checked('aiTypoCheckEnabled'),
     warningLevels: Object.fromEntries(DETECTOR_IDS.map((id) => [id, readLevel(id)])) as Record<
       DetectorId,
       WarningLevel
@@ -171,11 +178,61 @@ function setUpClearButton(): void {
   button.addEventListener('blur', disarm);
 }
 
+const AI_STATUS_MESSAGES: Readonly<Record<Exclude<AiAvailability, 'downloading'>, MessageKey>> = {
+  unavailable: 'optionsAiStatusUnavailable',
+  downloadable: 'optionsAiStatusDownloadable',
+  available: 'optionsAiStatusAvailable',
+};
+
+/** AI のモデルの状態を表示し、必要ならダウンロードのボタンを出す */
+function showAiStatus(state: AiAvailability, percent = 0): void {
+  const status = byId('aiStatus');
+  status.textContent =
+    state === 'downloading'
+      ? t('optionsAiStatusDownloading', [String(percent)])
+      : t(AI_STATUS_MESSAGES[state]);
+  // ダウンロードは、利用者がボタンを押したときにだけ始める（Chrome の決まり。数 GB の通信が発生するため）
+  byId<HTMLButtonElement>('aiDownload').hidden = state !== 'downloadable';
+  // 使えない端末では、有効にしても意味がないので選べないようにする
+  byId<HTMLInputElement>('aiTypoCheckEnabled').disabled = state === 'unavailable';
+}
+
+function setUpAiSection(): void {
+  const button = byId<HTMLButtonElement>('aiDownload');
+  button.addEventListener('click', () => {
+    button.disabled = true;
+    showAiStatus('downloading', 0);
+    downloadAiModel((ratio) => {
+      showAiStatus('downloading', Math.round(ratio * 100));
+    })
+      .then(() => getAiAvailability())
+      .then((state) => {
+        showAiStatus(state);
+      })
+      .catch((error: unknown) => {
+        console.error('[gmail-send-guard] failed to download the AI model', error);
+        showAiStatus('downloadable');
+        showStatus(t('optionsAiDownloadFailed'), true);
+      })
+      .finally(() => {
+        button.disabled = false;
+      });
+  });
+  getAiAvailability()
+    .then((state) => {
+      showAiStatus(state);
+    })
+    .catch(() => {
+      showAiStatus('unavailable');
+    });
+}
+
 /** 設定画面を初期化する */
 async function initOptionsPage(): Promise<void> {
   applyMessages();
   renderLevelRows();
   setUpClearButton();
+  setUpAiSection();
   const saveButton = byId<HTMLButtonElement>('save');
   saveButton.addEventListener('click', () => {
     void save();

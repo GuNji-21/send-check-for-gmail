@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gmail Send Guard",
+    "message": "Send Check for Gmail",
     "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）"
   },
   "extDescription": {
@@ -107,6 +107,62 @@
     "message": "Unchecked items: $1",
     "description": "未チェックの項目の件数。$1 は件数"
   },
+  "dialogTypoTitle": {
+    "message": "Possible typos (AI)",
+    "description": "AI による誤字・脱字チェックの欄の見出し"
+  },
+  "dialogTypoChecking": {
+    "message": "The AI is checking. You can send without waiting for the result.",
+    "description": "AI の解析中の表示"
+  },
+  "dialogTypoNone": {
+    "message": "No candidates were found.",
+    "description": "AI が誤字・脱字の候補を見つけなかったときの表示"
+  },
+  "dialogTypoFailed": {
+    "message": "The AI check could not be run. You can still send.",
+    "description": "AI の解析に失敗したときの表示"
+  },
+  "dialogTypoNotReady": {
+    "message": "The AI model is not available. Check its status on the options page.",
+    "description": "AI のモデルが未ダウンロード・非対応のときの表示"
+  },
+  "dialogTypoArrow": {
+    "message": "→",
+    "description": "誤りの箇所と修正案の間に置く矢印"
+  },
+  "dialogTypoApply": {
+    "message": "Fix",
+    "description": "誤字・脱字の修正案をメールに反映するボタン"
+  },
+  "dialogTypoApplied": {
+    "message": "Fixed",
+    "description": "修正案をメールに反映した後の表示"
+  },
+  "dialogTypoApplyFailed": {
+    "message": "Could not fix this automatically. Go back to editing to fix it.",
+    "description": "修正案をメールに反映できなかったときの表示"
+  },
+  "dialogTypoApplyAmbiguous": {
+    "message": "This text appears more than once, so it could not be fixed automatically. Go back to editing to fix it.",
+    "description": "修正する箇所が複数あって決められなかったときの表示"
+  },
+  "dialogTypoFixedLine": {
+    "message": "After the fix: ",
+    "description": "修正した行の前に付ける見出し"
+  },
+  "dialogTypoUndo": {
+    "message": "Undo",
+    "description": "反映した修正を元に戻すボタン"
+  },
+  "dialogTypoUndoFailed": {
+    "message": "Could not undo this. Go back to editing to check it.",
+    "description": "修正を元に戻せなかったときの表示"
+  },
+  "dialogTypoReview": {
+    "message": "See in email",
+    "description": "ダイアログを閉じて、修正した箇所をメールの画面で確認するボタン"
+  },
   "dialogSend": {
     "message": "Send",
     "description": "確認ダイアログの送信ボタン"
@@ -148,7 +204,7 @@
     "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
   },
   "optionsTitle": {
-    "message": "Gmail Send Guard Settings",
+    "message": "Send Check for Gmail Settings",
     "description": "設定画面のタイトル"
   },
   "optionsReloadTip": {
@@ -214,6 +270,42 @@
   "optionsDriveLinks": {
     "message": "Treat a Google Drive link in the body as an attachment",
     "description": "ドライブのリンクを添付とみなすチェックボックス"
+  },
+  "optionsSectionAi": {
+    "message": "AI typo check",
+    "description": "設定画面の、AI による誤字・脱字チェックの見出し"
+  },
+  "optionsAiEnabled": {
+    "message": "Look for possible typos with AI before sending",
+    "description": "AI による誤字・脱字チェックを有効にするチェックボックス"
+  },
+  "optionsAiHelp": {
+    "message": "Uses the AI built into Chrome (Gemini Nano). Everything is processed on this device, and the content of your email is never sent anywhere. It is free. You need a device that meets the requirements (such as 22 GB of free space) and a one-time model download. Results appear after the confirmation dialog opens, and you can send without waiting for them.",
+    "description": "AI による誤字・脱字チェックの説明"
+  },
+  "optionsAiStatusUnavailable": {
+    "message": "AI status: not available on this device or in this version of Chrome.",
+    "description": "AI のモデルが使えないときの表示"
+  },
+  "optionsAiStatusDownloadable": {
+    "message": "AI status: the model needs to be downloaded.",
+    "description": "AI のモデルが未ダウンロードのときの表示"
+  },
+  "optionsAiStatusDownloading": {
+    "message": "AI status: downloading the model ($1%).",
+    "description": "AI のモデルをダウンロード中の表示。$1 は進み具合"
+  },
+  "optionsAiStatusAvailable": {
+    "message": "AI status: ready.",
+    "description": "AI のモデルが使えるときの表示"
+  },
+  "optionsAiDownload": {
+    "message": "Download the model",
+    "description": "AI のモデルをダウンロードするボタン"
+  },
+  "optionsAiDownloadFailed": {
+    "message": "The model could not be downloaded. Check your free space and network, then try again.",
+    "description": "AI のモデルのダウンロードに失敗したときの表示"
   },
   "optionsSectionLevels": {
     "message": "Items to warn about",

@@ -11,6 +11,7 @@ import {
   findSendTargetForKey,
   isUnrecognizedCompose,
   readComposeSnapshot,
+  replaceComposeText,
   toLocalIsoString,
 } from '../../src/gmail/compose';
 
@@ -35,6 +36,12 @@ function query(root: ParentNode, selector: string): HTMLElement {
   const element = root.querySelector<HTMLElement>(selector);
   if (element === null) throw new Error(`not found: ${selector}`);
   return element;
+}
+
+function subjectInput(compose: HTMLElement): HTMLInputElement {
+  const input = compose.querySelector<HTMLInputElement>('input[name="subjectbox"]');
+  if (input === null) throw new Error('subject input not found');
+  return input;
 }
 
 beforeEach(() => {
@@ -330,6 +337,195 @@ describe('送信操作の対象の特定', () => {
     compose.className = 'renamed';
     expect(isUnrecognizedCompose(body)).toBe(true);
     expect(isUnrecognizedCompose(document.body)).toBe(false);
+  });
+});
+
+describe('replaceComposeText', () => {
+  function setUp(bodyHtml: string, subject = 'お見積りの件'): HTMLElement {
+    const compose = load('reply-inline--quote-expanded.ja.20261120.html');
+    const body = query(compose, '[g_editable="true"]');
+    const quote = query(body, '.gmail_quote');
+    body.innerHTML = bodyHtml;
+    body.append(quote);
+    const subjectInput = compose.querySelector<HTMLInputElement>('input[name="subjectbox"]');
+    if (subjectInput === null) throw new Error('subject input not found');
+    subjectInput.value = subject;
+    return compose;
+  }
+
+  it('本文の該当箇所を置き換え、Gmail に変更を知らせる', () => {
+    const compose = setUp('<div>資料をを送付いたします。</div>');
+    const body = query(compose, '[g_editable="true"]');
+    let inputEvents = 0;
+    body.addEventListener('input', () => inputEvents++);
+
+    expect(replaceComposeText(compose, '資料をを', '資料を').status).toBe('applied');
+    expect(readComposeSnapshot(compose, AT).bodyText).toBe('資料を送付いたします。');
+    expect(inputEvents).toBe(1);
+  });
+
+  it('件名の該当箇所を置き換える', () => {
+    const compose = setUp('<div>本文です。</div>', 'お見積りのの件');
+    expect(replaceComposeText(compose, 'りのの件', 'りの件').status).toBe('applied');
+    expect(readComposeSnapshot(compose, AT).subject).toBe('お見積りの件');
+  });
+
+  it('該当箇所が2か所以上あるときは、置き換えない', () => {
+    const compose = setUp('<div>資料をを送ります。</div><div>書類をを送ります。</div>');
+    expect(replaceComposeText(compose, 'をを', 'を').status).toBe('ambiguous');
+    expect(readComposeSnapshot(compose, AT).bodyText).toContain('資料をを');
+  });
+
+  it('件名と本文の両方にあるときも、置き換えない', () => {
+    const compose = setUp('<div>見積もりの件です。</div>', '見積もりの件');
+    expect(replaceComposeText(compose, '見積もり', '見積り').status).toBe('ambiguous');
+  });
+
+  it('該当箇所が無いときは、置き換えない', () => {
+    const compose = setUp('<div>資料を送ります。</div>');
+    expect(replaceComposeText(compose, '存在しない', 'x').status).toBe('not-found');
+    expect(replaceComposeText(compose, '', 'x').status).toBe('not-found');
+  });
+
+  it('文字のかたまり（テキストノード）が分かれていても、続いている文字として置き換える', () => {
+    const compose = setUp('<div></div>');
+    const line = query(compose, '[g_editable="true"] div');
+    // Gmail の本文は、打ち直しや変換のたびに文字のかたまりが分かれる
+    line.append('アリが', 'がとう', 'ございます。');
+    expect(line.childNodes).toHaveLength(3);
+
+    expect(replaceComposeText(compose, 'アリががとう', 'ありがとう').status).toBe('applied');
+    expect(readComposeSnapshot(compose, AT).bodyText).toBe('ありがとうございます。');
+  });
+
+  it('太字などの書式の境目をまたいでいても置き換える', () => {
+    const compose = setUp('<div>資料を<b>を</b>送ります。</div>');
+    expect(replaceComposeText(compose, '資料をを', '資料を').status).toBe('applied');
+    expect(readComposeSnapshot(compose, AT).bodyText).toBe('資料を送ります。');
+  });
+
+  it('行をまたぐ一致は、置き換えない', () => {
+    const compose = setUp('<div>資料を</div><div>を送ります。</div>');
+    expect(replaceComposeText(compose, '資料をを', '資料を').status).toBe('not-found');
+    const lines = setUp('<div>資料を<br>を送ります。</div>');
+    expect(replaceComposeText(lines, '資料をを', '資料を').status).toBe('not-found');
+  });
+
+  it('改行しない空白（&nbsp;）が混ざっていても見つける', () => {
+    const compose = setUp('<div>資料&nbsp;をを送ります。</div>');
+    expect(replaceComposeText(compose, '資料 をを', '資料を').status).toBe('applied');
+    expect(readComposeSnapshot(compose, AT).bodyText).toBe('資料を送ります。');
+  });
+
+  it('修正案が直後の文字と重なる場合は、重なりを除いて置き換える', () => {
+    // AI が「アリががとう」に対して「ありがとうございます」を返した場合
+    const compose = setUp('<div>アリががとうございます。</div>');
+    expect(replaceComposeText(compose, 'アリががとう', 'ありがとうございます').status).toBe(
+      'applied',
+    );
+    expect(readComposeSnapshot(compose, AT).bodyText).toBe('ありがとうございます。');
+  });
+
+  describe('書き換えた後', () => {
+    function applied(compose: HTMLElement, search: string, replacement: string) {
+      const outcome = replaceComposeText(compose, search, replacement);
+      if (outcome.status !== 'applied') throw new Error(`not applied: ${outcome.status}`);
+      return outcome;
+    }
+
+    it('書き換えた行を、メール本体から読み直して返す', () => {
+      const compose = setUp(
+        '<div>お世話になっております。</div><div>資料をを送付いたします。</div>',
+      );
+      expect(applied(compose, '資料をを', '資料を').line).toEqual({
+        before: '',
+        fixed: '資料を',
+        after: '送付いたします。',
+      });
+    });
+
+    it('行の途中を書き換えた場合は、同じ行の前後を返す（ほかの行は含めない）', () => {
+      const compose = setUp(
+        '<div>1行目</div><div>先日はアリががとうございました。</div><div>3行目</div>',
+      );
+      expect(applied(compose, 'アリががとう', 'ありがとう').line).toEqual({
+        before: '先日は',
+        fixed: 'ありがとう',
+        after: 'ございました。',
+      });
+    });
+
+    it('件名を書き換えた場合は、件名の前後を返す', () => {
+      const compose = setUp('<div>本文です。</div>', 'お見積りのの件');
+      expect(applied(compose, 'りのの件', 'りの件').line).toEqual({
+        before: 'お見積',
+        fixed: 'りの件',
+        after: '',
+      });
+    });
+
+    it('元に戻すと、書き換える前の本文に戻り、Gmail に変更を知らせる', () => {
+      const compose = setUp('<div></div>');
+      const line = query(compose, '[g_editable="true"] div');
+      line.append('アリが', 'がとう', 'ございます。');
+      const outcome = applied(compose, 'アリががとう', 'ありがとう');
+      expect(readComposeSnapshot(compose, AT).bodyText).toBe('ありがとうございます。');
+
+      let inputEvents = 0;
+      query(compose, '[g_editable="true"]').addEventListener('input', () => inputEvents++);
+      expect(outcome.undo()).toBe(true);
+      expect(readComposeSnapshot(compose, AT).bodyText).toBe('アリががとうございます。');
+      expect(inputEvents).toBe(1);
+    });
+
+    it('件名の書き換えも元に戻せる', () => {
+      const compose = setUp('<div>本文です。</div>', 'お見積りのの件');
+      const outcome = applied(compose, 'りのの件', 'りの件');
+      expect(outcome.undo()).toBe(true);
+      expect(readComposeSnapshot(compose, AT).subject).toBe('お見積りのの件');
+    });
+
+    it('書き換えた後にその箇所が編集されていたら、元に戻さない', () => {
+      const compose = setUp('<div>資料をを送付いたします。</div>');
+      const outcome = applied(compose, '資料をを', '資料を');
+      const node = query(compose, '[g_editable="true"] div').firstChild;
+      if (node === null) throw new Error('text node not found');
+      node.nodeValue = '資料を郵送いたします。';
+      expect(outcome.undo()).toBe(false);
+      expect(readComposeSnapshot(compose, AT).bodyText).toBe('資料を郵送いたします。');
+
+      const subject = setUp('<div>本文です。</div>', 'お見積りのの件');
+      const subjectOutcome = applied(subject, 'りのの件', 'りの件');
+      subjectInput(subject).value = '別の件名';
+      expect(subjectOutcome.undo()).toBe(false);
+    });
+
+    it('書き換えた箇所を、メールの画面で選択する', () => {
+      const compose = setUp('<div>先日はアリががとうございました。</div>');
+      applied(compose, 'アリががとう', 'ありがとう').reveal();
+      expect(document.getSelection()?.toString()).toBe('ありがとう');
+    });
+
+    it('件名の書き換えた箇所を選択する', () => {
+      const compose = setUp('<div>本文です。</div>', 'お見積りのの件');
+      applied(compose, 'りのの件', 'りの件').reveal();
+      const input = subjectInput(compose);
+      expect(input.value.slice(input.selectionStart ?? 0, input.selectionEnd ?? 0)).toBe('りの件');
+    });
+  });
+
+  it('引用部分（過去のメール）は書き換えない', () => {
+    const compose = setUp('<div>本文です。</div>');
+    const quote = query(compose, '[g_editable="true"] .gmail_quote');
+    quote.append('引用の中の誤字をを含む文');
+    expect(replaceComposeText(compose, '誤字をを', '誤字を').status).toBe('not-found');
+    expect(quote.textContent).toContain('誤字をを');
+  });
+
+  it('件名や本文の欄が無い場合は例外を投げる', () => {
+    const compose = setUp('<div>本文</div>');
+    query(compose, '[g_editable="true"]').remove();
+    expect(() => replaceComposeText(compose, '本文', 'x')).toThrow(GmailStructureError);
   });
 });
 

@@ -12,6 +12,7 @@
  *   （呼び出し側で「チェックできませんでした」として送信を止める）
  */
 
+import { fitSuggestion } from '../core/typo/typo-check';
 import type { Attachment, ComposeSnapshot, Recipient, RecipientField } from '../core/types';
 import { DRIVE_HOSTS, SELECTORS, recipientFieldSelector } from './selectors';
 
@@ -254,6 +255,214 @@ function readAttachments(compose: HTMLElement): Attachment[] {
     if (fileName === '') throw new GmailStructureError('attachment file name');
     return { fileName };
   });
+}
+
+/** 書き換えた行（書き換えた後に、メール本体から読み直したもの） */
+export interface FixedLine {
+  /** 書き換えた部分より前（同じ行の中） */
+  readonly before: string;
+  /** 書き換えた後の文字 */
+  readonly fixed: string;
+  /** 書き換えた部分より後（同じ行の中） */
+  readonly after: string;
+}
+
+/** 文字を置き換えられたときの結果 */
+export interface AppliedReplacement {
+  readonly status: 'applied';
+  readonly line: FixedLine;
+  /**
+   * 元の文字に戻す。戻せたら true。
+   * 書き換えた後にその箇所が編集されていた場合は、戻さずに false を返す。
+   */
+  undo(): boolean;
+  /** 書き換えた箇所を、メールの画面で選択し、見える位置まで動かす */
+  reveal(): void;
+}
+
+/** 文字の置き換えの結果 */
+export type ReplacementOutcome =
+  | AppliedReplacement
+  /** not-found = 該当する箇所が見つからない、ambiguous = 2か所以上あって決められない */
+  | { readonly status: 'not-found' | 'ambiguous' };
+
+/** 本文の中の文字のかたまり（テキストノード）と、つなげた文字列の中での位置 */
+interface TextPiece {
+  readonly node: Text;
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * 本文の編集欄の文字（引用部分を除く）を、1本の文字列につなげる。
+ *
+ * Gmail の本文は、打ち直しや変換のたびに文字のかたまり（テキストノード）が細かく分かれるため、
+ * かたまりごとに探すと、見た目では続いている文字を見つけられない。つなげた文字列で探し、
+ * 見つかった位置からどのかたまりに当たるかを引けるようにする。
+ * 行の区切り（ブロック要素の境目、改行）には改行文字を入れ、行をまたいだ一致が起きないようにする。
+ */
+function collectEditableText(body: Element): { text: string; pieces: TextPiece[] } {
+  let text = '';
+  const pieces: TextPiece[] = [];
+  const walk = (node: Node): void => {
+    // nodeType: 1 = 要素、3 = テキスト
+    if (node.nodeType === 3) {
+      // 改行しない空白（&nbsp;）は、普通の空白として扱う（文字数は変わらないので位置はずれない）
+      const value = (node.nodeValue ?? '').replace(/\u00a0/g, ' ');
+      pieces.push({ node: node as Text, start: text.length, end: text.length + value.length });
+      text += value;
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    const element = node as Element;
+    if (element.matches(SELECTORS.quote)) return;
+    const tag = element.localName;
+    if (tag === 'br') {
+      text += '\n';
+      return;
+    }
+    const isBlock = BLOCK_TAGS.has(tag);
+    if (isBlock) text += '\n';
+    for (const child of node.childNodes) walk(child);
+    if (isBlock) text += '\n';
+  };
+  walk(body);
+  return { text, pieces };
+}
+
+/** 文字列の中に、探す文字が現れる位置をすべて返す */
+function findAll(text: string, search: string): number[] {
+  const positions: number[] = [];
+  for (let at = text.indexOf(search); at !== -1; at = text.indexOf(search, at + 1)) {
+    positions.push(at);
+  }
+  return positions;
+}
+
+/** 文字列の中で、指定した範囲を含む行（改行から改行まで）を、範囲の前・範囲・範囲の後に分けて返す */
+function lineAround(text: string, start: number, end: number): FixedLine {
+  const lineStart = start === 0 ? 0 : text.lastIndexOf('\n', start - 1) + 1;
+  const lineEndIndex = text.indexOf('\n', end);
+  const lineEnd = lineEndIndex === -1 ? text.length : lineEndIndex;
+  return {
+    before: text.slice(lineStart, start),
+    fixed: text.slice(start, end),
+    after: text.slice(end, lineEnd),
+  };
+}
+
+/**
+ * 作成画面の件名・本文（引用部分を除く）にある文字を、別の文字に置き換える。
+ * AI が示した誤字の修正案を、メールに反映するために使う。
+ *
+ * - 取り違えを防ぐため、該当する箇所が件名と本文を通して「ちょうど1か所」のときだけ置き換える。
+ * - 本文では、文字のかたまり（テキストノード）や書式（太字など）の境目をまたいでいても置き換える。
+ *   行をまたぐ場合は置き換えない。
+ * - 修正案が前後の文字と重なる場合は、重なりを取り除いてから置き換える（fitSuggestion）。
+ * - 置き換えた後は、Gmail が変更に気づいて下書きを保存できるよう、入力のイベントを発生させる。
+ * - 置き換えた場合は、書き換えた行（メール本体から読み直したもの）と、
+ *   元に戻す処理・該当箇所をメールの画面で見せる処理を返す。
+ */
+export function replaceComposeText(
+  compose: HTMLElement,
+  search: string,
+  replacement: string,
+): ReplacementOutcome {
+  const needle = search.replace(/\u00a0/g, ' ');
+  if (needle === '' || needle.includes('\n')) return { status: 'not-found' };
+  const subjectInput = compose.querySelector<HTMLInputElement>(SELECTORS.subject);
+  const body = compose.querySelector<HTMLElement>(SELECTORS.body);
+  if (subjectInput === null || body === null) throw new GmailStructureError('subject or body');
+  const view = compose.ownerDocument.defaultView;
+  if (view === null) throw new GmailStructureError('window of the element');
+  const notifyGmail = (element: HTMLElement): void => {
+    element.dispatchEvent(new view.Event('input', { bubbles: true }));
+  };
+
+  const subject = subjectInput.value;
+  const inSubject = findAll(subject, needle);
+  const { text, pieces } = collectEditableText(body);
+  const inBody = findAll(text, needle);
+  if (inSubject.length + inBody.length === 0) return { status: 'not-found' };
+  if (inSubject.length + inBody.length > 1) return { status: 'ambiguous' };
+
+  // ---- 件名
+  const subjectAt = inSubject[0];
+  if (subjectAt !== undefined) {
+    const before = subject.slice(0, subjectAt);
+    const after = subject.slice(subjectAt + needle.length);
+    const fitted = fitSuggestion(before, needle, replacement, after);
+    const changed = before + fitted + after;
+    subjectInput.value = changed;
+    notifyGmail(subjectInput);
+    return {
+      status: 'applied',
+      line: lineAround(subjectInput.value, subjectAt, subjectAt + fitted.length),
+      undo() {
+        if (subjectInput.value !== changed) return false;
+        subjectInput.value = subject;
+        notifyGmail(subjectInput);
+        return true;
+      },
+      reveal() {
+        subjectInput.focus();
+        subjectInput.setSelectionRange(subjectAt, subjectAt + fitted.length);
+      },
+    };
+  }
+
+  // ---- 本文
+  const start = inBody[0];
+  if (start === undefined) return { status: 'not-found' };
+  const end = start + needle.length;
+  const fitted = fitSuggestion(text.slice(0, start), needle, replacement, text.slice(end));
+  // 一致した範囲にかかるかたまりを、前から順に書き換える。
+  // 修正後の文字は最初のかたまりに入れ、残りのかたまりからは一致した部分だけを取り除く
+  const changes: { node: Text; previous: string; current: string; offset: number }[] = [];
+  for (const piece of pieces) {
+    if (piece.end <= start || piece.start >= end) continue;
+    const previous = piece.node.nodeValue ?? '';
+    const from = Math.max(start, piece.start) - piece.start;
+    const to = Math.min(end, piece.end) - piece.start;
+    const current =
+      previous.slice(0, from) + (changes.length === 0 ? fitted : '') + previous.slice(to);
+    piece.node.nodeValue = current;
+    changes.push({ node: piece.node, previous, current, offset: from });
+  }
+  const first = changes[0];
+  if (first === undefined) return { status: 'not-found' };
+  notifyGmail(body);
+
+  return {
+    status: 'applied',
+    // 書き換えた後の本文を読み直して、該当の行を取り出す（書き換えた結果そのものを見せるため）
+    line: lineAround(collectEditableText(body).text, start, start + fitted.length),
+    undo() {
+      // 書き換えた後に、その箇所が編集されたり消されたりしていたら戻さない
+      const untouched = changes.every(
+        (change) => change.node.isConnected && change.node.nodeValue === change.current,
+      );
+      if (!untouched) return false;
+      for (const change of changes) change.node.nodeValue = change.previous;
+      notifyGmail(body);
+      return true;
+    },
+    reveal() {
+      if (!first.node.isConnected) return;
+      const document = compose.ownerDocument;
+      const range = document.createRange();
+      const length = (first.node.nodeValue ?? '').length;
+      range.setStart(first.node, Math.min(first.offset, length));
+      range.setEnd(first.node, Math.min(first.offset + fitted.length, length));
+      body.focus();
+      const selection = document.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      // 画面の外にある場合は、見える位置まで動かす（この機能が無い環境では何もしない）
+      const parent = first.node.parentElement as Partial<HTMLElement> | null;
+      parent?.scrollIntoView?.({ block: 'center' });
+    },
+  };
 }
 
 /**

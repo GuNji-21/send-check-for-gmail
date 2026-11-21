@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { attachmentMissingDetector } from '../../src/core/detectors/attachment-missing';
 import { dateWeekdayMismatchDetector } from '../../src/core/detectors/date-weekday-mismatch';
 import { DETECTORS, runDetectors } from '../../src/core/detectors/index';
+import { DEFAULT_SETTINGS } from '../../src/storage/settings';
 import { multipleExternalCompaniesDetector } from '../../src/core/detectors/multiple-external-companies';
 import { placeholderDetector } from '../../src/core/detectors/placeholder';
 import { subjectEmptyDetector } from '../../src/core/detectors/subject-empty';
@@ -62,6 +63,50 @@ describe('添付漏れ', () => {
         { treatDriveLinksAsAttachment: false },
       ),
     ).toHaveLength(1);
+  });
+
+  describe('初期値のキーワードでの判定', () => {
+    const withDefaults = (bodyText: string) =>
+      attachmentMissingDetector.detect(
+        snapshot({ bodyText }),
+        context({ attachmentKeywords: DEFAULT_SETTINGS.attachmentKeywords }),
+      );
+
+    it.each([
+      '資料を送付します。',
+      '資料を送付いたします。',
+      '見積書をご送付いたします。',
+      '添付ファイルをご確認ください。',
+      '別紙のとおりです。',
+      '資料を同封しました。',
+      'ファイルをお送りします。',
+      'ご査収のほどお願いいたします。',
+      '請求書を添付しております。',
+      'Please find the enclosed document.',
+      'I have attached the file.',
+    ])('自分が添付・送付する文は検知する：%s', (body) => {
+      expect(withDefaults(body)).toHaveLength(1);
+    });
+
+    it.each([
+      '請求書を送付してください。',
+      '請求書のご送付をお願いします。',
+      'ご送付いただいた資料を確認しました。',
+      '資料を添付いただき、ありがとうございます。',
+      '書類をお送りいただけますと幸いです。',
+      '今回は添付ファイルはありません。',
+      '添付なしで失礼します。',
+      '資料の添付は不要です。',
+      'お世話になっております。よろしくお願いいたします。',
+    ])('相手への依頼・お礼・添付なしの文は検知しない：%s', (body) => {
+      expect(withDefaults(body)).toEqual([]);
+    });
+
+    it('依頼の文と、自分が添付する文が両方ある場合は検知する', () => {
+      expect(
+        withDefaults('請求書を送付してください。\nこちらからは見積書を添付します。'),
+      ).toHaveLength(1);
+    });
   });
 
   it('キーワードを空にすると検知しない', () => {

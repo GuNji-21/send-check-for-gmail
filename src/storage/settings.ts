@@ -36,6 +36,11 @@ export interface Settings {
   readonly attachmentKeywords: readonly string[];
   /** Google ドライブのリンクを添付ありとみなすか */
   readonly treatDriveLinksAsAttachment: boolean;
+  /**
+   * AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックを行うか。初期設定では無効。
+   * モデルのダウンロード（数 GB）が必要なため、利用者が設定画面で有効にしたときだけ使う。
+   */
+  readonly aiTypoCheckEnabled: boolean;
 }
 
 /** 設定の初期値 */
@@ -57,6 +62,36 @@ export const DEFAULT_SETTINGS: Settings = {
     'multiple-external-companies': 'warn',
   },
   attachmentKeywords: [
+    // 添付・送付を表す語（「送付」は「送付します」「送付いたします」「ご送付」を含む）
+    '添付',
+    '別添',
+    '別紙',
+    '同封',
+    '送付',
+    '資料をお送り',
+    'ファイルをお送り',
+    'データをお送り',
+    'ご査収',
+    // 添付されることが多い書類・形式
+    '見積書',
+    '請求書',
+    'PDF',
+    // 英語
+    'attached',
+    'attachment',
+    'enclosed',
+  ],
+  treatDriveLinksAsAttachment: true,
+  aiTypoCheckEnabled: false,
+};
+
+/**
+ * 以前の版の、添付キーワードの初期値。
+ * 保存されているキーワードがこれと同じ（＝利用者が編集していない）場合は、新しい初期値に置き換える。
+ * 利用者が編集したキーワードは、そのまま残す。
+ */
+const PREVIOUS_DEFAULT_KEYWORDS: readonly (readonly string[])[] = [
+  [
     '添付',
     '添付ファイル',
     '別添',
@@ -70,8 +105,14 @@ export const DEFAULT_SETTINGS: Settings = {
     'attached',
     'attachment',
   ],
-  treatDriveLinksAsAttachment: true,
-};
+];
+
+function isPreviousDefault(keywords: readonly string[]): boolean {
+  return PREVIOUS_DEFAULT_KEYWORDS.some(
+    (previous) =>
+      previous.length === keywords.length && previous.every((item, i) => item === keywords[i]),
+  );
+}
 
 /** 検知項目のID（設定画面の表示順） */
 export const DETECTOR_IDS: readonly DetectorId[] = [
@@ -109,6 +150,18 @@ const readDomains = (value: unknown): string[] => readList(value, normalizeDomai
 const readAddresses = (value: unknown): string[] =>
   readList(value, normalizeAddress, looksLikeAddress);
 
+/** 添付キーワードを読む。未保存・以前の初期値のままなら、現在の初期値を返す */
+function readKeywords(value: unknown): readonly string[] {
+  // キーワードは利用者が全部消すこともできる（空の配列も有効な設定として扱う）
+  if (!Array.isArray(value)) return DEFAULT_SETTINGS.attachmentKeywords;
+  const keywords = readList(
+    value,
+    (item) => item.trim(),
+    () => true,
+  );
+  return isPreviousDefault(keywords) ? DEFAULT_SETTINGS.attachmentKeywords : keywords;
+}
+
 /**
  * 保存されていた値（形が壊れている可能性がある）を、正しい形の設定にする。
  * 読めない項目は初期値にする。保存データが無い場合（undefined）は初期値を返す。
@@ -138,17 +191,12 @@ export function normalizeSettings(raw: unknown): Settings {
     skipConfirmationEnabled: raw.skipConfirmationEnabled === true,
     warningLevels,
     // キーワードは利用者が全部消すこともできる（空の配列も有効な設定として扱う）
-    attachmentKeywords: Array.isArray(raw.attachmentKeywords)
-      ? readList(
-          raw.attachmentKeywords,
-          (item) => item.trim(),
-          () => true,
-        )
-      : DEFAULT_SETTINGS.attachmentKeywords,
+    attachmentKeywords: readKeywords(raw.attachmentKeywords),
     treatDriveLinksAsAttachment:
       typeof raw.treatDriveLinksAsAttachment === 'boolean'
         ? raw.treatDriveLinksAsAttachment
         : DEFAULT_SETTINGS.treatDriveLinksAsAttachment,
+    aiTypoCheckEnabled: raw.aiTypoCheckEnabled === true,
   };
 }
 

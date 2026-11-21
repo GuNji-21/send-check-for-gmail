@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import enMessages from '../../public/_locales/en/messages.json';
 import jaMessages from '../../public/_locales/ja/messages.json';
 import { buildConfirmationModel, previewOf } from '../../src/core/confirmation';
 import { parseFormValues, toFormValues } from '../../src/options/form';
-import { MESSAGE_KEYS, t } from '../../src/shared/i18n';
+import { MESSAGE_KEYS, clearMessageCache, preloadMessages, t } from '../../src/shared/i18n';
 import {
   DEFAULT_SETTINGS,
   type Settings,
@@ -30,6 +30,8 @@ describe('normalizeSettings', () => {
     expect(DEFAULT_SETTINGS.skipConfirmationEnabled).toBe(false);
     expect(new Set(Object.values(DEFAULT_SETTINGS.warningLevels))).toEqual(new Set(['warn']));
     expect(DEFAULT_SETTINGS.treatDriveLinksAsAttachment).toBe(true);
+    // AI による誤字・脱字チェックは、モデルのダウンロードが必要なので初期設定では無効
+    expect(DEFAULT_SETTINGS.aiTypoCheckEnabled).toBe(false);
     expect(DEFAULT_SETTINGS.attachmentKeywords).toContain('添付');
     expect(DEFAULT_SETTINGS.attachmentKeywords).toContain('attached');
   });
@@ -74,6 +76,43 @@ describe('normalizeSettings', () => {
       normalizeSettings({ attachmentKeywords: [' 添付 ', '添付', ''] }).attachmentKeywords,
     ).toEqual(['添付']);
     expect(normalizeSettings({}).attachmentKeywords).toEqual(DEFAULT_SETTINGS.attachmentKeywords);
+  });
+
+  it('AI による誤字・脱字チェックは true が保存されているときだけ有効にする', () => {
+    expect(normalizeSettings({ aiTypoCheckEnabled: true }).aiTypoCheckEnabled).toBe(true);
+    expect(normalizeSettings({ aiTypoCheckEnabled: 1 }).aiTypoCheckEnabled).toBe(false);
+    expect(normalizeSettings({}).aiTypoCheckEnabled).toBe(false);
+  });
+
+  it('添付キーワードの初期値に「送付」「別紙」「ご査収」が入っている', () => {
+    for (const keyword of ['添付', '送付', '別添', '別紙', '同封', 'ご査収', 'attached']) {
+      expect(DEFAULT_SETTINGS.attachmentKeywords).toContain(keyword);
+    }
+  });
+
+  it('以前の版の初期値のまま保存されていたキーワードは、新しい初期値に置き換える', () => {
+    const previous = [
+      '添付',
+      '添付ファイル',
+      '別添',
+      '同封',
+      '資料をお送り',
+      'ご送付',
+      '送付いたします',
+      '見積書',
+      '請求書',
+      'PDF',
+      'attached',
+      'attachment',
+    ];
+    expect(normalizeSettings({ attachmentKeywords: previous }).attachmentKeywords).toEqual(
+      DEFAULT_SETTINGS.attachmentKeywords,
+    );
+  });
+
+  it('利用者が編集したキーワードは、そのまま残す', () => {
+    const edited = ['添付', '同封', '自社の用語'];
+    expect(normalizeSettings({ attachmentKeywords: edited }).attachmentKeywords).toEqual(edited);
   });
 
   it('確認省略は true が保存されているときだけ有効にする', () => {
@@ -199,25 +238,66 @@ describe('画面文言（_locales）', () => {
     expect(ja.errorCheckFailed?.message).toContain('チェックできませんでした');
   });
 
-  it('t は chrome.i18n から文言を取得し、差し込み値を渡す', () => {
-    const getMessage = vi.fn(() => '件名');
-    vi.stubGlobal('chrome', { i18n: { getMessage } });
-    expect(t('dialogSubject')).toBe('件名');
-    t('dialogRemaining', ['3']);
-    expect(getMessage).toHaveBeenLastCalledWith('dialogRemaining', ['3']);
-  });
-
-  it('文言が見つからない・chrome.i18n が使えない場合は、キーの名前を返す', () => {
-    vi.stubGlobal('chrome', { i18n: { getMessage: () => '' } });
-    expect(t('dialogSubject')).toBe('dialogSubject');
-    vi.stubGlobal('chrome', {
-      i18n: {
-        getMessage: () => {
-          throw new Error('Extension context invalidated.');
+  describe('t', () => {
+    /** chrome.i18n の代用。$1・$2 を、渡された差し込み値で置き換える */
+    function stubMessages(table: Record<string, string>): void {
+      vi.stubGlobal('chrome', {
+        i18n: {
+          getMessage: (name: string, substitutions: string[] = []) =>
+            (table[name] ?? '').replace(
+              /\$(\d)/g,
+              (_, n: string) => substitutions[Number(n) - 1] ?? '',
+            ),
         },
-      },
+      });
+    }
+    const unavailable = (): void => {
+      vi.stubGlobal('chrome', {
+        i18n: {
+          getMessage: () => {
+            throw new Error('Extension context invalidated.');
+          },
+        },
+      });
+    };
+
+    beforeEach(() => {
+      clearMessageCache();
     });
-    expect(t('errorCheckFailed')).toBe('errorCheckFailed');
+
+    it('chrome.i18n から文言を取得し、差し込み値を入れる', () => {
+      stubMessages({ dialogSubject: '件名', dialogCompanyCount: '$1（$2名）' });
+      expect(t('dialogSubject')).toBe('件名');
+      expect(t('dialogCompanyCount', ['example.com', '2'])).toBe('example.com（2名）');
+      // 同じ文言を、別の差し込み値でも使える
+      expect(t('dialogCompanyCount', ['example.org', '5'])).toBe('example.org（5名）');
+    });
+
+    it('差し込み値が足りない場合は、その位置を空にする', () => {
+      stubMessages({ dialogCompanyCount: '$1（$2名）' });
+      expect(t('dialogCompanyCount', ['example.com'])).toBe('example.com（名）');
+    });
+
+    it('文言が見つからない・chrome.i18n が使えない場合は、キーの名前を返す', () => {
+      stubMessages({});
+      expect(t('dialogSubject')).toBe('dialogSubject');
+      unavailable();
+      expect(t('errorCheckFailed')).toBe('errorCheckFailed');
+    });
+
+    it('先に読み込んでおけば、chrome.i18n が使えなくなっても文言を表示できる', () => {
+      stubMessages({
+        errorCheckFailed: 'チェックできませんでした。',
+        dialogRemaining: '未チェックの項目：$1件',
+      });
+      preloadMessages();
+      // 拡張機能が更新され、古い content script から chrome.i18n を使えなくなった状態
+      unavailable();
+      expect(t('errorCheckFailed')).toBe('チェックできませんでした。');
+      expect(t('dialogRemaining', ['3'])).toBe('未チェックの項目：3件');
+      // 読み込み時に無かった文言は、キーの名前になる
+      expect(t('dialogSubject')).toBe('dialogSubject');
+    });
   });
 });
 
@@ -231,6 +311,7 @@ describe('設定画面の入力内容の変換', () => {
         skipAddresses: ['me@example.com'],
       }),
       skipConfirmationEnabled: true,
+      aiTypoCheckEnabled: true,
       warningLevels: { ...DEFAULT_SETTINGS.warningLevels, placeholder: 'off' },
     };
     expect(parseFormValues(toFormValues(settings))).toEqual({ ok: true, settings });

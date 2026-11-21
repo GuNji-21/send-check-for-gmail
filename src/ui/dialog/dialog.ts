@@ -6,9 +6,12 @@
  * - <dialog> の showModal() で最前面に表示し、背後の Gmail を操作できないようにする
  * - 宛先・添付のすべてにチェックが入るまで、送信ボタンは押せない
  * - 検知結果は警告として表示するだけで、送信は止めない
+ * - AI による誤字・脱字チェックの結果は、ダイアログを開いた後で届く。届くまでは「確認中」と表示し、
+ *   結果を待たずに送信できる（失敗しても送信は止めない）
  */
 
 import type { ConfirmationModel, RecipientView } from '../../core/confirmation';
+import type { TypoCandidate, TypoCheckResult } from '../../core/typo/typo-check';
 import type { Detection, RecipientField } from '../../core/types';
 import { type MessageKey, t } from '../../shared/i18n';
 import { DIALOG_CSS } from './styles';
@@ -126,7 +129,7 @@ function renderRecipients(
   model: ConfirmationModel,
   checklist: Checklist,
 ): HTMLElement {
-  const section = el(doc, 'section');
+  const section = el(doc, 'section', 'recipients');
   section.append(el(doc, 'h2', undefined, t('dialogRecipients')));
 
   if (model.recipients.length === 0) {
@@ -152,14 +155,14 @@ function renderRecipients(
       const label = el(doc, 'label', `item ${recipient.category}`);
       const box = checklist.add(doc);
       if (recipient.category === 'internal') internalBoxes.push(box);
-      const text = el(doc, 'span', 'text', recipient.address);
+      const text = el(doc, 'span', 'text address', recipient.address);
       if (recipient.displayName !== undefined) {
         text.append(el(doc, 'span', 'sub', recipient.displayName));
       }
       label.append(
         box,
         text,
-        el(doc, 'span', `badge ${recipient.category}`, t(BADGE_LABELS[recipient.category])),
+        el(doc, 'span', `tag ${recipient.category}`, t(BADGE_LABELS[recipient.category])),
       );
       item.append(label);
       list.append(item);
@@ -187,20 +190,38 @@ function renderRecipients(
   return section;
 }
 
+/** 警告の印（三角に感嘆符）を描く。意味は隣の読み上げ用の文字で伝えるため、絵そのものは読み上げさせない */
+function warningIcon(doc: Document): SVGSVGElement {
+  const namespace = 'http://www.w3.org/2000/svg';
+  const svg = doc.createElementNS(namespace, 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', 'icon');
+  const triangle = doc.createElementNS(namespace, 'path');
+  triangle.setAttribute('d', 'M8 1.9 14.6 13.6H1.4L8 1.9Z');
+  triangle.setAttribute('class', 'icon-shape');
+  const mark = doc.createElementNS(namespace, 'path');
+  mark.setAttribute('d', 'M8 6.3v3.4M8 11.5v.1');
+  mark.setAttribute('class', 'icon-mark');
+  svg.append(triangle, mark);
+  return svg;
+}
+
 function renderDetections(doc: Document, detections: readonly Detection[]): HTMLElement | null {
   if (detections.length === 0) return null;
-  const section = el(doc, 'section');
+  const section = el(doc, 'section', 'warnings');
   section.append(el(doc, 'h2', undefined, t('dialogWarnings')));
+  const list = el(doc, 'ul');
   for (const detection of detections) {
-    const box = el(doc, 'div', 'detection');
-    const head = el(doc, 'div', 'head');
-    head.append(
-      el(doc, 'span', 'badge external', t('dialogLevelWarn')),
+    const item = el(doc, 'li', 'detection');
+    item.append(
+      warningIcon(doc),
+      el(doc, 'span', 'sr-only', t('dialogLevelWarn')),
       el(doc, 'span', 'message', t(detection.messageKey, detection.substitutions)),
     );
-    box.append(head);
-    section.append(box);
+    list.append(item);
   }
+  section.append(list);
   return section;
 }
 
@@ -209,7 +230,7 @@ function renderAttachments(
   model: ConfirmationModel,
   checklist: Checklist,
 ): HTMLElement {
-  const section = el(doc, 'section');
+  const section = el(doc, 'section', 'attachments');
   section.append(el(doc, 'h2', undefined, t('dialogAttachments')));
   if (model.attachments.length === 0) {
     section.append(el(doc, 'p', 'muted', t('dialogNoAttachments')));
@@ -219,7 +240,7 @@ function renderAttachments(
   for (const attachment of model.attachments) {
     const item = el(doc, 'li');
     const label = el(doc, 'label', 'item');
-    label.append(checklist.add(doc), el(doc, 'span', 'text', attachment.fileName));
+    label.append(checklist.add(doc), el(doc, 'span', 'text file', attachment.fileName));
     item.append(label);
     list.append(item);
   }
@@ -227,12 +248,205 @@ function renderAttachments(
   return section;
 }
 
-function renderText(doc: Document, title: string, value: string, emptyText: string): HTMLElement {
-  const section = el(doc, 'section');
+/** 件名・本文の欄。update を呼ぶと、表示する内容を差し替えられる */
+interface TextField {
+  readonly section: HTMLElement;
+  update(value: string): void;
+}
+
+function renderText(doc: Document, title: string, value: string, emptyText: string): TextField {
+  const section = el(doc, 'section', 'field');
   section.append(el(doc, 'h2', undefined, title));
-  section.append(
-    value.trim() === '' ? el(doc, 'p', 'muted', emptyText) : el(doc, 'p', 'plain', value),
+  const content = el(doc, 'p');
+  const update = (next: string): void => {
+    const empty = next.trim() === '';
+    content.className = empty ? 'muted' : 'plain';
+    content.textContent = empty ? emptyText : next;
+  };
+  update(value);
+  section.append(content);
+  return { section, update };
+}
+
+/** 確認ダイアログに追加で渡すもの */
+export interface ConfirmationExtras {
+  /** AI による誤字・脱字チェックの結果（後から届く）。指定しなければ、欄そのものを出さない */
+  readonly typoCheck?: Promise<TypoCheckResult>;
+  /**
+   * 誤字・脱字の候補を、メールに反映する。指定しなければ「修正する」ボタンを出さない。
+   * 反映できなかったら、その理由を返す
+   * （'ambiguous' = 同じ表記が複数あって決められない、'not-found' = 該当箇所が見つからない）。
+   */
+  readonly applyFix?: (candidate: TypoCandidate) => AppliedFix | 'ambiguous' | 'not-found';
+}
+
+/** メールの件名と本文の冒頭（ダイアログの表示を更新するために使う） */
+export interface MailText {
+  readonly subject: string;
+  readonly bodyPreview: string;
+}
+
+/** 修正案をメールに反映した結果 */
+export interface AppliedFix extends MailText {
+  /** 書き換えた行（メール本体から読み直したもの）。fixed が書き換えた部分 */
+  readonly line: { readonly before: string; readonly fixed: string; readonly after: string };
+  /** 元に戻す。戻せたら、戻した後の件名と本文の冒頭を返す。戻せなかったら null */
+  undo(): MailText | null;
+  /** 書き換えた箇所を、メールの画面で選択して見える位置に出す（ダイアログを閉じた後に呼ぶ） */
+  reveal(): void;
+}
+
+/** 誤字・脱字の候補の欄から、ダイアログ本体に頼む操作 */
+interface TypoActions {
+  applyFix(candidate: TypoCandidate): AppliedFix | 'ambiguous' | 'not-found';
+  /** メールを書き換えた（または元に戻した）ので、件名・本文の表示を更新する */
+  mailChanged(mail: MailText): void;
+  /** ダイアログを閉じて、メールの画面で該当箇所を見せる */
+  review(reveal: () => void): void;
+}
+
+/** 修正した行の前後は、長い場合に切り詰めて表示する */
+const LINE_CONTEXT_LENGTH = 24;
+
+/** 書き換えた行を、書き換えた部分を強調して表示する */
+function renderFixedLine(doc: Document, line: AppliedFix['line']): HTMLElement {
+  const paragraph = el(doc, 'p', 'fixed-line');
+  const before =
+    line.before.length > LINE_CONTEXT_LENGTH
+      ? `…${line.before.slice(-LINE_CONTEXT_LENGTH)}`
+      : line.before;
+  const after =
+    line.after.length > LINE_CONTEXT_LENGTH
+      ? `${line.after.slice(0, LINE_CONTEXT_LENGTH)}…`
+      : line.after;
+  paragraph.append(
+    el(doc, 'span', 'fixed-label', t('dialogTypoFixedLine')),
+    doc.createTextNode(before),
+    el(doc, 'mark', undefined, line.fixed),
+    doc.createTextNode(after),
   );
+  return paragraph;
+}
+
+/** 誤字・脱字の候補1件。修正する → 修正後の行を表示（元に戻す／メールで確認）と状態が変わる */
+function renderTypoItem(
+  doc: Document,
+  candidate: TypoCandidate,
+  actions: TypoActions | undefined,
+): HTMLElement {
+  const item = el(doc, 'li', 'typo');
+  const change = el(doc, 'span', 'change');
+  change.append(
+    el(doc, 'span', 'wrong', candidate.wrong),
+    el(doc, 'span', 'arrow', t('dialogTypoArrow')),
+    el(doc, 'span', 'suggestion', candidate.suggestion),
+  );
+  const buttons = el(doc, 'span', 'typo-actions');
+  const detail = el(doc, 'div', 'typo-detail');
+  detail.setAttribute('aria-live', 'polite');
+  item.append(change, buttons);
+  if (candidate.reason !== '') item.append(el(doc, 'span', 'reason', candidate.reason));
+  item.append(detail);
+  if (actions === undefined) return item;
+
+  const button = (className: string, key: MessageKey, onClick: () => void): HTMLButtonElement => {
+    const element = el(doc, 'button', `mini ${className}`, t(key));
+    element.type = 'button';
+    element.addEventListener('click', onClick);
+    return element;
+  };
+  const showMessage = (key: MessageKey): void => {
+    detail.replaceChildren(el(doc, 'p', 'fix-result', t(key)));
+  };
+
+  const showInitial = (): void => {
+    item.classList.remove('applied', 'unapplied');
+    detail.replaceChildren();
+    buttons.replaceChildren(
+      button('fix', 'dialogTypoApply', () => {
+        const outcome = actions.applyFix(candidate);
+        if (outcome === 'ambiguous' || outcome === 'not-found') {
+          item.classList.add('unapplied');
+          buttons.replaceChildren();
+          showMessage(
+            outcome === 'ambiguous' ? 'dialogTypoApplyAmbiguous' : 'dialogTypoApplyFailed',
+          );
+          return;
+        }
+        actions.mailChanged(outcome);
+        showApplied(outcome);
+      }),
+    );
+  };
+
+  const showApplied = (fix: AppliedFix): void => {
+    item.classList.add('applied');
+    // 「修正しました」だけでなく、メール本体から読み直した修正後の行を見せる
+    detail.replaceChildren(
+      el(doc, 'p', 'fix-result', t('dialogTypoApplied')),
+      renderFixedLine(doc, fix.line),
+    );
+    buttons.replaceChildren(
+      button('undo', 'dialogTypoUndo', () => {
+        const restored = fix.undo();
+        if (restored === null) {
+          buttons.replaceChildren();
+          showMessage('dialogTypoUndoFailed');
+          return;
+        }
+        actions.mailChanged(restored);
+        showInitial();
+      }),
+      button('review', 'dialogTypoReview', () => {
+        actions.review(() => {
+          fix.reveal();
+        });
+      }),
+    );
+  };
+
+  showInitial();
+  return item;
+}
+
+/**
+ * AI による誤字・脱字チェックの欄を作る。最初は「確認中」を表示し、結果が届いたら置き換える。
+ */
+function renderTypoCheck(
+  doc: Document,
+  typoCheck: Promise<TypoCheckResult>,
+  actions: TypoActions | undefined,
+): HTMLElement {
+  const section = el(doc, 'section', 'typos');
+  section.append(el(doc, 'h2', undefined, t('dialogTypoTitle')));
+  const body = el(doc, 'div', 'typo-body');
+  body.setAttribute('aria-live', 'polite');
+  body.append(el(doc, 'p', 'muted pending', t('dialogTypoChecking')));
+  section.append(body);
+
+  const show = (result: TypoCheckResult): void => {
+    if (result.status === 'not-ready') {
+      body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoNotReady')));
+      return;
+    }
+    if (result.status === 'failed') {
+      body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoFailed')));
+      return;
+    }
+    if (result.candidates.length === 0) {
+      body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoNone')));
+      return;
+    }
+    const list = el(doc, 'ul');
+    for (const candidate of result.candidates) {
+      list.append(renderTypoItem(doc, candidate, actions));
+    }
+    body.replaceChildren(list);
+  };
+
+  typoCheck.then(show, () => {
+    show({ status: 'failed' });
+  });
   return section;
 }
 
@@ -244,6 +458,7 @@ export function showConfirmationDialog(
   doc: Document,
   model: ConfirmationModel,
   mode: ConfirmationMode,
+  extras: ConfirmationExtras = {},
 ): Promise<ConfirmationResult> {
   return new Promise((resolve) => {
     const { host, root } = createHost(doc);
@@ -260,10 +475,41 @@ export function showConfirmationDialog(
     const main = el(doc, 'main');
     const detections = renderDetections(doc, model.detections);
     if (detections !== null) main.append(detections);
+    const subjectField = renderText(
+      doc,
+      t('dialogSubject'),
+      model.subject,
+      t('dialogSubjectEmpty'),
+    );
+    const bodyField = renderText(doc, t('dialogBody'), model.bodyPreview, t('dialogBodyEmpty'));
+    if (extras.typoCheck !== undefined) {
+      const { applyFix } = extras;
+      main.append(
+        renderTypoCheck(
+          doc,
+          extras.typoCheck,
+          applyFix === undefined
+            ? undefined
+            : {
+                applyFix,
+                // メールを書き換えたので、ダイアログに表示している件名・本文も合わせる
+                mailChanged(mail) {
+                  subjectField.update(mail.subject);
+                  bodyField.update(mail.bodyPreview);
+                },
+                // ダイアログを閉じてから（開いている間は Gmail を操作できないため）、該当箇所を見せる
+                review(reveal) {
+                  finish('cancelled');
+                  doc.defaultView?.setTimeout(reveal, 0);
+                },
+              },
+        ),
+      );
+    }
     main.append(
       renderRecipients(doc, model, checklist),
-      renderText(doc, t('dialogSubject'), model.subject, t('dialogSubjectEmpty')),
-      renderText(doc, t('dialogBody'), model.bodyPreview, t('dialogBodyEmpty')),
+      subjectField.section,
+      bodyField.section,
       renderAttachments(doc, model, checklist),
     );
 
@@ -334,7 +580,7 @@ export function showCheckFailedDialog(doc: Document): Promise<void> {
     dialog.setAttribute('aria-label', t('errorCheckFailed'));
 
     const main = el(doc, 'main');
-    const section = el(doc, 'section');
+    const section = el(doc, 'section', 'failure');
     section.append(
       el(doc, 'p', 'error', t('errorCheckFailed')),
       el(doc, 'p', 'muted', t('errorCheckFailedHint')),

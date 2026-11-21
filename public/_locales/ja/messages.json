@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Gmail 送信前チェック（仮）",
+    "message": "Send Check for Gmail",
     "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）"
   },
   "extDescription": {
@@ -107,6 +107,62 @@
     "message": "未チェックの項目：$1件",
     "description": "未チェックの項目の件数。$1 は件数"
   },
+  "dialogTypoTitle": {
+    "message": "誤字・脱字の候補（AI）",
+    "description": "AI による誤字・脱字チェックの欄の見出し"
+  },
+  "dialogTypoChecking": {
+    "message": "AI が確認しています。結果を待たずに送信できます。",
+    "description": "AI の解析中の表示"
+  },
+  "dialogTypoNone": {
+    "message": "候補は見つかりませんでした。",
+    "description": "AI が誤字・脱字の候補を見つけなかったときの表示"
+  },
+  "dialogTypoFailed": {
+    "message": "AI チェックは実行できませんでした。送信はそのまま行えます。",
+    "description": "AI の解析に失敗したときの表示"
+  },
+  "dialogTypoNotReady": {
+    "message": "AI のモデルを使えません。設定画面で状態を確認してください。",
+    "description": "AI のモデルが未ダウンロード・非対応のときの表示"
+  },
+  "dialogTypoArrow": {
+    "message": "→",
+    "description": "誤りの箇所と修正案の間に置く矢印"
+  },
+  "dialogTypoApply": {
+    "message": "修正する",
+    "description": "誤字・脱字の修正案をメールに反映するボタン"
+  },
+  "dialogTypoApplied": {
+    "message": "修正しました",
+    "description": "修正案をメールに反映した後の表示"
+  },
+  "dialogTypoApplyFailed": {
+    "message": "自動では修正できませんでした。編集に戻って直してください。",
+    "description": "修正案をメールに反映できなかったときの表示"
+  },
+  "dialogTypoApplyAmbiguous": {
+    "message": "同じ表記が複数あるため、自動では修正できませんでした。編集に戻って直してください。",
+    "description": "修正する箇所が複数あって決められなかったときの表示"
+  },
+  "dialogTypoFixedLine": {
+    "message": "修正後：",
+    "description": "修正した行の前に付ける見出し"
+  },
+  "dialogTypoUndo": {
+    "message": "元に戻す",
+    "description": "反映した修正を元に戻すボタン"
+  },
+  "dialogTypoUndoFailed": {
+    "message": "元に戻せませんでした。編集に戻って確認してください。",
+    "description": "修正を元に戻せなかったときの表示"
+  },
+  "dialogTypoReview": {
+    "message": "メールで確認",
+    "description": "ダイアログを閉じて、修正した箇所をメールの画面で確認するボタン"
+  },
   "dialogSend": {
     "message": "送信",
     "description": "確認ダイアログの送信ボタン"
@@ -148,7 +204,7 @@
     "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
   },
   "optionsTitle": {
-    "message": "Gmail 送信前チェック（仮）の設定",
+    "message": "Send Check for Gmail の設定",
     "description": "設定画面のタイトル"
   },
   "optionsReloadTip": {
@@ -214,6 +270,42 @@
   "optionsDriveLinks": {
     "message": "本文に Google ドライブのリンクがあれば、添付ありとみなす",
     "description": "ドライブのリンクを添付とみなすチェックボックス"
+  },
+  "optionsSectionAi": {
+    "message": "AI による誤字・脱字チェック",
+    "description": "設定画面の、AI による誤字・脱字チェックの見出し"
+  },
+  "optionsAiEnabled": {
+    "message": "送信前に、AI で誤字・脱字の候補を調べる",
+    "description": "AI による誤字・脱字チェックを有効にするチェックボックス"
+  },
+  "optionsAiHelp": {
+    "message": "Chrome に内蔵された AI（Gemini Nano）を使います。処理はこの端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金はかかりません。使うには、空き容量 22GB 以上などの条件を満たす端末と、モデルのダウンロード（初回のみ）が必要です。結果は確認ダイアログを開いた後に表示され、結果を待たずに送信できます。",
+    "description": "AI による誤字・脱字チェックの説明"
+  },
+  "optionsAiStatusUnavailable": {
+    "message": "AI の状態：この端末または Chrome では使えません。",
+    "description": "AI のモデルが使えないときの表示"
+  },
+  "optionsAiStatusDownloadable": {
+    "message": "AI の状態：モデルのダウンロードが必要です。",
+    "description": "AI のモデルが未ダウンロードのときの表示"
+  },
+  "optionsAiStatusDownloading": {
+    "message": "AI の状態：モデルをダウンロードしています（$1%）。",
+    "description": "AI のモデルをダウンロード中の表示。$1 は進み具合"
+  },
+  "optionsAiStatusAvailable": {
+    "message": "AI の状態：使えます。",
+    "description": "AI のモデルが使えるときの表示"
+  },
+  "optionsAiDownload": {
+    "message": "モデルをダウンロード",
+    "description": "AI のモデルをダウンロードするボタン"
+  },
+  "optionsAiDownloadFailed": {
+    "message": "モデルをダウンロードできませんでした。空き容量と通信環境を確認して、もう一度お試しください。",
+    "description": "AI のモデルのダウンロードに失敗したときの表示"
   },
   "optionsSectionLevels": {
     "message": "警告する項目",

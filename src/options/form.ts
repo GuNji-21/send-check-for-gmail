@@ -23,6 +23,7 @@ export interface OptionsFormValues {
   readonly skipConfirmationEnabled: boolean;
   readonly attachmentKeywords: string;
   readonly treatDriveLinksAsAttachment: boolean;
+  readonly aiTypoCheckEnabled: boolean;
   readonly warningLevels: Readonly<Record<DetectorId, WarningLevel>>;
 }
 
@@ -43,6 +44,7 @@ export function toFormValues(settings: Settings): OptionsFormValues {
     skipConfirmationEnabled: settings.skipConfirmationEnabled,
     attachmentKeywords: lines(settings.attachmentKeywords),
     treatDriveLinksAsAttachment: settings.treatDriveLinksAsAttachment,
+    aiTypoCheckEnabled: settings.aiTypoCheckEnabled,
     warningLevels: { ...settings.warningLevels },
   };
 }
@@ -85,6 +87,7 @@ export function parseFormValues(values: OptionsFormValues): ParseResult {
     ) as Record<DetectorId, WarningLevel>,
     attachmentKeywords: parseLines(values.attachmentKeywords),
     treatDriveLinksAsAttachment: values.treatDriveLinksAsAttachment,
+    aiTypoCheckEnabled: values.aiTypoCheckEnabled,
   };
 
   return invalid.length > 0 ? { ok: false, invalid } : { ok: true, settings };

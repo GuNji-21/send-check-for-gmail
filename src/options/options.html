@@ -5,208 +5,358 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- タイトル・文言は options.ts が _locales（data-i18n のキー）から差し込む -->
     <title></title>
+    <!--
+      見た目の決まり（確認ダイアログ src/ui/dialog/styles.ts と同じ世界にする）：
+      - 地は #0D1117 の暗い色、文字は白。設定画面は背後に透かすものが無いので、半透明やぼかしは使わない
+      - 書体は BIZ UDP ゴシック。ドメイン・アドレスなどを入力する欄は等幅の書体
+        （外部からフォントは読み込まない。端末に入っている書体だけを使う）
+      - 意味を持つ色は2つだけ。黄色は「知らせ・注意」、赤は「削除など取り消せない操作」
+      - 枠で囲んだ箱を並べず、細い区切り線と「見出しを左、内容を右」の並びで見せる
+    -->
     <style>
+      :root {
+        --ground: #0d1117;
+        --ink: #ffffff;
+        --ink-soft: rgba(255, 255, 255, 0.72);
+        --rule: rgba(255, 255, 255, 0.16);
+        --wash: rgba(255, 255, 255, 0.06);
+        --edge: rgba(255, 255, 255, 0.3);
+        --notice: #f9f1a5;
+        --danger: #ff9a90;
+        --ui: 'BIZ UDPGothic', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
+        --data: 'Cascadia Mono', Consolas, 'SF Mono', Menlo, 'BIZ UDGothic', monospace;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+      }
       body {
         margin: 0;
-        background: #f6f8fc;
-        color: #1f1f1f;
-        font:
-          14px/1.6 system-ui,
-          -apple-system,
-          'Segoe UI',
-          'Hiragino Sans',
-          'Yu Gothic UI',
-          Meiryo,
-          sans-serif;
+        background: var(--ground);
+        color: var(--ink);
+        font: 14px/1.7 var(--ui);
+        font-feature-settings: 'palt';
+      }
+      ::selection {
+        background: rgba(255, 255, 255, 0.28);
+        color: #fff;
       }
       main {
-        max-width: 720px;
+        max-width: 860px;
         margin: 0 auto;
-        padding: 24px 16px 96px;
+        padding: 40px 32px 120px;
       }
       h1 {
+        margin: 0 0 28px;
         font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
       }
+
+      /* 知らせ（インストール直後の再読み込み、送信取り消しの案内） */
+      .notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        max-width: 62ch;
+        margin: 0;
+        color: var(--notice);
+      }
+      .notice svg {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        margin-top: 4px;
+      }
+      .closing {
+        margin-top: 28px;
+        padding-top: 28px;
+        border-top: 1px solid var(--rule);
+      }
+      .closing .notice {
+        color: var(--ink-soft);
+      }
+
+      /* 見出しを左の列、内容を右の列に置く */
       section {
-        margin-top: 20px;
-        padding: 16px 20px;
-        border-radius: 12px;
-        background: #fff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        display: grid;
+        grid-template-columns: 11em minmax(0, 1fr);
+        column-gap: 32px;
+        margin-top: 28px;
+        padding-top: 28px;
+        border-top: 1px solid var(--rule);
       }
       h2 {
-        margin: 0 0 8px;
-        font-size: 16px;
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
       }
+      .content > :first-child {
+        margin-top: 0;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 28px 20px 120px;
+        }
+        section {
+          grid-template-columns: minmax(0, 1fr);
+          row-gap: 12px;
+        }
+      }
+
       label.field {
         display: block;
-        margin-top: 12px;
-        font-weight: 600;
+        margin-top: 20px;
+        font-weight: 700;
       }
       textarea {
-        box-sizing: border-box;
         display: block;
         width: 100%;
-        margin-top: 4px;
-        padding: 8px;
-        border: 1px solid #747775;
-        border-radius: 6px;
-        font: inherit;
-        font-weight: 400;
+        margin-top: 6px;
+        padding: 8px 10px;
+        border: 1px solid var(--edge);
+        border-radius: 4px;
+        background: var(--wash);
+        color: var(--ink);
+        font: 13px/1.7 var(--data);
         resize: vertical;
+        transition: border-color 120ms ease-out;
+      }
+      textarea:hover {
+        border-color: rgba(255, 255, 255, 0.5);
       }
       .help {
-        margin: 4px 0 0;
-        color: #5f6368;
-        font-size: 12px;
+        max-width: 62ch;
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        font-size: 13px;
       }
       label.check {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 12px;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      td {
-        padding: 6px 0;
-        border-top: 1px solid #e0e0e0;
-      }
-      td:last-child {
-        text-align: right;
-      }
-      select {
+        align-items: flex-start;
+        gap: 10px;
+        margin: 14px -8px 0;
         padding: 4px 8px;
-        font: inherit;
-      }
-      button {
-        padding: 8px 20px;
-        border: 1px solid #747775;
-        border-radius: 999px;
-        background: #fff;
-        color: #0b57d0;
-        font: inherit;
-        font-weight: 600;
+        border-radius: 4px;
         cursor: pointer;
       }
+      label.check:hover {
+        background: var(--wash);
+      }
+      label.check:has(input:disabled) {
+        color: var(--ink-soft);
+        cursor: not-allowed;
+      }
+      input[type='checkbox'] {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        margin: 4px 0 0;
+        accent-color: #ffffff;
+        cursor: inherit;
+      }
+      #warningLevels label.check {
+        margin-top: 2px;
+      }
+      #warningLevels label.check:first-child {
+        margin-top: 10px;
+      }
+      .state {
+        margin: 14px 0 0;
+        font-variant-numeric: tabular-nums;
+      }
+
+      button {
+        min-height: 36px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 120ms ease-out;
+      }
+      button:hover {
+        background: var(--wash);
+      }
+      button:disabled {
+        border-color: transparent;
+        background: rgba(255, 255, 255, 0.14);
+        color: rgba(255, 255, 255, 0.45);
+        cursor: not-allowed;
+      }
+      /* 主となる操作は白の塗り（色ではなく明るさで目立たせる） */
       button.primary {
-        border-color: #0b57d0;
-        background: #0b57d0;
-        color: #fff;
+        min-width: 96px;
+        border-color: #ffffff;
+        background: #ffffff;
+        color: var(--ground);
+      }
+      button.primary:hover {
+        background: rgba(255, 255, 255, 0.86);
       }
       button.danger {
-        border-color: #b3261e;
-        color: #b3261e;
+        border-color: var(--danger);
+        color: var(--danger);
       }
+      .content > button {
+        margin-top: 12px;
+      }
+      button:focus-visible,
+      textarea:focus-visible,
+      input:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* 保存の操作は、どこまでスクロールしていても届くように下に固定する */
       .bar {
         position: fixed;
         right: 0;
         bottom: 0;
         left: 0;
+        border-top: 1px solid var(--rule);
+        background: var(--ground);
+      }
+      .bar-inner {
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 16px;
-        padding: 12px 16px;
-        border-top: 1px solid #e0e0e0;
-        background: #fff;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 12px 32px;
       }
       .status {
-        min-height: 1.6em;
+        flex: 1;
+        min-width: 0;
+        min-height: 1.7em;
+        color: var(--ink-soft);
+        font-size: 13px;
       }
       .status.error {
-        color: #b3261e;
-        font-weight: 600;
-      }
-      .tip.reload {
-        margin-top: 0;
-        background: #fff8e6;
-        color: #7a4f01;
-        font-weight: 600;
-      }
-      .tip {
-        margin-top: 20px;
-        padding: 12px 16px;
-        border-radius: 8px;
-        background: #e8f0fe;
-        color: #174ea6;
+        color: var(--danger);
+        font-weight: 700;
       }
     </style>
   </head>
   <body>
     <main>
       <h1 data-i18n="optionsTitle"></h1>
-      <p class="tip reload" role="note" data-i18n="optionsReloadTip"></p>
+
+      <p class="notice" role="note">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 1.9 14.6 13.6H1.4L8 1.9Z" fill="#f9f1a5" />
+          <path
+            d="M8 6.3v3.4M8 11.5v.1"
+            fill="none"
+            stroke="#0d1117"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+        <span data-i18n="optionsReloadTip"></span>
+      </p>
 
       <section>
         <h2 data-i18n="optionsSectionRecipients"></h2>
-        <p class="help" data-i18n="optionsOnePerLine"></p>
+        <div class="content">
+          <p class="help" data-i18n="optionsOnePerLine"></p>
 
-        <label class="field">
-          <span data-i18n="optionsInternalDomains"></span>
-          <textarea id="internalDomains" rows="3" spellcheck="false"></textarea>
-        </label>
-        <p class="help" data-i18n="optionsInternalDomainsHelp"></p>
-        <label class="field">
-          <span data-i18n="optionsInternalAddresses"></span>
-          <textarea id="internalAddresses" rows="3" spellcheck="false"></textarea>
-        </label>
+          <label class="field">
+            <span data-i18n="optionsInternalDomains"></span>
+            <textarea id="internalDomains" rows="3" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsInternalDomainsHelp"></p>
+          <label class="field">
+            <span data-i18n="optionsInternalAddresses"></span>
+            <textarea id="internalAddresses" rows="3" spellcheck="false"></textarea>
+          </label>
 
-        <label class="field">
-          <span data-i18n="optionsCautionDomains"></span>
-          <textarea id="cautionDomains" rows="3" spellcheck="false"></textarea>
-        </label>
-        <label class="field">
-          <span data-i18n="optionsCautionAddresses"></span>
-          <textarea id="cautionAddresses" rows="3" spellcheck="false"></textarea>
-        </label>
-        <p class="help" data-i18n="optionsCautionHelp"></p>
+          <label class="field">
+            <span data-i18n="optionsCautionDomains"></span>
+            <textarea id="cautionDomains" rows="3" spellcheck="false"></textarea>
+          </label>
+          <label class="field">
+            <span data-i18n="optionsCautionAddresses"></span>
+            <textarea id="cautionAddresses" rows="3" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsCautionHelp"></p>
 
-        <label class="check">
-          <input id="skipConfirmationEnabled" type="checkbox" />
-          <span data-i18n="optionsSkipEnabled"></span>
-        </label>
-        <label class="field">
-          <span data-i18n="optionsSkipAddresses"></span>
-          <textarea id="skipAddresses" rows="3" spellcheck="false"></textarea>
-        </label>
-        <p class="help" data-i18n="optionsSkipHelp"></p>
+          <label class="check">
+            <input id="skipConfirmationEnabled" type="checkbox" />
+            <span data-i18n="optionsSkipEnabled"></span>
+          </label>
+          <label class="field">
+            <span data-i18n="optionsSkipAddresses"></span>
+            <textarea id="skipAddresses" rows="3" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsSkipHelp"></p>
 
-        <p class="help" data-i18n="optionsFreemailNote"></p>
+          <p class="help" data-i18n="optionsFreemailNote"></p>
+        </div>
       </section>
 
       <section>
         <h2 data-i18n="optionsSectionAttachment"></h2>
-        <label class="field">
-          <span data-i18n="optionsAttachmentKeywords"></span>
-          <textarea id="attachmentKeywords" rows="8" spellcheck="false"></textarea>
-        </label>
-        <p class="help" data-i18n="optionsOnePerLine"></p>
-        <label class="check">
-          <input id="treatDriveLinksAsAttachment" type="checkbox" />
-          <span data-i18n="optionsDriveLinks"></span>
-        </label>
+        <div class="content">
+          <label class="field">
+            <span data-i18n="optionsAttachmentKeywords"></span>
+            <textarea id="attachmentKeywords" rows="8" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsOnePerLine"></p>
+          <label class="check">
+            <input id="treatDriveLinksAsAttachment" type="checkbox" />
+            <span data-i18n="optionsDriveLinks"></span>
+          </label>
+        </div>
       </section>
 
       <section>
         <h2 data-i18n="optionsSectionLevels"></h2>
-        <p class="help" data-i18n="optionsLevelsHelp"></p>
-        <div id="warningLevels"></div>
+        <div class="content">
+          <p class="help" data-i18n="optionsLevelsHelp"></p>
+          <div id="warningLevels"></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="optionsSectionAi"></h2>
+        <div class="content">
+          <p class="help" data-i18n="optionsAiHelp"></p>
+          <label class="check">
+            <input id="aiTypoCheckEnabled" type="checkbox" />
+            <span data-i18n="optionsAiEnabled"></span>
+          </label>
+          <p id="aiStatus" class="state" role="status" aria-live="polite"></p>
+          <button id="aiDownload" type="button" data-i18n="optionsAiDownload" hidden></button>
+        </div>
       </section>
 
       <section>
         <h2 data-i18n="optionsSectionData"></h2>
-        <button id="clear" type="button" class="danger" data-i18n="optionsClearData"></button>
+        <div class="content">
+          <button id="clear" type="button" class="danger" data-i18n="optionsClearData"></button>
+        </div>
       </section>
 
-      <p class="tip" data-i18n="optionsUndoSendTip"></p>
+      <div class="closing">
+        <p class="notice" data-i18n="optionsUndoSendTip"></p>
+      </div>
     </main>
 
     <div class="bar">
-      <span id="status" class="status" role="status" aria-live="polite"></span>
-      <button id="save" type="button" class="primary" data-i18n="optionsSave"></button>
+      <div class="bar-inner">
+        <span id="status" class="status" role="status" aria-live="polite"></span>
+        <button id="save" type="button" class="primary" data-i18n="optionsSave"></button>
+      </div>
     </div>
     <script src="options.js"></script>
   </body>

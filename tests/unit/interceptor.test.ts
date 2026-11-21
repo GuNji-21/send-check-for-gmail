@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import jaMessages from '../../public/_locales/ja/messages.json';
 import { readFixture } from '../../scripts/lib/fixture-files.mjs';
 import { type InterceptorSettings, startInterceptor } from '../../src/content/interceptor';
+import type { TypoCheckResult } from '../../src/core/typo/typo-check';
 import { findComposeWindows, findSendButton } from '../../src/gmail/compose';
+import { clearMessageCache } from '../../src/shared/i18n';
 import { DEFAULT_SETTINGS } from '../../src/storage/settings';
 import { isDialogOpen } from '../../src/ui/dialog/dialog';
 import { rules } from './helpers';
@@ -11,6 +14,8 @@ import { rules } from './helpers';
 // 採取した Gmail の HTML（匿名化済み）の上で確かめる。
 // 「Gmail の送信処理」は、送信ボタンに届いたイベントを数えることで代用している。
 
+const messages: Record<string, { message: string } | undefined> = jaMessages;
+
 let stop: () => void = () => undefined;
 let compose: HTMLElement;
 let sendButton: HTMLElement;
@@ -18,6 +23,9 @@ let sendButton: HTMLElement;
 let delivered: string[];
 let settings: InterceptorSettings;
 let getSettings: () => Promise<InterceptorSettings>;
+/** AI による誤字・脱字チェックの代用（テストごとに差し替える） */
+let checkTypos: (signal: AbortSignal) => Promise<TypoCheckResult>;
+let typoCalls: number;
 
 /** 件名の入力欄に値を入れる（入力値は HTML に残らないため、テストで入れる） */
 function setSubject(value: string): void {
@@ -40,6 +48,10 @@ function setUp(fixture = 'compose-new--attachment.ja.20261120.html'): void {
   stop = startInterceptor({
     view: window,
     getSettings: () => getSettings(),
+    checkTypos: (_snapshot, signal) => {
+      typoCalls++;
+      return checkTypos(signal);
+    },
     now: () => new Date(2026, 10, 20, 10, 0, 0),
   });
 }
@@ -81,16 +93,21 @@ async function settle(): Promise<void> {
 }
 
 beforeEach(() => {
-  // 文言は「キー名」または「キー名:差し込み値」として返す
+  // 文言は「キー名」または「キー名:差し込み値」として返す（差し込みの数は、実際の文言に合わせる）
+  clearMessageCache();
   vi.stubGlobal('chrome', {
     i18n: {
-      getMessage: (name: string, substitutions?: string[]) =>
-        substitutions === undefined ? name : `${name}:${substitutions.join('|')}`,
+      getMessage: (name: string, substitutions: string[] = []) => {
+        const count = new Set(messages[name]?.message.match(/\$\d/g) ?? []).size;
+        return count === 0 ? name : `${name}:${substitutions.slice(0, count).join('|')}`;
+      },
     },
   });
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   settings = { ...DEFAULT_SETTINGS };
   getSettings = () => Promise.resolve(settings);
+  typoCalls = 0;
+  checkTypos = () => Promise.resolve({ status: 'ok', candidates: [] });
 });
 
 afterEach(() => {
@@ -497,5 +514,287 @@ describe('失敗時の動作', () => {
     stop();
     userClick(sendButton);
     expect(delivered).toEqual(['mousedown', 'mouseup', 'click']);
+  });
+});
+
+describe('AI による誤字・脱字チェック', () => {
+  const typoText = (): string => dialogRoot().querySelector('section.typos')?.textContent ?? '';
+
+  it('初期設定（無効）では、欄を出さず、AI も呼ばない', async () => {
+    setUp();
+    userClick(sendButton);
+    await settle();
+    expect(dialogRoot().querySelector('section.typos')).toBeNull();
+    expect(typoCalls).toBe(0);
+  });
+
+  it('有効な場合は、ダイアログをすぐに出して「確認中」を表示し、結果が届いたら候補を表示する', async () => {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    let deliver: (result: TypoCheckResult) => void = () => undefined;
+    checkTypos = () =>
+      new Promise((resolve) => {
+        deliver = resolve;
+      });
+    setUp();
+    userClick(sendButton);
+    await settle();
+    // 結果を待たずにダイアログが出ている
+    expect(isDialogOpen(document)).toBe(true);
+    expect(typoText()).toContain('dialogTypoChecking');
+
+    deliver({
+      status: 'ok',
+      candidates: [{ wrong: '資料をを', suggestion: '資料を', reason: '助詞の重複' }],
+    });
+    await settle();
+    expect(typoText()).not.toContain('dialogTypoChecking');
+    const item = dialogRoot().querySelector('.typo');
+    expect(item?.querySelector('.wrong')?.textContent).toBe('資料をを');
+    expect(item?.querySelector('.suggestion')?.textContent).toBe('資料を');
+    expect(item?.querySelector('.reason')?.textContent).toBe('助詞の重複');
+  });
+
+  it('結果が届く前でも、宛先と添付をチェックすれば送信できる', async () => {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    checkTypos = () => new Promise(() => undefined);
+    setUp();
+    userClick(sendButton);
+    await settle();
+    checkAll();
+    expect(buttons()[1]?.disabled).toBe(false);
+    buttons()[1]?.click();
+    await settle();
+    expect(delivered).toEqual(['mousedown', 'mouseup', 'click']);
+  });
+
+  it('候補が無い・失敗した・モデルが使えない場合は、その旨を表示する（送信は止めない）', async () => {
+    const cases: readonly (readonly [TypoCheckResult, string])[] = [
+      [{ status: 'ok', candidates: [] }, 'dialogTypoNone'],
+      [{ status: 'failed' }, 'dialogTypoFailed'],
+      [{ status: 'not-ready' }, 'dialogTypoNotReady'],
+    ];
+    for (const [result, message] of cases) {
+      settings = { ...settings, aiTypoCheckEnabled: true };
+      checkTypos = () => Promise.resolve(result);
+      setUp();
+      userClick(sendButton);
+      await settle();
+      expect(typoText(), message).toContain(message);
+      checkAll();
+      expect(buttons()[1]?.disabled, message).toBe(false);
+      buttons()[0]?.click();
+      await settle();
+      stop();
+    }
+  });
+
+  it('AI の呼び出しが例外になっても、送信は止めず「実行できませんでした」と表示する', async () => {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    checkTypos = () => Promise.reject(new Error('model crashed'));
+    setUp();
+    userClick(sendButton);
+    await settle();
+    // 「チェックできませんでした」（送信を止めるエラー）にはしない
+    expect(dialogRoot().querySelector('.error')).toBeNull();
+    expect(typoText()).toContain('dialogTypoFailed');
+    checkAll();
+    buttons()[1]?.click();
+    await settle();
+    expect(delivered).toEqual(['mousedown', 'mouseup', 'click']);
+  });
+
+  it('ダイアログが閉じられたら（キャンセル・送信のどちらでも）、解析を中止する', async () => {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    const signals: AbortSignal[] = [];
+    checkTypos = (signal) => {
+      signals.push(signal);
+      return new Promise(() => undefined);
+    };
+    setUp();
+    userClick(sendButton);
+    await settle();
+    expect(signals[0]?.aborted).toBe(false);
+    buttons()[0]?.click();
+    await settle();
+    expect(signals[0]?.aborted).toBe(true);
+  });
+
+  it('候補の文字は HTML として解釈しない', async () => {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    checkTypos = () =>
+      Promise.resolve({
+        status: 'ok',
+        candidates: [{ wrong: '<img src=x>', suggestion: '<b>x</b>', reason: '<i>r</i>' }],
+      });
+    setUp();
+    userClick(sendButton);
+    await settle();
+    expect(
+      dialogRoot().querySelector('section.typos img, section.typos b, section.typos i'),
+    ).toBeNull();
+    expect(typoText()).toContain('<img src=x>');
+  });
+});
+
+describe('誤字・脱字の修正案をメールに反映する', () => {
+  const candidate = { wrong: '資料をを', suggestion: '資料を', reason: '助詞の重複' };
+  const bodyText = (): string => compose.querySelector('[g_editable="true"]')?.textContent ?? '';
+
+  async function openWith(bodyHtml: string): Promise<void> {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    checkTypos = () => Promise.resolve({ status: 'ok', candidates: [candidate] });
+    setUp();
+    const body = compose.querySelector('[g_editable="true"]');
+    if (body === null) throw new Error('body not found');
+    body.innerHTML = bodyHtml;
+    userClick(sendButton);
+    await settle();
+  }
+
+  it('「修正する」を押すと、メールの本文を書き換え、ダイアログの本文の表示も更新する', async () => {
+    await openWith('<div>資料をを送付いたします。</div>');
+    const fix = dialogRoot().querySelector<HTMLButtonElement>('button.fix');
+    expect(fix?.textContent).toBe('dialogTypoApply');
+    fix?.click();
+
+    expect(bodyText()).toBe('資料を送付いたします。');
+    const item = dialogRoot().querySelector('.typo');
+    expect(item?.classList.contains('applied')).toBe(true);
+    expect(item?.querySelector('.fix-result')?.textContent).toBe('dialogTypoApplied');
+    expect(item?.querySelector('button.fix')).toBeNull();
+    // 「修正しました」だけでなく、メール本体から読み直した修正後の行を、書き換えた部分を強調して見せる
+    expect(item?.querySelector('.fixed-line')?.textContent).toBe(
+      'dialogTypoFixedLine資料を送付いたします。',
+    );
+    expect(item?.querySelector('.fixed-line mark')?.textContent).toBe('資料を');
+    const fields = [...dialogRoot().querySelectorAll('section.field')].map((f) => f.textContent);
+    expect(fields.join('\n')).toContain('資料を送付いたします。');
+    expect(fields.join('\n')).not.toContain('資料をを');
+  });
+
+  it('修正した後に送信すると、書き換えた内容のまま送信ボタンが押される', async () => {
+    await openWith('<div>資料をを送付いたします。</div>');
+    dialogRoot().querySelector<HTMLButtonElement>('button.fix')?.click();
+    checkAll();
+    buttons()[1]?.click();
+    await settle();
+    expect(delivered).toEqual(['mousedown', 'mouseup', 'click']);
+    expect(bodyText()).toBe('資料を送付いたします。');
+  });
+
+  it('該当箇所が複数あるなど、反映できない場合は、書き換えずにその旨を表示する', async () => {
+    await openWith('<div>資料をを送ります。資料をを送ります。</div>');
+    dialogRoot().querySelector<HTMLButtonElement>('button.fix')?.click();
+    const item = dialogRoot().querySelector('.typo');
+    expect(item?.classList.contains('unapplied')).toBe(true);
+    expect(item?.querySelector('.fix-result')?.textContent).toBe('dialogTypoApplyAmbiguous');
+    expect(bodyText()).toBe('資料をを送ります。資料をを送ります。');
+  });
+
+  it('該当箇所が見つからない場合（確認中に本文が変わったなど）は、その旨を表示する', async () => {
+    await openWith('<div>資料をを送付いたします。</div>');
+    const body = compose.querySelector('[g_editable="true"]');
+    if (body === null) throw new Error('body not found');
+    body.textContent = '別の内容に変わった本文';
+    dialogRoot().querySelector<HTMLButtonElement>('button.fix')?.click();
+    expect(dialogRoot().querySelector('.fix-result')?.textContent).toBe('dialogTypoApplyFailed');
+    expect(bodyText()).toBe('別の内容に変わった本文');
+  });
+
+  it('文字のかたまりが分かれている本文でも、修正を反映できる', async () => {
+    await openWith('<div></div>');
+    // ダイアログを開いた後で本文を作ると候補と合わなくなるため、開き直す
+    dialogRoot().querySelector<HTMLButtonElement>('footer button')?.click();
+    await settle();
+    const line = compose.querySelector('[g_editable="true"] div');
+    if (line === null) throw new Error('line not found');
+    line.append('資料を', 'を送付いたします。');
+    userClick(sendButton);
+    await settle();
+    dialogRoot().querySelector<HTMLButtonElement>('button.fix')?.click();
+    expect(dialogRoot().querySelector('.fix-result')?.textContent).toBe('dialogTypoApplied');
+    expect(bodyText()).toBe('資料を送付いたします。');
+  });
+});
+
+describe('修正の確認と取り消し', () => {
+  const candidate = { wrong: '資料をを', suggestion: '資料を', reason: '助詞の重複' };
+  const bodyText = (): string => compose.querySelector('[g_editable="true"]')?.textContent ?? '';
+  const typoButton = (name: string): HTMLButtonElement | null =>
+    dialogRoot().querySelector<HTMLButtonElement>(`button.${name}`);
+
+  async function fixed(bodyHtml = '<div>先日の資料をを送付いたします。</div>'): Promise<void> {
+    settings = { ...settings, aiTypoCheckEnabled: true };
+    checkTypos = () => Promise.resolve({ status: 'ok', candidates: [candidate] });
+    setUp();
+    const body = compose.querySelector('[g_editable="true"]');
+    if (body === null) throw new Error('body not found');
+    body.innerHTML = bodyHtml;
+    userClick(sendButton);
+    await settle();
+    typoButton('fix')?.click();
+  }
+
+  it('修正した後は「元に戻す」と「メールで確認」を出す', async () => {
+    await fixed();
+    expect(typoButton('undo')?.textContent).toBe('dialogTypoUndo');
+    expect(typoButton('review')?.textContent).toBe('dialogTypoReview');
+  });
+
+  it('「元に戻す」を押すと、メールとダイアログの表示が元に戻り、もう一度修正できる', async () => {
+    await fixed();
+    expect(bodyText()).toBe('先日の資料を送付いたします。');
+
+    typoButton('undo')?.click();
+    expect(bodyText()).toBe('先日の資料をを送付いたします。');
+    const item = dialogRoot().querySelector('.typo');
+    expect(item?.classList.contains('applied')).toBe(false);
+    expect(item?.querySelector('.fixed-line')).toBeNull();
+    const fields = [...dialogRoot().querySelectorAll('section.field')].map((f) => f.textContent);
+    expect(fields.join('\n')).toContain('資料をを送付');
+
+    typoButton('fix')?.click();
+    expect(bodyText()).toBe('先日の資料を送付いたします。');
+  });
+
+  it('修正した後にその箇所が変わっていたら、元に戻さずにその旨を表示する', async () => {
+    await fixed();
+    const body = compose.querySelector('[g_editable="true"]');
+    if (body === null) throw new Error('body not found');
+    body.textContent = '別の内容に変わった本文';
+    typoButton('undo')?.click();
+    expect(bodyText()).toBe('別の内容に変わった本文');
+    expect(dialogRoot().querySelector('.fix-result')?.textContent).toBe('dialogTypoUndoFailed');
+  });
+
+  it('「メールで確認」を押すと、送信せずにダイアログを閉じ、修正した箇所をメールの画面で選択する', async () => {
+    vi.useFakeTimers();
+    try {
+      await fixed();
+      typoButton('review')?.click();
+      await vi.runAllTimersAsync();
+      expect(isDialogOpen(document)).toBe(false);
+      expect(delivered).toEqual([]);
+      // 修正は残したまま、該当箇所が選択されている
+      expect(bodyText()).toBe('先日の資料を送付いたします。');
+      expect(document.getSelection()?.toString()).toBe('資料を');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('「メールで確認」の後で送信ボタンを押すと、もう一度確認ダイアログが出る', async () => {
+    vi.useFakeTimers();
+    try {
+      await fixed();
+      typoButton('review')?.click();
+      await vi.runAllTimersAsync();
+    } finally {
+      vi.useRealTimers();
+    }
+    userClick(sendButton);
+    await settle();
+    expect(isDialogOpen(document)).toBe(true);
+    expect(delivered).toEqual([]);
   });
 });

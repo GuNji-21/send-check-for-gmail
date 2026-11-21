@@ -19,8 +19,9 @@
  */
 
 import { shouldSkipConfirmation } from '../core/classify';
-import { type ConfirmationSettings, buildConfirmationModel } from '../core/confirmation';
-import type { ClassificationRules } from '../core/types';
+import { type ConfirmationSettings, buildConfirmationModel, previewOf } from '../core/confirmation';
+import type { TypoCheckResult } from '../core/typo/typo-check';
+import type { ClassificationRules, ComposeSnapshot } from '../core/types';
 import {
   type SendTarget,
   activateElement,
@@ -30,6 +31,7 @@ import {
   findSendTargetForKey,
   isUnrecognizedCompose,
   readComposeSnapshot,
+  replaceComposeText,
 } from '../gmail/compose';
 import { showCheckFailedDialog, showConfirmationDialog, showNotice } from '../ui/dialog/dialog';
 
@@ -46,6 +48,8 @@ export type SendTrigger =
 export interface InterceptorSettings extends ConfirmationSettings {
   readonly rules: ClassificationRules;
   readonly skipConfirmationEnabled: boolean;
+  /** AI による誤字・脱字チェックを行うか */
+  readonly aiTypoCheckEnabled: boolean;
 }
 
 export interface InterceptorOptions {
@@ -53,6 +57,14 @@ export interface InterceptorOptions {
   readonly view: Window;
   /** 設定を返す。読み込めない場合は reject する（その場合は送信を止める） */
   readonly getSettings: () => Promise<InterceptorSettings>;
+  /**
+   * AI による誤字・脱字チェック。設定で有効な場合に、確認ダイアログの表示と並行して呼ぶ。
+   * 結果は後からダイアログに差し込む（結果を待たずに送信できる）。失敗しても送信は止めない。
+   */
+  readonly checkTypos?: (
+    snapshot: ComposeSnapshot,
+    signal: AbortSignal,
+  ) => Promise<TypoCheckResult>;
   /** 現在時刻（テスト用に差し替えられるようにしている） */
   readonly now?: () => Date;
 }
@@ -78,7 +90,7 @@ function block(event: Event): void {
  * 送信操作の捕捉を開始する。戻り値の関数を呼ぶと捕捉をやめる。
  */
 export function startInterceptor(options: InterceptorOptions): () => void {
-  const { view, getSettings } = options;
+  const { view, getSettings, checkTypos } = options;
   const now = options.now ?? ((): Date => new Date());
   const doc = view.document;
 
@@ -112,11 +124,73 @@ export function startInterceptor(options: InterceptorOptions): () => void {
       );
       if (!skip) {
         const model = buildConfirmationModel(snapshot, settings);
-        const result = await showConfirmationDialog(
-          doc,
-          model,
-          trigger === 'schedule' ? 'schedule' : 'send',
-        );
+        // AI の解析は時間がかかるため、ダイアログを先に出し、結果は後から差し込む。
+        // ダイアログが閉じられたら（送信・キャンセルのどちらでも）、解析を中止する
+        const typoAbort = new AbortController();
+        const typoCheck =
+          settings.aiTypoCheckEnabled && checkTypos !== undefined
+            ? checkTypos(snapshot, typoAbort.signal).catch((error: unknown): TypoCheckResult => {
+                console.error('[gmail-send-guard] typo check failed', error);
+                return { status: 'failed' };
+              })
+            : undefined;
+        let result;
+        try {
+          result = await showConfirmationDialog(
+            doc,
+            model,
+            trigger === 'schedule' ? 'schedule' : 'send',
+            typoCheck === undefined
+              ? {}
+              : {
+                  typoCheck,
+                  // 修正案をメールに反映する。反映できたら、書き換えた行と、
+                  // 元に戻す処理・メールの画面で見せる処理を返す。
+                  // 反映できなかった場合は、その理由（複数ある、見つからない・画面を読めない）を返す
+                  applyFix: (candidate) => {
+                    const readMail = (): { subject: string; bodyPreview: string } => {
+                      const current = readComposeSnapshot(target.compose, now());
+                      return {
+                        subject: current.subject,
+                        bodyPreview: previewOf(current.bodyText),
+                      };
+                    };
+                    try {
+                      const outcome = replaceComposeText(
+                        target.compose,
+                        candidate.wrong,
+                        candidate.suggestion,
+                      );
+                      if (outcome.status !== 'applied') return outcome.status;
+                      return {
+                        ...readMail(),
+                        line: outcome.line,
+                        undo: () => {
+                          try {
+                            return outcome.undo() ? readMail() : null;
+                          } catch (error) {
+                            console.error('[gmail-send-guard] failed to undo the fix', error);
+                            return null;
+                          }
+                        },
+                        reveal: () => {
+                          try {
+                            outcome.reveal();
+                          } catch (error) {
+                            console.error('[gmail-send-guard] failed to reveal the fix', error);
+                          }
+                        },
+                      };
+                    } catch (error) {
+                      console.error('[gmail-send-guard] failed to apply the fix', error);
+                      return 'not-found';
+                    }
+                  },
+                },
+          );
+        } finally {
+          typoAbort.abort();
+        }
         if (result !== 'confirmed') return;
       }
       proceed(trigger, target);
