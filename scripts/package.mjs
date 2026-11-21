@@ -2,7 +2,7 @@
 //
 //   node scripts/package.mjs
 //
-// 出力：release/gmail-send-guard-v<version>.zip（version は dist/manifest.json から取得）
+// 出力：release/send-check-for-gmail-v<version>.zip（version は dist/manifest.json から取得）
 // 実行時の外部ライブラリを増やさないため、zip は Node.js 標準の zlib で自前生成する。
 
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
@@ -118,7 +118,7 @@ const files = await listFiles(distDir);
 const zip = await createZip(files);
 
 await mkdir(releaseDir, { recursive: true });
-const outPath = path.join(releaseDir, `gmail-send-guard-v${manifest.version}.zip`);
+const outPath = path.join(releaseDir, `send-check-for-gmail-v${manifest.version}.zip`);
 await writeFile(outPath, zip);
 
 console.log(

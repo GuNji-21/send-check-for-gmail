@@ -1,11 +1,11 @@
 {
   "extName": {
-    "message": "Send Check for Gmail",
-    "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）"
+    "message": "Send Check for Gmail™",
+    "description": "拡張機能の名前（Chrome Web Store・拡張機能一覧に表示）。Google の商標の決まりに合わせて for Gmail™ の形にしている"
   },
   "extDescription": {
-    "message": "送信前に宛先・本文・添付を確認し、誤送信を防ぐ拡張機能",
-    "description": "拡張機能の説明（Chrome Web Store・拡張機能一覧に表示）"
+    "message": "Gmail™ の送信前に、宛先・本文・添付を確認。添付漏れや誤字を知らせて、誤送信を防ぎます。",
+    "description": "拡張機能の短い説明（Chrome Web Store・拡張機能一覧に表示。132 文字以内）"
   },
   "errorCheckFailed": {
     "message": "チェックできませんでした。送信を止めています。",
