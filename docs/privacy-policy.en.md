@@ -2,7 +2,7 @@
 
 > **[DRAFT — REVIEW BEFORE PUBLISHING]** This page is a draft. Review its content, effective date and contact information before publishing on the Chrome Web Store.
 
-Applies to: the Chrome extension "Gmail Send Guard" (the "Extension")
+Applies to: the Chrome extension "Send Check for Gmail" (the "Extension")
 
 Last updated: <!-- TODO: fill in at publication -->
 
@@ -28,6 +28,7 @@ The Extension also handles the following:
 - Email content, recipients and contact information are processed only within your browser and are never sent to any external server.
 - The Extension does not communicate with any external server, including servers operated by the developer.
 - The Extension does not use the Gmail API.
+- The AI typo check (only when you turn it on) uses the AI built into Chrome (Gemini Nano) and runs on your device. Email content is never sent to any external AI service.
 
 ## 3. Storage
 

@@ -1,4 +1,4 @@
-# Gmail 送信前チェック（仮） / Gmail Send Guard
+# Send Check for Gmail
 
 Gmail の送信前に宛先・本文・添付を確認し、誤送信を防ぐ Chrome 拡張機能です。
 

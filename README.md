@@ -1,4 +1,4 @@
-# Gmail 送信前チェック（仮） / Gmail Send Guard
+# Send Check for Gmail
 
 [日本語](#日本語) | [English](#english)
 
@@ -40,17 +40,25 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 **自動検知**（項目ごとにオン・オフを選べます。初期設定はすべてオン）
 
-| 項目               | 検知する内容                                                               |
-| ------------------ | -------------------------------------------------------------------------- |
-| 複数の会社の混在   | 社外の宛先が2つ以上のドメインにまたがっている                              |
-| 件名が空           | 件名が入力されていない                                                     |
-| 添付漏れ           | 本文に「添付」「見積書」などのキーワードがあるのに、添付ファイルがない     |
-| 書き換え忘れの記号 | 〇〇、●●、XX、【 】、{name} などが件名・本文に残っている                   |
-| 日付と曜日の不一致 | 「11月13日（木）」のように、日付と曜日が合っていない。存在しない日付も検知 |
+| 項目               | 検知する内容                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| 複数の会社の混在   | 社外の宛先が2つ以上のドメインにまたがっている                                                                |
+| 件名が空           | 件名が入力されていない                                                                                       |
+| 添付漏れ           | 本文に「添付」「送付」「見積書」などのキーワードがあるのに、添付ファイルがない（相手への依頼の文などは除く） |
+| 書き換え忘れの記号 | 〇〇、●●、XX、【 】、{name} などが件名・本文に残っている                                                     |
+| 日付と曜日の不一致 | 「11月13日（木）」のように、日付と曜日が合っていない。存在しない日付も検知                                   |
 
 - 警告は表示するだけで、警告が出ていてもそのまま送信できます。
 - 返信・転送時の引用部分（過去のメール）は、検知の対象にしません。
 - 添付のキーワードは設定画面で編集できます。本文に Google ドライブ（drive.google.com／docs.google.com）のリンクがあれば添付ありとみなす設定もあります（初期設定はオン）。
+
+**AI による誤字・脱字チェック**（初期設定は無効）
+
+- Chrome に内蔵された AI（Gemini Nano）で、件名と本文の誤字・脱字の候補を調べ、確認ダイアログに「誤りの箇所 → 修正案」と理由を表示します。
+- 処理は端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金もかかりません。
+- 結果は確認ダイアログを開いた後に表示されます。結果を待たずに送信でき、解析に失敗しても送信は止まりません。
+- 候補ごとの「修正する」ボタンで、修正案をメールに反映できます（該当する箇所が1か所に決まる場合のみ）。反映後は、書き換えた行がその場に表示され、「元に戻す」で取り消したり、「メールで確認」で実際のメールの画面に戻って該当箇所を確かめたりできます。
+- 使うには、設定画面で有効にして、モデルをダウンロードします（初回のみ）。空き容量 22GB 以上、メモリ 16GB 以上または VRAM 4GB 超の GPU など、Chrome の定める端末の条件があります。対応していない端末では、設定画面にその旨が表示されます。
 
 **うまく動かないとき**
 
@@ -79,7 +87,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 **フェーズ3**
 
 - 誤字辞書の拡充
-- AI による校正と署名抽出の精度向上
+- AI による署名抽出の精度向上
 
 ### 開発環境の準備
 
@@ -176,6 +184,14 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 - Quoted text in replies and forwards is not checked.
 - Attachment keywords can be edited on the options page. A Google Drive link (drive.google.com / docs.google.com) in the body can be treated as an attachment (on by default).
 
+**AI typo check** (off by default)
+
+- Uses the AI built into Chrome (Gemini Nano) to look for possible typos in the subject and body, and shows "wrong text → suggestion" with a reason in the confirmation dialog.
+- Everything is processed on your device; the content of your email is never sent anywhere. It is free.
+- Results appear after the confirmation dialog opens. You can send without waiting, and a failed check never blocks sending.
+- Each candidate has a "Fix" button that applies the suggestion to your email (only when the text to fix can be identified in exactly one place). After a fix, the changed line is shown in place; "Undo" reverts it, and "See in email" closes the dialog and selects the fixed text in your email.
+- To use it, turn it on in the options page and download the model (once). Chrome's device requirements apply, such as 22 GB of free space and either 16 GB of RAM or a GPU with more than 4 GB of VRAM. On unsupported devices, the options page says so.
+
 **When something goes wrong**
 
 - If the extension hits an error or cannot read the Gmail screen, it stops the send and shows "The check could not be completed". A message is never sent without the check.
@@ -203,7 +219,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 **Phase 3**
 
 - Expanded typo dictionary
-- AI proofreading and more accurate signature extraction
+- More accurate signature extraction with AI
 
 ### Development setup
 
