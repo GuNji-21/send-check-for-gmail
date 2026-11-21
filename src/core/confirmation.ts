@@ -7,6 +7,7 @@
 
 import { classifyRecipient, companyKeyOf } from './classify';
 import { runDetectors } from './detectors/index';
+import type { LedgerInsight } from './ledger/ledger';
 import type {
   Attachment,
   ClassificationRules,
@@ -71,6 +72,7 @@ export function previewOf(bodyText: string): string {
 export function buildConfirmationModel(
   snapshot: ComposeSnapshot,
   settings: ConfirmationSettings,
+  ledger?: LedgerInsight,
 ): ConfirmationModel {
   const context = { rules: settings.rules, fromAddress: snapshot.fromAddress };
   const recipients: RecipientView[] = snapshot.recipients.map((recipient) => ({
@@ -94,6 +96,7 @@ export function buildConfirmationModel(
       rules: settings.rules,
       attachmentKeywords: settings.attachmentKeywords,
       treatDriveLinksAsAttachment: settings.treatDriveLinksAsAttachment,
+      ...(ledger === undefined ? {} : { ledger }),
     },
     settings.warningLevels,
   );

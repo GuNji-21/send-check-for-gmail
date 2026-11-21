@@ -203,6 +203,74 @@
     "message": "External recipients span $1 companies (domains): $2",
     "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
   },
+  "detectFirstTimeDomain": {
+    "message": "You have not sent to these domains before: $1 (check that it is not a look-alike domain)",
+    "description": "初めて送るドメインの検知結果。$1 はドメインの一覧"
+  },
+  "detectCcMissing": {
+    "message": "People you usually Cc on email to this recipient are missing this time: $1",
+    "description": "Cc 漏れの検知結果。$1 は入っていない人のアドレスの一覧"
+  },
+  "dialogLedgerUnavailable": {
+    "message": "The contact records could not be read, so \"first-time domain\" and \"missing Cc\" were not checked.",
+    "description": "連絡先の記録を読み込めなかったときに、確認ダイアログに出す注記"
+  },
+  "detectorNameFirstTimeDomain": {
+    "message": "First-time domain (needs contact records)",
+    "description": "検知項目の名前：初めて送るドメイン"
+  },
+  "detectorNameCcMissing": {
+    "message": "Missing Cc (needs contact records)",
+    "description": "検知項目の名前：Cc 漏れ"
+  },
+  "optionsSectionLedger": {
+    "message": "Contact records",
+    "description": "設定画面の、連絡先の記録の見出し"
+  },
+  "optionsLedgerHelp": {
+    "message": "Records the recipients of email you send (address, display name, how often they were in To or Cc, and the date of the last send) on this device. The records are used for the \"first-time domain\" and \"missing Cc\" checks. They are never sent anywhere. Email sent before you turn this on is not recorded.",
+    "description": "連絡先の記録の説明"
+  },
+  "optionsLedgerEnabled": {
+    "message": "Record the people I send email to",
+    "description": "連絡先の記録を有効にするチェックボックス"
+  },
+  "optionsLedgerRetention": {
+    "message": "How long to keep records (from the last send)",
+    "description": "連絡先の記録を残す期間の選択欄"
+  },
+  "optionsLedgerRetentionHalf": {
+    "message": "6 months",
+    "description": "保存期間の選択肢：6か月"
+  },
+  "optionsLedgerRetention1": {
+    "message": "1 year",
+    "description": "保存期間の選択肢：1年"
+  },
+  "optionsLedgerRetention2": {
+    "message": "2 years",
+    "description": "保存期間の選択肢：2年"
+  },
+  "optionsLedgerRetention5": {
+    "message": "5 years",
+    "description": "保存期間の選択肢：5年"
+  },
+  "optionsLedgerStats": {
+    "message": "Recorded contacts: $1",
+    "description": "記録している連絡先の件数。$1 は件数"
+  },
+  "optionsLedgerStatsFailed": {
+    "message": "The contact records could not be read.",
+    "description": "連絡先の記録の件数を読み込めなかったときの表示"
+  },
+  "optionsLedgerClear": {
+    "message": "Delete all contact records",
+    "description": "連絡先の記録を削除するボタン"
+  },
+  "optionsLedgerCleared": {
+    "message": "Contact records were deleted.",
+    "description": "連絡先の記録を削除したときの表示"
+  },
   "optionsTitle": {
     "message": "Send Check for Gmail Settings",
     "description": "設定画面のタイトル"

@@ -8,6 +8,7 @@
  * - 添付キーワードの編集、Google ドライブのリンクを添付ありとみなすか
  * - 検知項目ごとの警告のオン・オフ
  * - AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックの有効・無効、モデルの状態の表示とダウンロード
+ * - 連絡先の記録（フェーズ2）の有効・無効、保存期間、記録の件数の表示と削除
  * - 保存データの削除
  *
  * 画面文言は options.html に直接書かず、data-i18n 属性のキーで _locales から差し込む。
@@ -16,9 +17,11 @@
 import type { DetectorId, WarningLevel } from '../core/types';
 import { MESSAGE_KEYS, type MessageKey, t } from '../shared/i18n';
 import { type AiAvailability, downloadAiModel, getAiAvailability } from '../shared/language-model';
+import { clearLedger, getLedgerStats } from '../shared/ledger-client';
 import {
   DEFAULT_SETTINGS,
   DETECTOR_IDS,
+  LEDGER_RETENTION_CHOICES,
   type Settings,
   clearAllData,
   loadSettings,
@@ -32,6 +35,8 @@ const DETECTOR_NAMES: Readonly<Record<DetectorId, MessageKey>> = {
   'attachment-missing': 'detectorNameAttachmentMissing',
   placeholder: 'detectorNamePlaceholder',
   'date-weekday-mismatch': 'detectorNameDateWeekday',
+  'first-time-domain': 'detectorNameFirstTimeDomain',
+  'cc-missing': 'detectorNameCcMissing',
 };
 
 const TEXT_FIELDS = [
@@ -47,6 +52,7 @@ const CHECK_FIELDS = [
   'skipConfirmationEnabled',
   'treatDriveLinksAsAttachment',
   'aiTypoCheckEnabled',
+  'ledgerEnabled',
 ] as const;
 
 // 呼び出し側が要素の種類を指定できるようにするための型引数（戻り値の型にだけ使う）
@@ -99,6 +105,7 @@ function showForm(settings: Settings): void {
   for (const id of DETECTOR_IDS) {
     byId<HTMLInputElement>(levelCheckboxId(id)).checked = values.warningLevels[id] !== 'off';
   }
+  byId<HTMLSelectElement>('ledgerRetentionDays').value = String(values.ledgerRetentionDays);
 }
 
 function readLevel(id: DetectorId): WarningLevel {
@@ -120,6 +127,8 @@ function readForm(): OptionsFormValues {
     attachmentKeywords: text('attachmentKeywords'),
     treatDriveLinksAsAttachment: checked('treatDriveLinksAsAttachment'),
     aiTypoCheckEnabled: checked('aiTypoCheckEnabled'),
+    ledgerEnabled: checked('ledgerEnabled'),
+    ledgerRetentionDays: Number(byId<HTMLSelectElement>('ledgerRetentionDays').value),
     warningLevels: Object.fromEntries(DETECTOR_IDS.map((id) => [id, readLevel(id)])) as Record<
       DetectorId,
       WarningLevel
@@ -165,8 +174,9 @@ function setUpClearButton(): void {
       return;
     }
     disarm();
-    clearAllData()
+    Promise.all([clearAllData(), clearLedger()])
       .then(() => {
+        showLedgerStats();
         showForm(DEFAULT_SETTINGS);
         showStatus(t('optionsCleared'));
       })
@@ -227,12 +237,71 @@ function setUpAiSection(): void {
     });
 }
 
+const RETENTION_LABELS: readonly MessageKey[] = [
+  'optionsLedgerRetentionHalf',
+  'optionsLedgerRetention1',
+  'optionsLedgerRetention2',
+  'optionsLedgerRetention5',
+];
+
+/** 連絡先の記録の件数を表示する */
+function showLedgerStats(): void {
+  const stats = byId('ledgerStats');
+  getLedgerStats()
+    .then((result) => {
+      stats.textContent = t('optionsLedgerStats', [String(result.contactCount)]);
+    })
+    .catch((error: unknown) => {
+      console.error('[gmail-send-guard] failed to read the ledger', error);
+      stats.textContent = t('optionsLedgerStatsFailed');
+    });
+}
+
+function setUpLedgerSection(): void {
+  const select = byId<HTMLSelectElement>('ledgerRetentionDays');
+  LEDGER_RETENTION_CHOICES.forEach((days, index) => {
+    const option = document.createElement('option');
+    option.value = String(days);
+    const label = RETENTION_LABELS[index];
+    option.textContent = label === undefined ? String(days) : t(label);
+    select.append(option);
+  });
+
+  // 記録の削除も、2回押して初めて実行する
+  const button = byId<HTMLButtonElement>('ledgerClear');
+  let armed = false;
+  const disarm = (): void => {
+    armed = false;
+    button.textContent = t('optionsLedgerClear');
+  };
+  button.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      button.textContent = t('optionsClearConfirm');
+      return;
+    }
+    disarm();
+    clearLedger()
+      .then(() => {
+        showLedgerStats();
+        showStatus(t('optionsLedgerCleared'));
+      })
+      .catch((error: unknown) => {
+        console.error('[gmail-send-guard] failed to clear the ledger', error);
+        showStatus(t('optionsSaveFailed'), true);
+      });
+  });
+  button.addEventListener('blur', disarm);
+  showLedgerStats();
+}
+
 /** 設定画面を初期化する */
 async function initOptionsPage(): Promise<void> {
   applyMessages();
   renderLevelRows();
   setUpClearButton();
   setUpAiSection();
+  setUpLedgerSection();
   const saveButton = byId<HTMLButtonElement>('save');
   saveButton.addEventListener('click', () => {
     void save();

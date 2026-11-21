@@ -20,14 +20,18 @@ import type {
   WarningLevels,
 } from '../types';
 import { attachmentMissingDetector } from './attachment-missing';
+import { ccMissingDetector } from './cc-missing';
 import { dateWeekdayMismatchDetector } from './date-weekday-mismatch';
+import { firstTimeDomainDetector } from './first-time-domain';
 import { multipleExternalCompaniesDetector } from './multiple-external-companies';
 import { placeholderDetector } from './placeholder';
 import { subjectEmptyDetector } from './subject-empty';
 
 /** 登録済みの検知器（確認ダイアログでの表示順） */
 export const DETECTORS: readonly Detector[] = [
+  firstTimeDomainDetector,
   multipleExternalCompaniesDetector,
+  ccMissingDetector,
   subjectEmptyDetector,
   attachmentMissingDetector,
   placeholderDetector,

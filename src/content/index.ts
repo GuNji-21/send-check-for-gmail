@@ -10,6 +10,7 @@
 
 import { preloadMessages } from '../shared/i18n';
 import { createTypoChecker } from '../shared/language-model';
+import { lookupLedger, recordSendToLedger } from '../shared/ledger-client';
 import { type Settings, loadSettings, watchSettings } from '../storage/settings';
 import { startInterceptor } from './interceptor';
 
@@ -38,6 +39,11 @@ startInterceptor({
   getSettings,
   checkTypos: (snapshot, signal) =>
     typoChecker.check({ subject: snapshot.subject, bodyText: snapshot.bodyText }, signal),
+  // 連絡先の記録は background 側にあるので、メッセージで読み書きを依頼する
+  ledger: {
+    lookup: (query) => lookupLedger(query),
+    record: (record, retentionDays) => recordSendToLedger(record, retentionDays),
+  },
 });
 
 // 設定を先に読み込んでおく。失敗した場合は、送信操作のときに読み込み直す

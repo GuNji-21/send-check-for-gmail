@@ -30,6 +30,8 @@ export const FIXTURE_SCREENS = [
   'schedule-menu',
   'schedule-presets',
   'schedule-picker',
+  // 届いたメールの表示画面（スレッドを開いた状態）。フェーズ2b の読み取りに使う
+  'message-view',
 ];
 
 const FILE_NAME_PATTERN =

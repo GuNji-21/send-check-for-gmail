@@ -134,8 +134,12 @@ section > h2 {
 /* 警告は、見出しを上に置いて横幅いっぱいに使う */
 section.warnings,
 section.typos,
+section.note,
 section.failure {
   display: block;
+}
+section.note {
+  font-size: 12px;
 }
 section.typos > h2 {
   margin-bottom: 6px;

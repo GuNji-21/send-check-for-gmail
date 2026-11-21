@@ -15,6 +15,8 @@ async function loadBackground() {
         addListener: (listener: (details: { reason: string }) => void) => listeners.push(listener),
       },
       openOptionsPage,
+      onMessage: { addListener: () => undefined },
+      id: 'test-extension',
     },
   });
   await import('../../src/background/service-worker');

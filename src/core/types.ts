@@ -5,6 +5,8 @@
  * Gmail の画面から読み取った送信内容は、src/gmail/ でこの型（ComposeSnapshot）に変換してから渡す。
  */
 
+import type { LedgerInsight } from './ledger/ledger';
+
 /** 宛先の欄 */
 export type RecipientField = 'to' | 'cc' | 'bcc';
 
@@ -103,7 +105,11 @@ export type DetectorId =
   /** 件名が空 */
   | 'subject-empty'
   /** 社外の会社が2社以上含まれる（複数社混在） */
-  | 'multiple-external-companies';
+  | 'multiple-external-companies'
+  /** 初めて送るドメイン（連絡先の記録を使う） */
+  | 'first-time-domain'
+  /** Cc 漏れ（連絡先の記録を使う） */
+  | 'cc-missing';
 
 /**
  * 検知結果の表示文言のキー（public/_locales の messages.json に定義する）。
@@ -120,7 +126,11 @@ export type DetectionMessageKey =
   | 'detectDateInvalid'
   | 'detectSubjectEmpty'
   /** $1 = 社外の会社（ドメイン）の数、$2 = その一覧 */
-  | 'detectMultipleExternalCompanies';
+  | 'detectMultipleExternalCompanies'
+  /** $1 = 初めて送るドメインの一覧 */
+  | 'detectFirstTimeDomain'
+  /** $1 = 今回入っていない人のアドレスの一覧 */
+  | 'detectCcMissing';
 
 /** 検知項目ごとの警告のオン・オフ */
 export type WarningLevels = Readonly<Record<DetectorId, WarningLevel>>;
@@ -144,6 +154,11 @@ export interface DetectorContext {
   readonly attachmentKeywords: readonly string[];
   /** Google ドライブのリンクを添付ありとみなすか */
   readonly treatDriveLinksAsAttachment: boolean;
+  /**
+   * 連絡先の記録（台帳）から読み取った情報。
+   * 台帳が無効な場合や、読み込めなかった場合は省略する（台帳を使う検知器は、何も検知しない）。
+   */
+  readonly ledger?: LedgerInsight;
 }
 
 /**

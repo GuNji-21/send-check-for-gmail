@@ -8,9 +8,13 @@
  *
  * 外部への通信は行わない。
  *
- * フェーズ1では、background に依頼する処理は無い（設定は content script と設定画面が
- * chrome.storage.local を直接読み書きする）。
+ * 設定は content script と設定画面が chrome.storage.local を直接読み書きする。
+ * 連絡先の記録（台帳）だけは、ここで IndexedDB に保存し、メッセージで読み書きを受け付ける。
  */
+
+import { isExtensionMessage } from '../shared/messages';
+import { handleLedgerMessage } from './ledger-handler';
+import { createIndexedDbLedgerStore } from './ledger-idb';
 
 /**
  * インストール直後に設定画面を開く。
@@ -26,4 +30,18 @@ chrome.runtime.onInstalled.addListener((details) => {
   });
 });
 
-export {};
+/** 連絡先の記録（台帳）。この拡張機能専用の IndexedDB に置く */
+const ledgerStore = createIndexedDbLedgerStore();
+
+/**
+ * content script・設定画面からの依頼を処理する。
+ * この拡張機能の中から届いたメッセージだけを受け付ける（ほかの拡張機能やウェブページからは受け付けない）。
+ */
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id || !isExtensionMessage(message)) return false;
+  handleLedgerMessage(ledgerStore, message, new Date()).then(sendResponse, (error: unknown) => {
+    sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) });
+  });
+  // 応答を後から返すことを Chrome に伝える
+  return true;
+});

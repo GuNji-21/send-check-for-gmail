@@ -20,9 +20,13 @@ import {
 
 const AT = new Date(2026, 10, 20, 9, 30, 0);
 
-/** 作成画面を含むフィクスチャ（予約送信のダイアログ2つは作成画面を含まない） */
+/** 作成画面を含むフィクスチャ（予約送信のダイアログ2つと、届いたメールの表示画面は作成画面を含まない） */
 const COMPOSE_FIXTURES = listFixtureFiles().filter(
-  (name) => !name.startsWith('schedule-presets') && !name.startsWith('schedule-picker'),
+  (name) =>
+    !name.startsWith('schedule-presets') &&
+    !name.startsWith('schedule-picker') &&
+    // 届いたメールの表示画面（フェーズ2b 用）も、作成画面ではない
+    !name.startsWith('message-view'),
 );
 
 function load(name: string): HTMLElement {

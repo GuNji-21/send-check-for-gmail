@@ -20,6 +20,13 @@
 
 import { shouldSkipConfirmation } from '../core/classify';
 import { type ConfirmationSettings, buildConfirmationModel, previewOf } from '../core/confirmation';
+import {
+  type LedgerInsight,
+  type LedgerQuery,
+  type SendRecord,
+  buildLedgerQuery,
+  buildSendRecord,
+} from '../core/ledger/ledger';
 import type { TypoCheckResult } from '../core/typo/typo-check';
 import type { ClassificationRules, ComposeSnapshot } from '../core/types';
 import {
@@ -50,6 +57,18 @@ export interface InterceptorSettings extends ConfirmationSettings {
   readonly skipConfirmationEnabled: boolean;
   /** AI による誤字・脱字チェックを行うか */
   readonly aiTypoCheckEnabled: boolean;
+  /** 連絡先を記録するか */
+  readonly ledgerEnabled: boolean;
+  /** 連絡先の記録を残す日数 */
+  readonly ledgerRetentionDays: number;
+}
+
+/** 連絡先の記録（台帳）への依頼。実際の読み書きは background が行う */
+export interface LedgerAccess {
+  /** 今回の送信の判断に使う情報を読み取る。読めない・時間がかかりすぎる場合は reject する */
+  lookup(query: LedgerQuery): Promise<LedgerInsight>;
+  /** 送信1回分を記録する */
+  record(record: SendRecord, retentionDays: number): Promise<void>;
 }
 
 export interface InterceptorOptions {
@@ -65,6 +84,12 @@ export interface InterceptorOptions {
     snapshot: ComposeSnapshot,
     signal: AbortSignal,
   ) => Promise<TypoCheckResult>;
+  /**
+   * 連絡先の記録（台帳）。設定で有効な場合に、ダイアログを出す前に読み取り、送信を続行するときに記録する。
+   * 台帳は補助の機能なので、読み書きに失敗しても送信は止めない
+   * （読めなかった場合は、ダイアログにその旨を表示する）。
+   */
+  readonly ledger?: LedgerAccess;
   /** 現在時刻（テスト用に差し替えられるようにしている） */
   readonly now?: () => Date;
 }
@@ -90,7 +115,7 @@ function block(event: Event): void {
  * 送信操作の捕捉を開始する。戻り値の関数を呼ぶと捕捉をやめる。
  */
 export function startInterceptor(options: InterceptorOptions): () => void {
-  const { view, getSettings, checkTypos } = options;
+  const { view, getSettings, checkTypos, ledger } = options;
   const now = options.now ?? ((): Date => new Date());
   const doc = view.document;
 
@@ -122,8 +147,24 @@ export function startInterceptor(options: InterceptorOptions): () => void {
         settings.rules,
         settings.skipConfirmationEnabled,
       );
+      // 連絡先の記録を使う場合は、今回の宛先について読み取っておく
+      const sendRecord =
+        settings.ledgerEnabled && ledger !== undefined
+          ? buildSendRecord(snapshot, settings.rules)
+          : undefined;
       if (!skip) {
-        const model = buildConfirmationModel(snapshot, settings);
+        let insight: LedgerInsight | undefined;
+        let ledgerUnavailable = false;
+        if (sendRecord !== undefined && ledger !== undefined) {
+          try {
+            insight = await ledger.lookup(buildLedgerQuery(sendRecord));
+          } catch (error) {
+            // 台帳を読めなくても送信は止めない。読めなかったことはダイアログに表示する
+            console.error('[gmail-send-guard] failed to read the ledger', error);
+            ledgerUnavailable = true;
+          }
+        }
+        const model = buildConfirmationModel(snapshot, settings, insight);
         // AI の解析は時間がかかるため、ダイアログを先に出し、結果は後から差し込む。
         // ダイアログが閉じられたら（送信・キャンセルのどちらでも）、解析を中止する
         const typoAbort = new AbortController();
@@ -141,8 +182,9 @@ export function startInterceptor(options: InterceptorOptions): () => void {
             model,
             trigger === 'schedule' ? 'schedule' : 'send',
             typoCheck === undefined
-              ? {}
+              ? { ledgerUnavailable }
               : {
+                  ledgerUnavailable,
                   typoCheck,
                   // 修正案をメールに反映する。反映できたら、書き換えた行と、
                   // 元に戻す処理・メールの画面で見せる処理を返す。
@@ -194,6 +236,12 @@ export function startInterceptor(options: InterceptorOptions): () => void {
         if (result !== 'confirmed') return;
       }
       proceed(trigger, target);
+      // 送信を続行したら、宛先を記録する。記録に失敗しても、すでに始まった送信には影響させない
+      if (sendRecord !== undefined && ledger !== undefined) {
+        ledger.record(sendRecord, settings.ledgerRetentionDays).catch((error: unknown) => {
+          console.error('[gmail-send-guard] failed to record the send', error);
+        });
+      }
     } catch (error) {
       // 送信は止めたまま、チェックできなかったことを知らせる
       console.error('[gmail-send-guard] check failed', error);

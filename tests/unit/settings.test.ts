@@ -115,6 +115,18 @@ describe('normalizeSettings', () => {
     expect(normalizeSettings({ attachmentKeywords: edited }).attachmentKeywords).toEqual(edited);
   });
 
+  it('連絡先の記録は初期設定で無効。保存期間は1年で、決まった選択肢（6か月・1年・2年・5年）だけを受け付ける', () => {
+    expect(DEFAULT_SETTINGS.ledgerEnabled).toBe(false);
+    expect(DEFAULT_SETTINGS.ledgerRetentionDays).toBe(365);
+    expect(normalizeSettings({ ledgerEnabled: true }).ledgerEnabled).toBe(true);
+    expect(normalizeSettings({ ledgerEnabled: 'yes' }).ledgerEnabled).toBe(false);
+    for (const days of [180, 365, 730, 1825]) {
+      expect(normalizeSettings({ ledgerRetentionDays: days }).ledgerRetentionDays).toBe(days);
+    }
+    expect(normalizeSettings({ ledgerRetentionDays: 1 }).ledgerRetentionDays).toBe(365);
+    expect(normalizeSettings({ ledgerRetentionDays: '730' }).ledgerRetentionDays).toBe(365);
+  });
+
   it('確認省略は true が保存されているときだけ有効にする', () => {
     expect(normalizeSettings({ skipConfirmationEnabled: true }).skipConfirmationEnabled).toBe(true);
     expect(normalizeSettings({ skipConfirmationEnabled: 'yes' }).skipConfirmationEnabled).toBe(

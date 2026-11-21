@@ -41,7 +41,17 @@ export interface Settings {
    * モデルのダウンロード（数 GB）が必要なため、利用者が設定画面で有効にしたときだけ使う。
    */
   readonly aiTypoCheckEnabled: boolean;
+  /**
+   * 連絡先を記録するか（フェーズ2）。初期設定では無効。
+   * 送った相手のアドレスなどを端末の中にためる機能なので、利用者が自分で有効にしたときだけ記録する。
+   */
+  readonly ledgerEnabled: boolean;
+  /** 連絡先の記録を残す日数。最終やりとり日からこの日数を過ぎた記録は削除する */
+  readonly ledgerRetentionDays: number;
 }
+
+/** 連絡先の記録を残す日数として選べる値（6か月・1年・2年・5年） */
+export const LEDGER_RETENTION_CHOICES: readonly number[] = [180, 365, 730, 1825];
 
 /** 設定の初期値 */
 export const DEFAULT_SETTINGS: Settings = {
@@ -60,6 +70,8 @@ export const DEFAULT_SETTINGS: Settings = {
     'date-weekday-mismatch': 'warn',
     'subject-empty': 'warn',
     'multiple-external-companies': 'warn',
+    'first-time-domain': 'warn',
+    'cc-missing': 'warn',
   },
   attachmentKeywords: [
     // 添付・送付を表す語（「送付」は「送付します」「送付いたします」「ご送付」を含む）
@@ -83,6 +95,8 @@ export const DEFAULT_SETTINGS: Settings = {
   ],
   treatDriveLinksAsAttachment: true,
   aiTypoCheckEnabled: false,
+  ledgerEnabled: false,
+  ledgerRetentionDays: 365,
 };
 
 /**
@@ -116,7 +130,9 @@ function isPreviousDefault(keywords: readonly string[]): boolean {
 
 /** 検知項目のID（設定画面の表示順） */
 export const DETECTOR_IDS: readonly DetectorId[] = [
+  'first-time-domain',
   'multiple-external-companies',
+  'cc-missing',
   'subject-empty',
   'attachment-missing',
   'placeholder',
@@ -197,6 +213,10 @@ export function normalizeSettings(raw: unknown): Settings {
         ? raw.treatDriveLinksAsAttachment
         : DEFAULT_SETTINGS.treatDriveLinksAsAttachment,
     aiTypoCheckEnabled: raw.aiTypoCheckEnabled === true,
+    ledgerEnabled: raw.ledgerEnabled === true,
+    ledgerRetentionDays: LEDGER_RETENTION_CHOICES.find((days) => days === raw.ledgerRetentionDays)
+      ? (raw.ledgerRetentionDays as number)
+      : DEFAULT_SETTINGS.ledgerRetentionDays,
   };
 }
 

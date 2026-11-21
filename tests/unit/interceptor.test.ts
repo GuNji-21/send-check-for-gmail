@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import jaMessages from '../../public/_locales/ja/messages.json';
 import { readFixture } from '../../scripts/lib/fixture-files.mjs';
 import { type InterceptorSettings, startInterceptor } from '../../src/content/interceptor';
+import type { LedgerInsight, LedgerQuery, SendRecord } from '../../src/core/ledger/ledger';
 import type { TypoCheckResult } from '../../src/core/typo/typo-check';
 import { findComposeWindows, findSendButton } from '../../src/gmail/compose';
 import { clearMessageCache } from '../../src/shared/i18n';
@@ -26,6 +27,9 @@ let getSettings: () => Promise<InterceptorSettings>;
 /** AI による誤字・脱字チェックの代用（テストごとに差し替える） */
 let checkTypos: (signal: AbortSignal) => Promise<TypoCheckResult>;
 let typoCalls: number;
+/** 連絡先の記録（台帳）の代用 */
+let ledgerLookup: (query: LedgerQuery) => Promise<LedgerInsight>;
+let ledgerRecords: SendRecord[];
 
 /** 件名の入力欄に値を入れる（入力値は HTML に残らないため、テストで入れる） */
 function setSubject(value: string): void {
@@ -48,6 +52,13 @@ function setUp(fixture = 'compose-new--attachment.ja.20261120.html'): void {
   stop = startInterceptor({
     view: window,
     getSettings: () => getSettings(),
+    ledger: {
+      lookup: (query) => ledgerLookup(query),
+      record: (record) => {
+        ledgerRecords.push(record);
+        return Promise.resolve();
+      },
+    },
     checkTypos: (_snapshot, signal) => {
       typoCalls++;
       return checkTypos(signal);
@@ -107,6 +118,8 @@ beforeEach(() => {
   settings = { ...DEFAULT_SETTINGS };
   getSettings = () => Promise.resolve(settings);
   typoCalls = 0;
+  ledgerRecords = [];
+  ledgerLookup = () => Promise.resolve({ totalSends: 50, knownCompanies: [], ccHistory: [] });
   checkTypos = () => Promise.resolve({ status: 'ok', candidates: [] });
 });
 
@@ -796,5 +809,119 @@ describe('修正の確認と取り消し', () => {
     await settle();
     expect(isDialogOpen(document)).toBe(true);
     expect(delivered).toEqual([]);
+  });
+});
+
+describe('連絡先の記録（台帳）', () => {
+  const warnings = (): string[] =>
+    [...dialogRoot().querySelectorAll('.detection .message')].map((m) => m.textContent);
+
+  it('初期設定（無効）では、読み取りも記録もしない', async () => {
+    let lookups = 0;
+    ledgerLookup = () => {
+      lookups++;
+      return Promise.resolve({ totalSends: 50, knownCompanies: [], ccHistory: [] });
+    };
+    setUp();
+    userClick(sendButton);
+    await settle();
+    checkAll();
+    buttons()[1]?.click();
+    await settle();
+    expect(lookups).toBe(0);
+    expect(ledgerRecords).toEqual([]);
+  });
+
+  it('有効な場合は、今回の宛先について読み取り、初めて送るドメインを警告する', async () => {
+    settings = { ...settings, ledgerEnabled: true };
+    const queries: LedgerQuery[] = [];
+    ledgerLookup = (query) => {
+      queries.push(query);
+      return Promise.resolve({ totalSends: 50, knownCompanies: ['example.com'], ccHistory: [] });
+    };
+    setUp();
+    userClick(sendButton);
+    await settle();
+    expect(queries).toEqual([
+      {
+        companies: ['example.com', 'example.org', 'example.net'],
+        toAddresses: ['taro.yamada@example.com', 'hanako.sato@example.org'],
+      },
+    ]);
+    expect(warnings()).toContain('detectFirstTimeDomain:example.org、example.net');
+  });
+
+  it('よく Cc に入れている人が今回いない場合に警告する', async () => {
+    settings = { ...settings, ledgerEnabled: true };
+    ledgerLookup = () =>
+      Promise.resolve({
+        totalSends: 50,
+        knownCompanies: ['example.com', 'example.org', 'example.net'],
+        ccHistory: [
+          {
+            toAddress: 'taro.yamada@example.com',
+            toSendCount: 5,
+            address: 'boss@example.com',
+            count: 5,
+          },
+          {
+            toAddress: 'taro.yamada@example.com',
+            toSendCount: 5,
+            address: 'jiro.suzuki@example.com',
+            count: 5,
+          },
+        ],
+      });
+    setUp();
+    userClick(sendButton);
+    await settle();
+    // jiro.suzuki は今回の Cc に入っているので、警告に出ない
+    expect(warnings()).toContain('detectCcMissing:boss@example.com');
+  });
+
+  it('確認して送信したときだけ、宛先を記録する', async () => {
+    settings = { ...settings, ledgerEnabled: true };
+    setUp();
+    userClick(sendButton);
+    await settle();
+    buttons()[0]?.click();
+    await settle();
+    expect(ledgerRecords).toEqual([]);
+
+    userClick(sendButton);
+    await settle();
+    checkAll();
+    buttons()[1]?.click();
+    await settle();
+    expect(ledgerRecords).toHaveLength(1);
+    expect(ledgerRecords[0]?.recipients.map((r) => [r.address, r.field])).toEqual([
+      ['taro.yamada@example.com', 'to'],
+      ['hanako.sato@example.org', 'to'],
+      ['jiro.suzuki@example.com', 'cc'],
+      ['archive@example.net', 'bcc'],
+    ]);
+  });
+
+  it('記録を読めなくても送信は止めず、確認できていないことを表示する', async () => {
+    settings = { ...settings, ledgerEnabled: true };
+    ledgerLookup = () => Promise.reject(new Error('Ledger lookup timed out'));
+    setUp();
+    userClick(sendButton);
+    await settle();
+    // 「チェックできませんでした」（送信を止めるエラー）にはしない
+    expect(dialogRoot().querySelector('.error')).toBeNull();
+    expect(dialogRoot().querySelector('section.note')?.textContent).toBe('dialogLedgerUnavailable');
+    checkAll();
+    buttons()[1]?.click();
+    await settle();
+    expect(delivered).toEqual(['mousedown', 'mouseup', 'click']);
+  });
+
+  it('記録を読めた場合は、注記を出さない', async () => {
+    settings = { ...settings, ledgerEnabled: true };
+    setUp();
+    userClick(sendButton);
+    await settle();
+    expect(dialogRoot().querySelector('section.note')).toBeNull();
   });
 });

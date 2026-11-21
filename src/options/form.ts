@@ -24,6 +24,8 @@ export interface OptionsFormValues {
   readonly attachmentKeywords: string;
   readonly treatDriveLinksAsAttachment: boolean;
   readonly aiTypoCheckEnabled: boolean;
+  readonly ledgerEnabled: boolean;
+  readonly ledgerRetentionDays: number;
   readonly warningLevels: Readonly<Record<DetectorId, WarningLevel>>;
 }
 
@@ -45,6 +47,8 @@ export function toFormValues(settings: Settings): OptionsFormValues {
     attachmentKeywords: lines(settings.attachmentKeywords),
     treatDriveLinksAsAttachment: settings.treatDriveLinksAsAttachment,
     aiTypoCheckEnabled: settings.aiTypoCheckEnabled,
+    ledgerEnabled: settings.ledgerEnabled,
+    ledgerRetentionDays: settings.ledgerRetentionDays,
     warningLevels: { ...settings.warningLevels },
   };
 }
@@ -88,6 +92,8 @@ export function parseFormValues(values: OptionsFormValues): ParseResult {
     attachmentKeywords: parseLines(values.attachmentKeywords),
     treatDriveLinksAsAttachment: values.treatDriveLinksAsAttachment,
     aiTypoCheckEnabled: values.aiTypoCheckEnabled,
+    ledgerEnabled: values.ledgerEnabled,
+    ledgerRetentionDays: values.ledgerRetentionDays,
   };
 
   return invalid.length > 0 ? { ok: false, invalid } : { ok: true, settings };

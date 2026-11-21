@@ -278,6 +278,11 @@ export interface ConfirmationExtras {
    * （'ambiguous' = 同じ表記が複数あって決められない、'not-found' = 該当箇所が見つからない）。
    */
   readonly applyFix?: (candidate: TypoCandidate) => AppliedFix | 'ambiguous' | 'not-found';
+  /**
+   * 連絡先の記録（台帳）を読み込めなかったか。true の場合、台帳を使うチェック
+   * （初めて送るドメイン、Cc 漏れ）を行えなかったことをダイアログに表示する。
+   */
+  readonly ledgerUnavailable?: boolean;
 }
 
 /** メールの件名と本文の冒頭（ダイアログの表示を更新するために使う） */
@@ -475,6 +480,12 @@ export function showConfirmationDialog(
     const main = el(doc, 'main');
     const detections = renderDetections(doc, model.detections);
     if (detections !== null) main.append(detections);
+    if (extras.ledgerUnavailable === true) {
+      // 連絡先の記録を読めなかったので、それを使うチェックを行えていないことを知らせる
+      const note = el(doc, 'section', 'note');
+      note.append(el(doc, 'p', 'muted', t('dialogLedgerUnavailable')));
+      main.append(note);
+    }
     const subjectField = renderText(
       doc,
       t('dialogSubject'),

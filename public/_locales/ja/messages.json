@@ -203,6 +203,74 @@
     "message": "社外の宛先が$1社（ドメイン）にまたがっています：$2",
     "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
   },
+  "detectFirstTimeDomain": {
+    "message": "初めて送るドメインがあります：$1（似たドメインへの誤送信ではないか、確認してください）",
+    "description": "初めて送るドメインの検知結果。$1 はドメインの一覧"
+  },
+  "detectCcMissing": {
+    "message": "この宛先へのメールでよく Cc に入れている人が、今回は入っていません：$1",
+    "description": "Cc 漏れの検知結果。$1 は入っていない人のアドレスの一覧"
+  },
+  "dialogLedgerUnavailable": {
+    "message": "連絡先の記録を読み込めなかったため、「初めて送るドメイン」と「Cc 漏れ」は確認できていません。",
+    "description": "連絡先の記録を読み込めなかったときに、確認ダイアログに出す注記"
+  },
+  "detectorNameFirstTimeDomain": {
+    "message": "初めて送るドメイン（連絡先の記録が必要）",
+    "description": "検知項目の名前：初めて送るドメイン"
+  },
+  "detectorNameCcMissing": {
+    "message": "Cc 漏れ（連絡先の記録が必要）",
+    "description": "検知項目の名前：Cc 漏れ"
+  },
+  "optionsSectionLedger": {
+    "message": "連絡先の記録",
+    "description": "設定画面の、連絡先の記録の見出し"
+  },
+  "optionsLedgerHelp": {
+    "message": "送信したメールの宛先（アドレス、表示名、To・Cc に入れた回数、最後に送った日）を、この端末の中に記録します。記録は「初めて送るドメイン」と「Cc 漏れ」の確認に使います。外部に送信することはありません。有効にする前に送ったメールは記録されません。",
+    "description": "連絡先の記録の説明"
+  },
+  "optionsLedgerEnabled": {
+    "message": "送信した相手を記録する",
+    "description": "連絡先の記録を有効にするチェックボックス"
+  },
+  "optionsLedgerRetention": {
+    "message": "記録を残す期間（最後に送った日から）",
+    "description": "連絡先の記録を残す期間の選択欄"
+  },
+  "optionsLedgerRetentionHalf": {
+    "message": "6か月",
+    "description": "保存期間の選択肢：6か月"
+  },
+  "optionsLedgerRetention1": {
+    "message": "1年",
+    "description": "保存期間の選択肢：1年"
+  },
+  "optionsLedgerRetention2": {
+    "message": "2年",
+    "description": "保存期間の選択肢：2年"
+  },
+  "optionsLedgerRetention5": {
+    "message": "5年",
+    "description": "保存期間の選択肢：5年"
+  },
+  "optionsLedgerStats": {
+    "message": "記録している連絡先：$1件",
+    "description": "記録している連絡先の件数。$1 は件数"
+  },
+  "optionsLedgerStatsFailed": {
+    "message": "連絡先の記録を読み込めませんでした。",
+    "description": "連絡先の記録の件数を読み込めなかったときの表示"
+  },
+  "optionsLedgerClear": {
+    "message": "連絡先の記録をすべて削除",
+    "description": "連絡先の記録を削除するボタン"
+  },
+  "optionsLedgerCleared": {
+    "message": "連絡先の記録を削除しました。",
+    "description": "連絡先の記録を削除したときの表示"
+  },
   "optionsTitle": {
     "message": "Send Check for Gmail の設定",
     "description": "設定画面のタイトル"

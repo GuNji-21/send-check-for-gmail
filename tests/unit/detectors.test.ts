@@ -15,6 +15,8 @@ const LEVELS: WarningLevels = {
   'date-weekday-mismatch': 'warn',
   'subject-empty': 'warn',
   'multiple-external-companies': 'warn',
+  'first-time-domain': 'warn',
+  'cc-missing': 'warn',
 };
 
 describe('添付漏れ', () => {

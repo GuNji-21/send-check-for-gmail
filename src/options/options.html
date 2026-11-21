@@ -164,6 +164,18 @@
       #warningLevels label.check:first-child {
         margin-top: 10px;
       }
+      select {
+        display: block;
+        margin-top: 6px;
+        min-height: 36px;
+        padding: 0 10px;
+        border: 1px solid var(--edge);
+        border-radius: 4px;
+        background: var(--ground);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 400;
+      }
       .state {
         margin: 14px 0 0;
         font-variant-numeric: tabular-nums;
@@ -208,6 +220,7 @@
         margin-top: 12px;
       }
       button:focus-visible,
+      select:focus-visible,
       textarea:focus-visible,
       input:focus-visible {
         outline: 2px solid #ffffff;
@@ -337,6 +350,28 @@
           </label>
           <p id="aiStatus" class="state" role="status" aria-live="polite"></p>
           <button id="aiDownload" type="button" data-i18n="optionsAiDownload" hidden></button>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="optionsSectionLedger"></h2>
+        <div class="content">
+          <p class="help" data-i18n="optionsLedgerHelp"></p>
+          <label class="check">
+            <input id="ledgerEnabled" type="checkbox" />
+            <span data-i18n="optionsLedgerEnabled"></span>
+          </label>
+          <label class="field">
+            <span data-i18n="optionsLedgerRetention"></span>
+            <select id="ledgerRetentionDays"></select>
+          </label>
+          <p id="ledgerStats" class="state" role="status" aria-live="polite"></p>
+          <button
+            id="ledgerClear"
+            type="button"
+            class="danger"
+            data-i18n="optionsLedgerClear"
+          ></button>
         </div>
       </section>
 

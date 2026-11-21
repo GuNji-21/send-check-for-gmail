@@ -61,6 +61,14 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 - 候補ごとの「修正する」ボタンで、修正案をメールに反映できます（該当する箇所が1か所に決まる場合のみ）。反映後は、書き換えた行がその場に表示され、「元に戻す」で取り消したり、「メールで確認」で実際のメールの画面に戻って該当箇所を確かめたりできます。
 - 使うには、設定画面で有効にして、モデルをダウンロードします（初回のみ）。空き容量 22GB 以上、メモリ 16GB 以上または VRAM 4GB 超の GPU など、Chrome の定める端末の条件があります。対応していない端末では、設定画面にその旨が表示されます。
 
+**連絡先の記録**（初期設定は無効。開発中の版に含まれ、ストアの版にはまだ含まれていません）
+
+- 設定画面で有効にすると、送信した相手（アドレス、表示名、To・Cc に入れた回数、最後に送った日）を、端末の中に記録します。外部には送信しません。
+- 記録を使って、次の2つを確認します。
+  - 初めて送るドメイン（似たドメインへの誤送信に気づくため）
+  - Cc 漏れ（その相手へのメールで、よく Cc に入れている人が今回入っていない）
+- 記録は、最後に送った日から一定の期間（初期値は1年）で自動的に削除します。設定画面から、いつでもすべて削除できます。
+
 **うまく動かないとき**
 
 - 拡張機能側でエラーが起きた場合や、Gmail の画面を読み取れなかった場合は、送信を止めて「チェックできませんでした」と表示します。確認なしに送信されることはありません。
@@ -193,6 +201,14 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 - Results appear after the confirmation dialog opens. You can send without waiting, and a failed check never blocks sending.
 - Each candidate has a "Fix" button that applies the suggestion to your email (only when the text to fix can be identified in exactly one place). After a fix, the changed line is shown in place; "Undo" reverts it, and "See in email" closes the dialog and selects the fixed text in your email.
 - To use it, turn it on in the options page and download the model (once). Chrome's device requirements apply, such as 22 GB of free space and either 16 GB of RAM or a GPU with more than 4 GB of VRAM. On unsupported devices, the options page says so.
+
+**Contact records** (off by default; in the development version, not yet in the store version)
+
+- When you turn it on in the options page, the people you send email to (address, display name, how often they were in To or Cc, and the date of the last send) are recorded on your device. Nothing is sent anywhere.
+- The records are used for two checks:
+  - First-time domain (to notice look-alike domains)
+  - Missing Cc (people you usually Cc on email to that recipient are not included this time)
+- Records are deleted automatically after a set period from the last send (1 year by default). You can delete all of them at any time from the options page.
 
 **When something goes wrong**
 
