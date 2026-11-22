@@ -29,3 +29,6 @@ desktop.ini
 # デザイン検査（Impeccable）の作業用ファイル（端末のパスを含むため、コミットしない）
 .impeccable/hook.cache.json
 .impeccable/config.local.json
+
+# ループ開発の作業フォルダ（検証の出力・評価結果）
+.loop/
