@@ -187,6 +187,10 @@
     "message": "書き換え忘れの可能性がある記号が残っています：$1",
     "description": "プレースホルダーの検知結果。$1 は見つかった記号"
   },
+  "detectRepeatedCharacters": {
+    "message": "同じ文字が重なっている可能性があります：$1",
+    "description": "同じ文字の重複の検知結果。$1 は見つかった箇所"
+  },
   "detectDateWeekdayMismatch": {
     "message": "「$1」の曜日が合っていません。この日付は$2曜日です。",
     "description": "日付と曜日の不一致の検知結果。$1 は本文中の表記、$2 は実際の曜日（日本語の1文字）"
@@ -390,6 +394,10 @@
   "detectorNamePlaceholder": {
     "message": "書き換え忘れの記号（〇〇、XX など）",
     "description": "検知項目の名前：プレースホルダー"
+  },
+  "detectorNameRepeatedCharacters": {
+    "message": "同じ文字の重複（をを、まます など）",
+    "description": "検知項目の名前：同じ文字の重複"
   },
   "detectorNameDateWeekday": {
     "message": "日付と曜日の不一致",

@@ -187,6 +187,10 @@
     "message": "Possible leftover placeholders: $1",
     "description": "プレースホルダーの検知結果。$1 は見つかった記号"
   },
+  "detectRepeatedCharacters": {
+    "message": "Possible repeated characters: $1",
+    "description": "同じ文字の重複の検知結果。$1 は見つかった箇所"
+  },
   "detectDateWeekdayMismatch": {
     "message": "The day of the week in \"$1\" does not match the calendar (that date is $2).",
     "description": "日付と曜日の不一致の検知結果。$1 は本文中の表記、$2 は実際の曜日（日本語の1文字）"
@@ -390,6 +394,10 @@
   "detectorNamePlaceholder": {
     "message": "Leftover placeholders (XX, {name}, etc.)",
     "description": "検知項目の名前：プレースホルダー"
+  },
+  "detectorNameRepeatedCharacters": {
+    "message": "Repeated characters in Japanese text (をを, まます, etc.)",
+    "description": "検知項目の名前：同じ文字の重複"
   },
   "detectorNameDateWeekday": {
     "message": "Date and day-of-week mismatch",

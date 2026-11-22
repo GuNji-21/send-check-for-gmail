@@ -102,6 +102,8 @@ export type DetectorId =
   | 'placeholder'
   /** 日付と曜日の不一致 */
   | 'date-weekday-mismatch'
+  /** 同じ文字の重複（をを、まます など） */
+  | 'repeated-characters'
   /** 件名が空 */
   | 'subject-empty'
   /** 社外の会社が2社以上含まれる（複数社混在） */
@@ -124,6 +126,8 @@ export type DetectionMessageKey =
   | 'detectDateWeekdayMismatch'
   /** $1 = 本文中の表記 */
   | 'detectDateInvalid'
+  /** $1 = 重複が見つかった箇所の一覧 */
+  | 'detectRepeatedCharacters'
   | 'detectSubjectEmpty'
   /** $1 = 社外の会社（ドメイン）の数、$2 = その一覧 */
   | 'detectMultipleExternalCompanies'

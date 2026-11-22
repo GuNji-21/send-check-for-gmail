@@ -34,6 +34,7 @@ const DETECTOR_NAMES: Readonly<Record<DetectorId, MessageKey>> = {
   'subject-empty': 'detectorNameSubjectEmpty',
   'attachment-missing': 'detectorNameAttachmentMissing',
   placeholder: 'detectorNamePlaceholder',
+  'repeated-characters': 'detectorNameRepeatedCharacters',
   'date-weekday-mismatch': 'detectorNameDateWeekday',
   'first-time-domain': 'detectorNameFirstTimeDomain',
   'cc-missing': 'detectorNameCcMissing',

@@ -5,6 +5,7 @@ import { DETECTORS, runDetectors } from '../../src/core/detectors/index';
 import { DEFAULT_SETTINGS } from '../../src/storage/settings';
 import { multipleExternalCompaniesDetector } from '../../src/core/detectors/multiple-external-companies';
 import { placeholderDetector } from '../../src/core/detectors/placeholder';
+import { repeatedCharactersDetector } from '../../src/core/detectors/repeated-characters';
 import { subjectEmptyDetector } from '../../src/core/detectors/subject-empty';
 import type { Detector, WarningLevels } from '../../src/core/types';
 import { context, recipient, rules, snapshot } from './helpers';
@@ -12,6 +13,7 @@ import { context, recipient, rules, snapshot } from './helpers';
 const LEVELS: WarningLevels = {
   'attachment-missing': 'warn',
   placeholder: 'warn',
+  'repeated-characters': 'warn',
   'date-weekday-mismatch': 'warn',
   'subject-empty': 'warn',
   'multiple-external-companies': 'warn',
@@ -147,6 +149,79 @@ describe('プレースホルダー', () => {
       '第X回の会議',
     ]) {
       expect(placeholderDetector.detect(snapshot({ bodyText: body }), context()), body).toEqual([]);
+    }
+  });
+});
+
+describe('同じ文字の重複', () => {
+  const found = (bodyText: string, subject = '件名') =>
+    repeatedCharactersDetector.detect(snapshot({ subject, bodyText }), context())[0]
+      ?.substitutions?.[0];
+
+  it('「をを」を検知する', () => {
+    expect(found('資料をを送付いたします。')).toBe('資料をを');
+    expect(
+      repeatedCharactersDetector.detect(snapshot({ bodyText: 'これをを見る' }), context()),
+    ).toEqual([
+      {
+        detectorId: 'repeated-characters',
+        messageKey: 'detectRepeatedCharacters',
+        substitutions: ['これをを'],
+      },
+    ]);
+  });
+
+  it('漢字・カタカナ・英数字の直後の、同じ助詞の重複を検知する', () => {
+    expect(found('資料がが届きました')).toBe('資料がが');
+    expect(found('会議にに参加します')).toBe('会議にに');
+    expect(found('弊社のの担当')).toBe('弊社のの');
+    expect(found('サンプルはは明日送ります')).toBe('プルはは');
+    expect(found('PDFでで送ります')).toBe('DFでで');
+  });
+
+  it('文末の言い回しの重複を検知する', () => {
+    expect(found('お世話になっておりまます。')).toBe('おりまます');
+    expect(found('資料をお送りしまします。')).toBe('送りしまします');
+    expect(found('ご確認くだださい。')).toBe('確認くだださい');
+    expect(found('ご確認くださいください。')).toBe('確認くださいください');
+    expect(found('明日ですです')).toBe('明日ですです');
+    expect(found('送付しまました。')).toBe('付しまました');
+    expect(found('よろしくお願いいいたします。')).toBe('お願いいいた');
+  });
+
+  it('件名に残っている場合も検知する', () => {
+    expect(found('本文です', '資料をを送付の件')).toBe('資料をを');
+  });
+
+  it('複数ある場合は出現順に並べ、同じものは1回だけ挙げる', () => {
+    expect(found('資料をを送ります。\n会議にに出ます。\n資料をを送ります。')).toBe(
+      '資料をを、会議にに',
+    );
+  });
+
+  it('前の行や空白をまたいだ文字は付けない', () => {
+    expect(found('以上\nをを')).toBe('をを');
+    expect(found('A をを')).toBe('をを');
+  });
+
+  it('正しい表現は検知しない', () => {
+    for (const body of [
+      'お世話になっております。資料を送付いたします。',
+      '出席することとなりました。',
+      '確認したものの、不明です。',
+      'ここまでで結構です。',
+      'ますますご清祥のこととお慶び申し上げます。',
+      'このまますぐに対応します。',
+      'そのまま進めてください。',
+      '鶏もも肉を発注します。',
+      'きのうははと話しました。',
+      'いろいろとありがとうございます。',
+      'またはがきでお知らせします。',
+    ]) {
+      expect(
+        repeatedCharactersDetector.detect(snapshot({ bodyText: body }), context()),
+        body,
+      ).toEqual([]);
     }
   });
 });

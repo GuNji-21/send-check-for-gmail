@@ -67,6 +67,7 @@ export const DEFAULT_SETTINGS: Settings = {
   warningLevels: {
     'attachment-missing': 'warn',
     placeholder: 'warn',
+    'repeated-characters': 'warn',
     'date-weekday-mismatch': 'warn',
     'subject-empty': 'warn',
     'multiple-external-companies': 'warn',
@@ -136,6 +137,7 @@ export const DETECTOR_IDS: readonly DetectorId[] = [
   'subject-empty',
   'attachment-missing',
   'placeholder',
+  'repeated-characters',
   'date-weekday-mismatch',
 ];
 

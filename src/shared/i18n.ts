@@ -61,6 +61,7 @@ export const MESSAGE_KEYS = [
   // 検知結果
   'detectAttachmentMissing',
   'detectPlaceholder',
+  'detectRepeatedCharacters',
   'detectDateWeekdayMismatch',
   'detectDateInvalid',
   'detectSubjectEmpty',
@@ -99,6 +100,7 @@ export const MESSAGE_KEYS = [
   'optionsLevelsHelp',
   'detectorNameAttachmentMissing',
   'detectorNamePlaceholder',
+  'detectorNameRepeatedCharacters',
   'detectorNameDateWeekday',
   'detectorNameSubjectEmpty',
   'detectorNameMultipleCompanies',

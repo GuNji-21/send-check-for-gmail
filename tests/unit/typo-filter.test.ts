@@ -202,6 +202,26 @@ describe('isSafeTypoFix（規則ごとの境界）', () => {
   });
 });
 
+describe('助詞だけを入れ替える候補を捨てる', () => {
+  it('助詞1文字を別の助詞に入れ替える候補は捨てる', () => {
+    expect(isSafeTypoFix('を送付いたします', 'の送付いたします')).toBe(false);
+    expect(isSafeTypoFix('への返信は', 'への返信が')).toBe(false);
+    expect(isSafeTypoFix('会議に参加', '会議へ参加')).toBe(false);
+    expect(isSafeTypoFix('私が担当', '私も担当')).toBe(false);
+  });
+
+  it('助詞ではない文字が関わる1文字の直しは残す', () => {
+    expect(isSafeTypoFix('こんにちわ', 'こんにちは')).toBe(true);
+    expect(isSafeTypoFix('以外と', '意外と')).toBe(true);
+    expect(isSafeTypoFix('資料お送付', '資料を送付')).toBe(true);
+  });
+
+  it('重複した助詞を1つ消す直しは残す', () => {
+    expect(isSafeTypoFix('資料をを', '資料を')).toBe(true);
+    expect(isSafeTypoFix('会議にに参加', '会議に参加')).toBe(true);
+  });
+});
+
 describe('AI の返答を信頼しない（異常な返答）', () => {
   const SOURCE = buildTypoSource('ご連絡', '資料をを送付');
   const KEEP = { wrong: '資料をを', suggestion: '資料を', reason: '助詞の重複' };

@@ -73,6 +73,13 @@ export const MAX_ADDED_CHARACTERS = 4;
  */
 export const MAX_PURE_INSERTED_CHARACTERS = 2;
 
+/**
+ * 助詞として使われる文字。助詞1文字を別の助詞1文字に入れ替えるだけの候補は捨てる。
+ * （例：資料を送付 → 資料の送付）。文の関係が変わり、誤字の直しと区別できないため。
+ * 「わ」は含めないので、「こんにちわ → こんにちは」は残る。
+ */
+export const PARTICLE_CHARACTERS = 'をのにはがでとへも';
+
 /** 文字列から、数字の文字だけを出現順に取り出す */
 function digitsOf(text: string): string {
   let digits = '';
@@ -104,6 +111,15 @@ export function measureDifference(
   wrong: string,
   replacement: string,
 ): { readonly removed: number; readonly added: number } {
+  const { removed, added } = differingParts(wrong, replacement);
+  return { removed: removed.length, added: added.length };
+}
+
+/** 修正の前後で食い違う部分（先頭と末尾の一致を除いた残り）を、文字の配列で返す */
+function differingParts(
+  wrong: string,
+  replacement: string,
+): { readonly removed: readonly string[]; readonly added: readonly string[] } {
   const from = Array.from(wrong);
   const to = Array.from(replacement);
   const shorter = Math.min(from.length, to.length);
@@ -115,7 +131,7 @@ export function measureDifference(
   while (tail < shorter - head && from[from.length - 1 - tail] === to[to.length - 1 - tail]) {
     tail++;
   }
-  return { removed: from.length - head - tail, added: to.length - head - tail };
+  return { removed: from.slice(head, from.length - tail), added: to.slice(head, to.length - tail) };
 }
 
 /**
@@ -131,10 +147,21 @@ export function isSafeTypoFix(wrong: string, replacement: string): boolean {
   if (digitsOf(wrong) !== digitsOf(replacement)) return false;
   // 否定・可否・範囲・時期・時制が変わる
   if (changesMeaningWords(wrong, replacement)) return false;
+  const parts = differingParts(wrong, replacement);
+  const removed = parts.removed.length;
+  const added = parts.added.length;
   // 差分が大きい（書き換え・付け足し）
-  const { removed, added } = measureDifference(wrong, replacement);
   if (removed >= MAX_REMOVED_CHARACTERS || added >= MAX_ADDED_CHARACTERS) return false;
   if (removed === 0 && added >= MAX_PURE_INSERTED_CHARACTERS) return false;
+  // 助詞1文字を、別の助詞1文字に入れ替えるだけ
+  if (
+    removed === 1 &&
+    added === 1 &&
+    PARTICLE_CHARACTERS.includes(parts.removed[0] ?? '') &&
+    PARTICLE_CHARACTERS.includes(parts.added[0] ?? '')
+  ) {
+    return false;
+  }
   return true;
 }
 
