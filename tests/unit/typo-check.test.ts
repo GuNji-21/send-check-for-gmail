@@ -109,12 +109,16 @@ describe('parseTypoResponse', () => {
       parseTypoResponse(response([{ wrong: long, suggestion: 'あ', reason: '' }]), source),
     ).toEqual([]);
 
-    const many = Array.from({ length: MAX_CANDIDATES + 5 }, (_, i) => ({
-      wrong: 'い',
-      suggestion: `う${String(i)}`,
+    // 互いに違う、受け入れられる候補（文字の重複の直し）を、上限より多く並べる
+    const doubled = Array.from('かきくけこさしすせそ');
+    expect(doubled).toHaveLength(MAX_CANDIDATES + 5);
+    const manySource = doubled.map((character) => character.repeat(2)).join('');
+    const many = doubled.map((character) => ({
+      wrong: character.repeat(2),
+      suggestion: character,
       reason: '',
     }));
-    expect(parseTypoResponse(response(many), source)).toHaveLength(MAX_CANDIDATES);
+    expect(parseTypoResponse(response(many), manySource)).toHaveLength(MAX_CANDIDATES);
   });
 
   it('JSON として読めない・形が違う返答では例外を投げる', () => {
@@ -309,6 +313,26 @@ describe('createTypoChecker', () => {
     stubLanguageModel({ reply: 'すみません、分かりません。' });
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     await expect(createTypoChecker().check(input)).resolves.toEqual({ status: 'failed' });
+  });
+
+  it('意味を変える候補しか無い場合は、「候補なし」を返す', async () => {
+    stubLanguageModel({
+      reply: response([
+        { wrong: '送付いたします', suggestion: '送付いたしません', reason: '理由' },
+      ]),
+    });
+    await expect(createTypoChecker().check(input)).resolves.toEqual({
+      status: 'ok',
+      candidates: [],
+    });
+  });
+
+  it('AI の返答の形が違う場合は failed を返す（例外は投げない）', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    for (const reply of ['{"candidates":"none"}', '[]', 'null']) {
+      stubLanguageModel({ reply });
+      await expect(createTypoChecker().check(input)).resolves.toEqual({ status: 'failed' });
+    }
   });
 
   it('セッションを作れなかった場合は failed を返し、次のチェックで作り直す', async () => {
