@@ -181,8 +181,10 @@ describe('isSafeTypoFix（規則ごとの境界）', () => {
   });
 
   it('削除する文字数が3までは受け入れ、4以上は受け入れない', () => {
-    expect(measureDifference('あかきくい', 'あさしすい')).toEqual({ removed: 3, added: 3 });
-    expect(isSafeTypoFix('あかきくい', 'あさしすい')).toBe(true);
+    // ひらがな同士の置き換えは別の規則で捨てるため、カタカナで確かめる
+    expect(measureDifference('アカキクイ', 'アサシスイ')).toEqual({ removed: 3, added: 3 });
+    expect(isSafeTypoFix('アカキクイ', 'アサシスイ')).toBe(true);
+    expect(isSafeTypoFix('あかきくい', 'あさしすい')).toBe(false);
     expect(measureDifference('あかきくけい', 'あさい')).toEqual({ removed: 4, added: 1 });
     expect(isSafeTypoFix('あかきくけい', 'あさい')).toBe(false);
   });
@@ -219,6 +221,68 @@ describe('助詞だけを入れ替える候補を捨てる', () => {
   it('重複した助詞を1つ消す直しは残す', () => {
     expect(isSafeTypoFix('資料をを', '資料を')).toBe(true);
     expect(isSafeTypoFix('会議にに参加', '会議に参加')).toBe(true);
+  });
+});
+
+describe('ひらがなの言い回しを変える候補を捨てる', () => {
+  it('ひらがな2文字以上を、別のひらがな2文字以上に置き換える候補は捨てる', () => {
+    expect(isSafeTypoFix('確認したものの不明です', '確認したところ不明です')).toBe(false);
+    expect(isSafeTypoFix('遅れるので連絡', '遅れるから連絡')).toBe(false);
+    expect(isSafeTypoFix('急ぎですが対応', '急ぎだけど対応')).toBe(false);
+  });
+
+  it('同じ文字の並べ替えは残す', () => {
+    expect(isSafeTypoFix('こんちには', 'こんにちは')).toBe(true);
+    expect(isSafeTypoFix('よろしくおねがいしすま', 'よろしくおねがいします')).toBe(true);
+  });
+
+  it('ひらがな1文字の直しと、漢字・カタカナを含む直しは残す', () => {
+    expect(isSafeTypoFix('こんにちわ', 'こんにちは')).toBe(true);
+    expect(isSafeTypoFix('いたたきます', 'いただきます')).toBe(true);
+    expect(isSafeTypoFix('機関限定', '期間限定')).toBe(true);
+    expect(isSafeTypoFix('会議質を', '会議に')).toBe(true);
+    expect(isSafeTypoFix('スケジュルー', 'スケジュール')).toBe(true);
+  });
+
+  it('片方が1文字以下なら、この規則では捨てない', () => {
+    expect(isSafeTypoFix('おりまます', 'おります')).toBe(true);
+    expect(isSafeTypoFix('お願いしす', 'お願いします')).toBe(true);
+  });
+});
+
+describe('言葉を削るだけの候補を捨てる', () => {
+  it('2文字以上を削るだけの候補は捨てる', () => {
+    expect(isSafeTypoFix('確認したものの', '確認した')).toBe(false);
+    expect(isSafeTypoFix('を送付いたします', 'を送付します')).toBe(false);
+    expect(isSafeTypoFix('ご確認のほどお願い', 'ご確認お願い')).toBe(false);
+  });
+
+  it('1文字を削るだけの直しは残す', () => {
+    expect(isSafeTypoFix('資料をを', '資料を')).toBe(true);
+    expect(isSafeTypoFix('おりまます', 'おります')).toBe(true);
+    expect(isSafeTypoFix('くだださい', 'ください')).toBe(true);
+  });
+
+  it('隣と同じ文字の繰り返しを消す直しは残す', () => {
+    expect(isSafeTypoFix('明日ですです。', '明日です。')).toBe(true);
+    expect(isSafeTypoFix('送りましたした', '送りました')).toBe(true);
+    expect(isSafeTypoFix('会議会議の件', '会議の件')).toBe(true);
+  });
+});
+
+describe('記号を足す・消すだけの候補を捨てる', () => {
+  it('句読点や空白を足す・消す・入れ替えるだけの候補は捨てる', () => {
+    expect(isSafeTypoFix('確認したものの不明です', '確認したものの、不明です')).toBe(false);
+    expect(isSafeTypoFix('はい、承知しました', 'はい承知しました')).toBe(false);
+    expect(isSafeTypoFix('お願いします', 'お願いします。')).toBe(false);
+    expect(isSafeTypoFix('資料,確認', '資料、確認')).toBe(false);
+    expect(isSafeTypoFix('山田 様', '山田様')).toBe(false);
+  });
+
+  it('長音や文字を含む直しは残す', () => {
+    expect(isSafeTypoFix('スケジュル', 'スケジュール')).toBe(true);
+    expect(isSafeTypoFix('サーバ―の件', 'サーバーの件')).toBe(true);
+    expect(isSafeTypoFix('資料をを、送付', '資料を、送付')).toBe(true);
   });
 });
 
