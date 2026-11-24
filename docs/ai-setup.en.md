@@ -10,8 +10,23 @@ By default, the typo check uses the AI built into Chrome, which only works on de
 
 - **You connect your own API.** You contract with OpenAI or Anthropic and register your own API key in the extension. The fees are charged to your account.
 - **The APIs are prepaid. You need to add credit first.** The monthly cost is close to zero, but nothing works without a balance.
-- **This is separate from a ChatGPT or Claude subscription.** The API is set up in the provider's developer console, apart from the chat subscription.
+- **The API is a separate system from a ChatGPT or Claude subscription.** It is set up in the provider's developer console and billed separately. However, some paid plans include monthly API credits (see "API credits included in paid plans" below).
 - **The subject and body of your email are sent to the provider you choose.** If your organization does not allow sending email content to an external AI, do not set this up; use the AI built into Chrome.
+
+### API credits included in paid plans (as of November 25, 2026)
+
+The following paid plans include monthly API credits. If you are on one of them, you may be able to use those credits without buying any.
+
+| Provider  | Plans with API credits                                                  | Plans without                      |
+| --------- | ----------------------------------------------------------------------- | ---------------------------------- |
+| OpenAI    | ChatGPT Pro (Pro 100 / Pro 200 / Pro 500), eligible Business workspaces | Free, Go, Plus, Enterprise, Edu    |
+| Anthropic | Claude Max, Ultra, Team                                                 | Pro (the API is billed separately) |
+
+- **They are not applied automatically; you have to claim them.** At OpenAI, start the API credits claim from Settings → Billing in ChatGPT and choose the API organization. At Anthropic, link a Claude Console organization to your plan.
+- **Unused credits do not roll over.** At both providers, the monthly credits expire at the end of the billing cycle.
+- At OpenAI the amounts are $100 a month for Pro 100, $200 for Pro 200 and $500 for Pro 500. For Anthropic, check the information for your plan.
+- ChatGPT Plus and Claude Pro do not include API credits. On those plans you need to buy credit as described below.
+- These terms may change. Check each provider's help pages for the current conditions.
 
 ## 2. Choose one
 
