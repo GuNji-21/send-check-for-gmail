@@ -81,8 +81,9 @@ export const MAX_PURE_INSERTED_CHARACTERS = 2;
 export const PARTICLE_CHARACTERS = 'をのにはがでとへも';
 
 /**
- * ひらがなだけの置き換えで、削除・追加の両方がこの文字数以上の候補は捨てる。
- * 言い回しの変更（例：ものの → ところ、ので → から）と区別できないため。
+ * ひらがなだけの部分をこの文字数以上消して、別の文字に置き換える候補は捨てる。
+ * 置き換え先は、ひらがなでも漢字でも同じ（例：ものの → ところ、ので → から、ように → 旨）。
+ * 言い回しの変更と区別できないため。
  * ひらがな2文字以上の打ち間違いの指摘も一部捨てることになるが、意味を変える候補を出さないほうを優先する。
  */
 export const MIN_HIRAGANA_REWORDING_CHARACTERS = 2;
@@ -206,13 +207,12 @@ export function isSafeTypoFix(wrong: string, replacement: string): boolean {
   ) {
     return false;
   }
-  // ひらがな2文字以上を、別のひらがな2文字以上に置き換える（言い回しの変更。例：ものの → ところ）。
+  // ひらがな2文字以上を、別の文字に置き換える（言い回しの変更。例：ものの → ところ、ように → 旨）。
   // 同じ文字の並べ替え（例：こんちには → こんにちは）は、打ち間違いの直しなので残す
   if (
     removed >= MIN_HIRAGANA_REWORDING_CHARACTERS &&
-    added >= MIN_HIRAGANA_REWORDING_CHARACTERS &&
+    added >= 1 &&
     parts.removed.every(isHiragana) &&
-    parts.added.every(isHiragana) &&
     !isSameCharacters(parts.removed, parts.added)
   ) {
     return false;

@@ -231,6 +231,17 @@ describe('ひらがなの言い回しを変える候補を捨てる', () => {
     expect(isSafeTypoFix('急ぎですが対応', '急ぎだけど対応')).toBe(false);
   });
 
+  it('ひらがな2文字以上を、漢字を含む別の言葉や、1文字に置き換える候補も捨てる', () => {
+    expect(isSafeTypoFix('そのようにお知らせください', 'その旨お知らせください')).toBe(false);
+    expect(isSafeTypoFix('移行のとおりです', '移行通りです')).toBe(false);
+    expect(isSafeTypoFix('急ぎですが対応', '急ぎだが対応')).toBe(false);
+  });
+
+  it('漢字を含む部分の置き換えは、この規則では捨てない', () => {
+    expect(isSafeTypoFix('移行のとおり', '以降のとおり')).toBe(true);
+    expect(isSafeTypoFix('ご検当ください', 'ご検討ください')).toBe(true);
+  });
+
   it('同じ文字の並べ替えは残す', () => {
     expect(isSafeTypoFix('こんちには', 'こんにちは')).toBe(true);
     expect(isSafeTypoFix('よろしくおねがいしすま', 'よろしくおねがいします')).toBe(true);
