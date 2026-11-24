@@ -2,7 +2,7 @@
 
 Applies to: the Chrome extension "Send Check for Gmail" (the "Extension")
 
-Last updated: November 21, 2026
+Last updated: November 24, 2026
 
 ## 1. Information the Extension handles
 
@@ -16,10 +16,12 @@ To perform pre-send checks in Gmail, the Extension reads the following informati
 The Extension also handles the following:
 
 - Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, attachment keywords, which warnings are turned on, etc.)
-- Contact information (planned for a future version)
-  - Who: people you have sent email to (To / Cc), and people in the Cc line of email you receive whose domain matches a company already registered
-  - What: email address, name, company name, department and title, phone number, how many times the person appeared in To / Cc, and the date of the last exchange
-  - Source: the recipients and salutations of email you compose, and the sender, Cc line and signature of email received from the people above (read from what Gmail displays on screen)
+- Contact records (only when you turn the feature on in the options page; off by default)
+  - Who: external recipients (To / Cc / Bcc) of email you send, and the people you put in Cc on email to an external recipient (including internal people)
+  - What: email address, display name, domain, how many times the person was in To or Cc, the date of the last send, and which people were in Cc on email to which recipient, with a count
+  - Source: the recipient fields of email you compose. The content of email you receive is not read
+  - Purpose: to warn you about a domain you are sending to for the first time, and about a person you usually Cc who is not included
+  - Email sent before you turned the feature on, and email sent only to internal recipients, is not recorded
 
 ## 2. Processing and transmission
 
@@ -30,7 +32,9 @@ The Extension also handles the following:
 
 ## 3. Storage
 
-- Data is stored only on your device (chrome.storage and IndexedDB).
+- Data is stored only on your device. Settings are stored in chrome.storage, and contact records in IndexedDB.
+- The subject, body and attachment information are not stored. They are read only while the check is shown.
+- Contact records are deleted automatically once a set period has passed since the last send (1 year by default; you can choose from 6 months to 5 years in the options page).
 - The developer has no access to your data.
 
 ## 4. No sale or advertising use
@@ -40,7 +44,8 @@ The Extension also handles the following:
 
 ## 5. Deleting your data
 
-- You can delete stored data from the Extension's options page.
+- You can delete the settings you registered from the Extension's options page.
+- You can delete all contact records at any time with "Delete all contact records" in the options page.
 - Data stored by the Extension is also removed when you uninstall the Extension.
 
 ## 6. Changes to this policy

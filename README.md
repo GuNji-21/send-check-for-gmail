@@ -12,10 +12,10 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 - 対象：PC 版 Chrome 上の Gmail（mail.google.com）
 - Gmail API は使いません。外部への通信は一切行わず、設定は利用者の端末内にのみ保存します。
-- 現在はフェーズ1（v1.0.0）を実装済みです。Chrome Web Store への公開を準備しています。
+- 現在はフェーズ1と、フェーズ2の一部（連絡先の記録、初めて送るドメイン、Cc 漏れ）を実装済みです。Chrome Web Store への公開を準備しています。
 - Gmail は Google LLC の商標です。この拡張機能は Google が提供・公認するものではありません。
 
-### できること（フェーズ1・実装済み）
+### できること（実装済み）
 
 **送信前の確認**
 
@@ -47,6 +47,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 | 件名が空           | 件名が入力されていない                                                                                       |
 | 添付漏れ           | 本文に「添付」「送付」「見積書」などのキーワードがあるのに、添付ファイルがない（相手への依頼の文などは除く） |
 | 書き換え忘れの記号 | 〇〇、●●、XX、【 】、{name} などが件名・本文に残っている                                                     |
+| 同じ文字の重複     | 「をを」「まます」「くだださい」のように、同じ文字が重なっている（AI を使わずに調べます）                    |
 | 日付と曜日の不一致 | 「11月13日（木）」のように、日付と曜日が合っていない。存在しない日付も検知                                   |
 
 - 警告は表示するだけで、警告が出ていてもそのまま送信できます。
@@ -58,15 +59,17 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 - Chrome に内蔵された AI（Gemini Nano）で、件名と本文の誤字・脱字の候補を調べ、確認ダイアログに「誤りの箇所 → 修正案」と理由を表示します。
 - 処理は端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金もかかりません。
 - 結果は確認ダイアログを開いた後に表示されます。結果を待たずに送信でき、解析に失敗しても送信は止まりません。
+- AI が返した候補のうち、意味を変えるもの（否定の入れ替え、数字・日付の変更など）や、言い回しを変えるだけのものは表示しません。そのため、すべての誤字を指摘できるわけではありません。修正案が正しいとは限らないので、反映する前に内容を確かめてください。
 - 候補ごとの「修正する」ボタンで、修正案をメールに反映できます（該当する箇所が1か所に決まる場合のみ）。反映後は、書き換えた行がその場に表示され、「元に戻す」で取り消したり、「メールで確認」で実際のメールの画面に戻って該当箇所を確かめたりできます。
 - 使うには、設定画面で有効にして、モデルをダウンロードします（初回のみ）。空き容量 22GB 以上、メモリ 16GB 以上または VRAM 4GB 超の GPU など、Chrome の定める端末の条件があります。対応していない端末では、設定画面にその旨が表示されます。
 
-**連絡先の記録**（初期設定は無効。開発中の版に含まれ、ストアの版にはまだ含まれていません）
+**連絡先の記録**（初期設定は無効）
 
-- 設定画面で有効にすると、送信した相手（アドレス、表示名、To・Cc に入れた回数、最後に送った日）を、端末の中に記録します。外部には送信しません。
+- 設定画面で有効にすると、送信した社外の相手（アドレス、表示名、To・Cc に入れた回数、最後に送った日）と、その相手へのメールで Cc に入れた人を、端末の中に記録します。外部には送信しません。
 - 記録を使って、次の2つを確認します。
   - 初めて送るドメイン（似たドメインへの誤送信に気づくため）
   - Cc 漏れ（その相手へのメールで、よく Cc に入れている人が今回入っていない）
+- 2つの確認は、項目ごとにオン・オフを選べます。警告は表示するだけで、送信は止めません。
 - 記録は、最後に送った日から一定の期間（初期値は1年）で自動的に削除します。設定画面から、いつでもすべて削除できます。
 
 **うまく動かないとき**
@@ -83,19 +86,17 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 ### 今後の予定
 
-**フェーズ2**
+**フェーズ2**（連絡先の記録、初めて送るドメインの警告、Cc 漏れの通知は実装済み）
 
-- 連絡先・会社台帳の自動作成（送信した相手と、その相手から届いたメールの Cc・署名を画面から蓄積）
+- 会社台帳の自動作成（届いたメールの Cc・署名を画面から読み取って蓄積）
 - 会社名検索
 - 宛名と宛先の照合
 - 添付ファイル名・本文中の他社名のチェック
-- Cc 漏れの通知
-- 初めて送るドメインの警告
 - 会社名での宛先表示
 
 **フェーズ3**
 
-- 誤字辞書の拡充
+- 誤字辞書の拡充（同じ文字の重複は実装済み）
 - AI による署名抽出の精度向上
 
 ### 開発環境の準備
@@ -153,10 +154,10 @@ A Chrome extension (Manifest V3) that stops the send action in Gmail and makes y
 
 - Target: Gmail (mail.google.com) on desktop Chrome
 - Does not use the Gmail API. Makes no external network requests; settings are stored only on your device.
-- Phase 1 (v1.0.0) is implemented. Publication on the Chrome Web Store is being prepared.
+- Phase 1 and part of Phase 2 (contact records, first-time domain, missing Cc) are implemented. Publication on the Chrome Web Store is being prepared.
 - Gmail is a trademark of Google LLC. This extension is not provided or endorsed by Google.
 
-### What it does (Phase 1, implemented)
+### What it does (implemented)
 
 **Pre-send confirmation**
 
@@ -188,6 +189,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 | Empty subject               | The subject is empty                                                               |
 | Missing attachment          | The body mentions an attachment keyword, but nothing is attached                   |
 | Leftover placeholders       | 〇〇, ●●, XX, 【 】, {name} and similar remain in the subject or body              |
+| Repeated characters         | Doubled characters in Japanese text, such as をを or まます (checked without AI)   |
 | Date / day-of-week mismatch | A date and its day of the week do not match (Japanese notation); invalid dates too |
 
 - Warnings are only shown; you can still send when a warning appears.
@@ -199,15 +201,17 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 - Uses the AI built into Chrome (Gemini Nano) to look for possible typos in the subject and body, and shows "wrong text → suggestion" with a reason in the confirmation dialog.
 - Everything is processed on your device; the content of your email is never sent anywhere. It is free.
 - Results appear after the confirmation dialog opens. You can send without waiting, and a failed check never blocks sending.
+- Candidates from the AI that would change the meaning (swapping a negation, changing a number or date) or that only reword the text are not shown, so not every typo is reported. A suggestion is not guaranteed to be right; check it before you apply it.
 - Each candidate has a "Fix" button that applies the suggestion to your email (only when the text to fix can be identified in exactly one place). After a fix, the changed line is shown in place; "Undo" reverts it, and "See in email" closes the dialog and selects the fixed text in your email.
 - To use it, turn it on in the options page and download the model (once). Chrome's device requirements apply, such as 22 GB of free space and either 16 GB of RAM or a GPU with more than 4 GB of VRAM. On unsupported devices, the options page says so.
 
-**Contact records** (off by default; in the development version, not yet in the store version)
+**Contact records** (off by default)
 
-- When you turn it on in the options page, the people you send email to (address, display name, how often they were in To or Cc, and the date of the last send) are recorded on your device. Nothing is sent anywhere.
+- When you turn it on in the options page, the external people you send email to (address, display name, how often they were in To or Cc, and the date of the last send) and the people you put in Cc on email to them are recorded on your device. Nothing is sent anywhere.
 - The records are used for two checks:
   - First-time domain (to notice look-alike domains)
   - Missing Cc (people you usually Cc on email to that recipient are not included this time)
+- Each of the two checks can be turned on or off. Warnings are only shown; they never block sending.
 - Records are deleted automatically after a set period from the last send (1 year by default). You can delete all of them at any time from the options page.
 
 **When something goes wrong**
@@ -224,19 +228,17 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 ### Roadmap
 
-**Phase 2**
+**Phase 2** (contact records, the first-time domain warning and the missing Cc notification are implemented)
 
-- Automatically built contact and company directory (from people you have sent email to, plus the Cc lines and signatures of email received from them)
+- Automatically built company directory (from the Cc lines and signatures of email you receive, read from the screen)
 - Company name search
 - Salutation vs. recipient matching
 - Attachment file name and other-company-name checks
-- Missing Cc notification
-- First-time domain warning
 - Showing recipients grouped by company name
 
 **Phase 3**
 
-- Expanded typo dictionary
+- Expanded typo dictionary (repeated characters are implemented)
 - More accurate signature extraction with AI
 
 ### Development setup

@@ -45,14 +45,17 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 　- 添付漏れ（本文に「添付」「送付」などがあるのに、添付ファイルがない）
 　- 件名が空
 　- 書き換え忘れの記号（〇〇、XX、{name} など）
+　- 同じ文字の重複（「をを」「まます」など）
 　- 日付と曜日の不一致（「11月13日（木）」など）
 　- 社外の複数の会社が宛先に混ざっている
 ・Chrome に内蔵された AI を使って、誤字・脱字の候補を表示できます（任意。初期設定はオフ）。候補はその場でメールに反映でき、元に戻すこともできます。
+・送信した相手を端末の中に記録して、初めて送るドメインと、いつも Cc に入れている人の入れ忘れを知らせることができます（任意。初期設定はオフ）。
 
 ■ プライバシー
 ・メールの内容や宛先は、お使いの端末の中だけで処理します。外部のサーバーには一切送信しません。
 ・AI による誤字・脱字チェックも、Chrome に内蔵された AI を使って端末の中で処理します。
 ・設定は、お使いの端末の中にだけ保存します。
+・送信した相手の記録は、有効にした場合だけ、お使いの端末の中に保存します。一定の期間で自動的に削除し、設定画面からいつでもすべて削除できます。
 ・Gmail API は使いません。ソースコードは GitHub で公開しています。
 
 ■ お使いになる前に
@@ -77,14 +80,17 @@ An extension for reviewing recipients, subject, body and attachments before you 
   - Missing attachment (the body mentions an attachment, but nothing is attached)
   - Empty subject
   - Leftover placeholders (XX, {name}, etc.)
+  - Repeated characters in Japanese text
   - Date and day-of-week mismatch (Japanese notation)
   - Recipients from multiple external companies
 - Can show possible typos using the AI built into Chrome (optional, off by default). A suggestion can be applied to your email in place, and undone.
+- Can record the people you send email to on your device, and warn you about a first-time domain or a person you usually Cc who is missing (optional, off by default).
 
 ■ Privacy
 - The content of your email and your recipients are processed only on your device. Nothing is sent to any external server.
 - The AI typo check also runs on your device, using the AI built into Chrome.
 - Settings are stored only on your device.
+- Records of the people you send email to are stored on your device, and only when you turn the feature on. They are deleted automatically after a set period, and you can delete all of them at any time from the options page.
 - The Gmail API is not used. The source code is published on GitHub.
 
 ■ Before you start
@@ -153,6 +159,7 @@ To prevent mis-sent email by having the user review recipients, subject, body an
 ### データの使用
 
 - この拡張機能は、メールの内容（宛先、件名、本文、添付ファイル名）を**端末の中で読み取って処理します**が、**外部には送信しません**。開発者がデータを受け取ることもありません。
+- 連絡先の記録を有効にした場合は、送信した相手のアドレス・表示名・回数・最後に送った日を、**端末の中（IndexedDB）に保存します**。これも外部には送信しません。IndexedDB の利用に、追加の権限は必要ありません。
 - ダッシュボードの「収集するデータ」のチェック項目で、端末内だけの処理を「収集」に含めるかどうかは、確認した公式ドキュメントには書かれていませんでした。
 - 推奨：審査で説明と申告が食い違うと判断されるのを避けるため、読み取っている情報に当たる項目（**個人を特定できる情報**、**個人的なコミュニケーション**）にチェックを入れ、プライバシーポリシーで「端末内でのみ処理し、外部に送信しない」と明記します。提出時に、ダッシュボードの各項目の説明文を読んで最終判断します。
 - 次の3つの確認事項には、すべて当てはまるのでチェックを入れます。
