@@ -1,19 +1,28 @@
 /*
- * 台帳の画面（manage.html）と、会社名検索のポップアップ（popup.html）の共通の見た目。
- * 設定画面（options.html）・確認ダイアログと同じ決まりにする：
- * - 地は #0D1117 の暗い色、文字は白
- * - 書体は BIZ UDP ゴシック。アドレス・ドメインは等幅の書体（外部からフォントは読み込まない）
- * - 意味を持つ色は2つだけ。黄色は「知らせ・注意」、赤は「削除など取り消せない操作」と「失敗」
+ * 拡張機能の画面（設定画面 options.html、台帳の画面 manage.html、会社名検索のポップアップ popup.html）の見た目。
+ *
+ * 決まり：
+ * - 地は黒。設定画面と台帳の画面は、背後に、光る曲線（オレンジから青紫）をゆっくり動かす。
+ *   曲線は CSS だけで描く（画像や外部のファイルは使わない）。
+ * - 見出しは大きな白い文字。内容は、細い枠の暗いカードにまとめる（背後の光がうっすら透ける）。
+ * - ボタンと検索欄は、両端が丸い形（カプセル）。主となる操作は白の塗り。
+ * - 書体は BIZ UDP ゴシック。アドレス・ドメインは等幅の書体（外部からフォントは読み込まない）。
+ * - 意味を持つ色は2つだけ。黄色は「知らせ・注意」、赤は「削除など取り消せない操作」と「失敗」。
+ * - ポップアップは、確認ダイアログ（src/ui/dialog/styles.ts）と同じ、つやのない暗い面に光の帯を回す。
+ * - 動きを減らす設定（prefers-reduced-motion）の環境では、動かさない。
  */
 :root {
-  --ground: #0d1117;
+  --ground: #050506;
+  --surface: rgba(255, 255, 255, 0.04);
   --ink: #ffffff;
   --ink-soft: rgba(255, 255, 255, 0.72);
-  --rule: rgba(255, 255, 255, 0.16);
+  --ink-faint: rgba(255, 255, 255, 0.5);
+  --rule: rgba(255, 255, 255, 0.09);
   --wash: rgba(255, 255, 255, 0.06);
-  --edge: rgba(255, 255, 255, 0.3);
+  --wash-strong: rgba(255, 255, 255, 0.12);
+  --edge: rgba(255, 255, 255, 0.16);
   --notice: #f9f1a5;
-  --danger: #ff9a90;
+  --danger: #ff8f86;
   --ui: 'BIZ UDPGothic', 'Hiragino Sans', 'Yu Gothic UI', Meiryo, sans-serif;
   --data: 'Cascadia Mono', Consolas, 'SF Mono', Menlo, 'BIZ UDGothic', monospace;
   color-scheme: dark;
@@ -22,7 +31,7 @@
   box-sizing: border-box;
 }
 html {
-  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 body {
   margin: 0;
@@ -35,15 +44,142 @@ body {
   background: rgba(255, 255, 255, 0.28);
   color: #fff;
 }
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- 背後の、光る曲線 ---------- */
+.aura {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aura i {
+  position: absolute;
+  display: block;
+  border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%;
+  background: radial-gradient(closest-side, rgba(96, 88, 255, 0.1), transparent 72%);
+  box-shadow:
+    0 0 70px 4px rgba(255, 122, 61, 0.16),
+    inset 0 0 80px 6px rgba(90, 110, 255, 0.16);
+  animation: aura-drift 28s ease-in-out infinite alternate;
+}
+/* 曲線そのもの：形に沿った細い輪に、色の変わるグラデーションを乗せる */
+.aura i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--aura-from, 210deg),
+    #ff7a3d,
+    #ffb36b 8%,
+    #ff4d8d 22%,
+    #8a5cff 40%,
+    #3b82ff 55%,
+    rgba(59, 130, 255, 0.15) 70%,
+    rgba(255, 122, 61, 0.1) 86%,
+    #ff7a3d
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.aura i:nth-child(1) {
+  top: -18vmax;
+  right: -12vmax;
+  width: 58vmax;
+  height: 50vmax;
+}
+.aura i:nth-child(2) {
+  --aura-from: 40deg;
+  top: 34vh;
+  left: -22vmax;
+  width: 44vmax;
+  height: 40vmax;
+  border-radius: 44% 56% 38% 62% / 58% 42% 58% 42%;
+  animation-duration: 34s;
+  animation-direction: alternate-reverse;
+}
+.aura i:nth-child(3) {
+  --aura-from: 300deg;
+  right: 6vw;
+  bottom: -26vmax;
+  width: 40vmax;
+  height: 38vmax;
+  border-radius: 62% 38% 46% 54% / 40% 52% 48% 60%;
+  opacity: 0.8;
+  animation-duration: 40s;
+}
+@keyframes aura-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    border-radius: 46% 54% 40% 60% / 56% 44% 56% 44%;
+  }
+  to {
+    transform: translate3d(-3vmax, 2vmax, 0) rotate(14deg);
+    border-radius: 52% 48% 60% 40% / 42% 58% 42% 58%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aura i {
+    animation: none;
+  }
+}
+
+/* ---------- 共通の部品 ---------- */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 32px 140px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--wash);
+  color: var(--ink-soft);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.brand::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff7a3d, #8a5cff);
+}
 h1 {
-  margin: 0 0 12px;
-  font-size: 22px;
+  margin: 40px 0 16px;
+  font-size: clamp(34px, 5.4vw, 60px);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+/* 設定画面の見出しは長いので、1行に収まる大きさにする */
+.options h1 {
+  font-size: clamp(26px, 3.6vw, 40px);
 }
 h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
 }
 .help {
@@ -51,6 +187,12 @@ h2 {
   margin: 6px 0 0;
   color: var(--ink-soft);
   font-size: 13px;
+}
+.lead {
+  max-width: 56ch;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
 }
 .data {
   font-family: var(--data);
@@ -61,62 +203,99 @@ h2 {
   color: var(--ink-soft);
   font-size: 13px;
 }
+/* カード：細い枠の暗い面。背後の光がうっすら透ける */
+.card {
+  margin-top: 20px;
+  padding: 28px 30px;
+  border: 1px solid var(--rule);
+  border-radius: 24px;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+input[type='text'],
+input[type='search'],
+textarea,
+select {
+  border: 1px solid var(--edge);
+  background: rgba(0, 0, 0, 0.32);
+  color: var(--ink);
+  font: inherit;
+  transition:
+    border-color 120ms ease-out,
+    background-color 120ms ease-out;
+}
 input[type='text'],
 input[type='search'] {
   width: 100%;
-  min-height: 36px;
-  padding: 0 10px;
-  border: 1px solid var(--edge);
-  border-radius: 4px;
-  background: var(--wash);
-  color: var(--ink);
-  font: inherit;
-  transition: border-color 120ms ease-out;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+input[type='search'] {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
 }
 input[type='text']:hover,
-input[type='search']:hover {
-  border-color: rgba(255, 255, 255, 0.5);
+input[type='search']:hover,
+textarea:hover,
+select:hover {
+  border-color: rgba(255, 255, 255, 0.36);
 }
 input::placeholder {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--ink-faint);
 }
 button {
-  min-height: 36px;
-  padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  background: transparent;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--wash-strong);
   color: var(--ink);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms ease-out;
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
 }
 button:hover {
-  background: var(--wash);
+  background: rgba(255, 255, 255, 0.2);
 }
 button:disabled {
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
   cursor: not-allowed;
 }
+/* 主となる操作は白の塗り（色ではなく明るさで目立たせる） */
+button.primary {
+  min-width: 112px;
+  background: #ffffff;
+  color: #0a0a0b;
+}
+button.primary:hover {
+  background: rgba(255, 255, 255, 0.86);
+}
 button.danger {
-  border-color: var(--danger);
+  border-color: rgba(255, 143, 134, 0.6);
+  background: transparent;
   color: var(--danger);
 }
+button.danger:hover {
+  background: rgba(255, 143, 134, 0.12);
+}
 button.small {
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: 30px;
+  padding: 0 14px;
   font-size: 13px;
 }
 button:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
 input:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
-}
-[hidden] {
-  display: none !important;
 }
 .status {
   min-height: 1.7em;
@@ -130,43 +309,176 @@ input:focus-visible {
 }
 .badge {
   display: inline-block;
-  padding: 0 6px;
-  border: 1px solid var(--edge);
-  border-radius: 3px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--wash-strong);
   color: var(--ink-soft);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.8;
+}
+
+/* ---------- 設定画面 ---------- */
+/* 知らせ（インストール直後の再読み込み、送信取り消しの案内） */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 62ch;
+  margin: 0;
+  color: var(--notice);
+}
+.notice svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 4px;
+}
+.closing {
+  margin-top: 28px;
+  padding: 0 30px;
+}
+.closing .notice {
+  color: var(--ink-soft);
+}
+/* 見出しを左の列、内容を右の列に置く */
+section.card.split {
+  display: grid;
+  grid-template-columns: 11em minmax(0, 1fr);
+  column-gap: 32px;
+}
+.options .notice + .card {
+  margin-top: 32px;
+}
+.content > :first-child {
+  margin-top: 0;
+}
+@media (max-width: 640px) {
+  main {
+    padding: 24px 16px 140px;
+  }
+  .card {
+    padding: 22px 20px;
+  }
+  section.card.split {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 12px;
+  }
+}
+label.field {
+  display: block;
+  margin-top: 20px;
+  font-weight: 700;
+}
+textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font: 13px/1.7 var(--data);
+  resize: vertical;
+}
+label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px -10px 0;
+  padding: 5px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+label.check:hover {
+  background: var(--wash);
+}
+label.check:has(input:disabled) {
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+input[type='checkbox'] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 4px 0 0;
+  accent-color: #ffffff;
+  cursor: inherit;
+}
+#warningLevels label.check {
+  margin-top: 2px;
+}
+#warningLevels label.check:first-child {
+  margin-top: 10px;
+}
+select {
+  display: block;
+  margin-top: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #0a0a0b;
+  font-weight: 400;
+}
+.state {
+  margin: 14px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+.content > button {
+  margin-top: 14px;
+  margin-right: 6px;
+}
+/* 保存の操作は、どこまでスクロールしていても届くように、下に浮かせて固定する */
+.bar {
+  position: fixed;
+  right: 0;
+  bottom: 20px;
+  left: 0;
+  z-index: 2;
+  padding: 0 16px;
+  pointer-events: none;
+}
+.bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 10px 10px 10px 24px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: rgba(16, 16, 18, 0.82);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  pointer-events: auto;
+}
+.bar .status {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ---------- 台帳の画面 ---------- */
-main.manage {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 40px 32px 80px;
-}
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 28px;
 }
 .toolbar .status {
   flex: 1;
   min-width: 12em;
 }
-.block {
-  margin-top: 28px;
-  padding-top: 28px;
-  border-top: 1px solid var(--rule);
-}
 .filter {
-  max-width: 28em;
-  margin-top: 20px;
+  max-width: 30em;
+  margin-top: 24px;
 }
 .row {
-  padding: 14px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--rule);
+}
+.row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 .row-head {
   display: flex;
@@ -181,7 +493,7 @@ main.manage {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
   gap: 8px 12px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .fields label {
   display: block;
@@ -194,22 +506,50 @@ main.manage {
 .row-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 /* ---------- 会社名検索のポップアップ ---------- */
+/* 確認ダイアログと同じ、つやのない暗い面。枠に光の帯を回す（帯の部品は popup.ts が入れる） */
 body.popup {
+  position: relative;
   width: 400px;
-  min-height: 160px;
+  min-height: 180px;
+  border-radius: 14px;
+  background: #18181a;
+  overflow: hidden;
+  --rule: rgba(255, 255, 255, 0.08);
+}
+.popup-inner {
+  position: relative;
+  z-index: 1;
   max-height: 560px;
-  padding: 16px;
+  padding: 18px 18px 16px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 body.popup h1 {
+  margin: 0 0 12px 4px;
   font-size: 16px;
+  line-height: 1.4;
+}
+body.popup h2 {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+body.popup input[type='search'] {
+  border-color: var(--rule);
+  background: rgba(255, 255, 255, 0.07);
+}
+body.popup .status {
+  margin: 8px 4px 0;
+}
+body.popup .status:empty {
+  display: none;
 }
 .company {
-  margin-top: 16px;
-  padding-top: 14px;
+  margin-top: 14px;
+  padding: 12px 4px 0;
   border-top: 1px solid var(--rule);
 }
 .person {

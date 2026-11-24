@@ -2,66 +2,79 @@
  * 確認ダイアログのスタイル。Shadow DOM の中だけに適用され、Gmail の画面には影響しない。
  *
  * 見た目の決まり：
- * - 素材はアクリル（すりガラス）。背後の Gmail を弱めにぼかして透かし、その上に #0D1117 を透明度 65%（不透明度 35%）で重ねる。
- *   ぼかしは、背後にあるものの形がうっすら分かる程度にとどめる（強くぼかすと、ただの灰色の板に見えるため）。
- *   ページ全体は暗くしない。白い文字が読めるように、パネルの中だけ背後を少し暗くしている。
+ * - 面は、つやのない暗い色（ほぼ不透明）。角は大きく丸め、枠は細い線1本にする。
+ *   枠には、光の帯を回す（src/ui/beam.ts）。帯の色は状態を表す。
+ *   確認が残っている間は色とりどり、すべて確認が済むと緑、チェックできなかったときは黄色から赤。
+ * - ボタンと印は、両端が丸い形（カプセル）にする。主となる操作は白の塗り、ほかは薄い塗り。
  * - 文字は、業務文書向けに作られた BIZ UDP ゴシックを使う（Windows に標準で入っている）。
  *   メールアドレス・ドメイン・ファイル名は、似た文字（l と 1、O と 0）を見分けやすい等幅の書体にする。
  *   外部からフォントを読み込むことはしない（外部通信をしない決まりのため、端末に入っている書体だけを使う）。
- * - 色は白を基調にし、意味を持つ色は2つだけにする。黄色は「社外・警告」、赤は「要注意」。
- * - 枠で囲んだ部品を並べず、行と細い区切り線で見せる。角は小さく丸める。
+ * - 文字の色は白を基調にし、意味を持つ色は2つだけにする。黄色は「社外・警告」、赤は「要注意」。
+ * - 枠で囲んだ部品を並べず、行と細い区切り線で見せる。
  */
+
+import { BEAM_ALERT, BEAM_COLORFUL, BEAM_CSS, BEAM_READY } from '../beam';
 
 export const DIALOG_CSS = `
 :host {
   all: initial;
 }
 dialog {
-  --tint: rgba(13, 17, 23, 0.35);
+  --surface: rgba(24, 24, 26, 0.96);
   --ink: #ffffff;
-  --ink-soft: rgba(255, 255, 255, 0.86);
-  --rule: rgba(255, 255, 255, 0.16);
-  --wash: rgba(255, 255, 255, 0.08);
+  --ink-soft: rgba(255, 255, 255, 0.72);
+  --ink-faint: rgba(255, 255, 255, 0.5);
+  --rule: rgba(255, 255, 255, 0.08);
+  --wash: rgba(255, 255, 255, 0.07);
+  --wash-strong: rgba(255, 255, 255, 0.13);
   --external: #f9f1a5;
-  --caution: #c50f1f;
+  --caution: #e5233a;
   --ui: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
   --data: "Cascadia Mono", Consolas, "SF Mono", Menlo, "BIZ UDGothic", monospace;
+  --beam: ${BEAM_COLORFUL};
 
   box-sizing: border-box;
-  width: min(620px, calc(100vw - 32px));
+  width: min(640px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   margin: auto;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  background-color: var(--tint);
-  /* アクリルの粒状感（ごく弱いノイズ） */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(0.62);
-  backdrop-filter: blur(12px) saturate(1.8) brightness(0.62);
+  border: 1px solid var(--rule);
+  border-radius: 26px;
+  background-color: var(--surface);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
   color: var(--ink);
   color-scheme: dark;
   font: 14px/1.6 var(--ui);
   font-feature-settings: "palt";
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 24px 56px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 28px 72px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+}
+/* すべて確認が済んだら、帯を緑にして、ゆっくり回す */
+dialog.ready {
+  --beam: ${BEAM_READY};
+  --beam-duration: 6s;
+}
+/* チェックできなかったとき */
+dialog.failed {
+  --beam: ${BEAM_ALERT};
 }
 dialog[open] {
   display: flex;
   flex-direction: column;
-  animation: arrive 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: arrive 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 dialog:not([open]) {
   display: none;
 }
-/* ページ全体は暗くしない（背後の Gmail はそのまま見せる）。操作できないことだけ、ごく薄く示す */
+/* ページ全体は、ごく薄く暗くするだけにする（背後の Gmail は見えるままにする） */
 dialog::backdrop {
-  background: rgba(13, 17, 23, 0.1);
+  background: rgba(0, 0, 0, 0.18);
 }
 @keyframes arrive {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.985);
+    transform: translateY(8px) scale(0.98);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -79,18 +92,26 @@ dialog.fallback {
   background: rgba(255, 255, 255, 0.28);
   color: #fff;
 }
+${BEAM_CSS}
+/* 中身は、光の帯より手前に置く */
+header,
+main,
+footer {
+  position: relative;
+  z-index: 1;
+}
 
 header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 22px 12px;
+  padding: 20px 28px 14px;
   border-bottom: 1px solid var(--rule);
 }
 h1 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -102,10 +123,10 @@ h1 {
   text-align: right;
 }
 main {
-  padding: 0 22px 6px;
+  padding: 2px 28px 8px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 
 /* 見出しを左の列、内容を右の列に置く（件名・本文・添付・宛先を上から順に読めるようにする） */
@@ -113,7 +134,7 @@ section {
   display: grid;
   grid-template-columns: 5.5em minmax(0, 1fr);
   column-gap: 14px;
-  padding: 12px 0;
+  padding: 14px 0;
   border-top: 1px solid var(--rule);
 }
 section:first-child {
@@ -126,8 +147,8 @@ section > h2 {
   grid-column: 1;
   grid-row: 1 / span 20;
   margin: 0;
-  padding-top: 1px;
-  color: var(--ink-soft);
+  padding-top: 2px;
+  color: var(--ink-faint);
   font-size: 12px;
   font-weight: 400;
 }
@@ -185,7 +206,7 @@ p {
 }
 .icon-mark {
   fill: none;
-  stroke: #0d1117;
+  stroke: #18181a;
   stroke-width: 1.5;
   stroke-linecap: round;
 }
@@ -246,10 +267,10 @@ p {
 }
 button.mini {
   min-height: 28px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  background: transparent;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--wash-strong);
   color: var(--ink);
   font: inherit;
   font-size: 12px;
@@ -259,7 +280,7 @@ button.mini {
   transition: background-color 120ms ease-out;
 }
 button.mini:hover {
-  background: var(--wash);
+  background: rgba(255, 255, 255, 0.2);
 }
 /* 修正の結果（修正後の行、修正できなかった理由）は、候補の下に横幅いっぱいで出す */
 .typo-detail {
@@ -278,8 +299,8 @@ button.mini:hover {
 }
 .fixed-line {
   margin-top: 2px;
-  padding: 6px 10px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  border-radius: 12px;
   background: var(--wash);
   font: 13px/1.7 var(--data);
   overflow-wrap: anywhere;
@@ -291,8 +312,8 @@ button.mini:hover {
 }
 /* 書き換えた部分 */
 mark {
-  padding: 1px 3px;
-  border-radius: 2px;
+  padding: 1px 4px;
+  border-radius: 4px;
   background: rgba(249, 241, 165, 0.3);
   color: var(--ink);
   font-weight: 700;
@@ -314,10 +335,11 @@ label.item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  margin: 0 -8px;
-  padding: 5px 8px;
-  border-radius: 4px;
+  margin: 0 -10px;
+  padding: 6px 10px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: background-color 120ms ease-out;
 }
 label.item:hover {
   background: var(--wash);
@@ -350,30 +372,32 @@ label.item:has(input:checked) .text {
 }
 .tag {
   flex: none;
+  padding: 0 10px;
+  border-radius: 999px;
   font-size: 12px;
   line-height: 1.9;
   white-space: nowrap;
 }
 .tag.internal {
+  background: var(--wash);
   color: var(--ink-soft);
 }
 .tag.external {
+  background: rgba(249, 241, 165, 0.13);
   color: var(--external);
   font-weight: 700;
 }
-/* 要注意だけは塗りで強く示す（この画面でいちばん見落としてはいけない印） */
+/* 要注意だけは濃い塗りで強く示す（この画面でいちばん見落としてはいけない印） */
 .tag.caution {
-  padding: 0 8px;
-  border-radius: 3px;
   background: var(--caution);
   color: #fff;
   font-weight: 700;
 }
 label.item.caution {
-  background: rgba(197, 15, 31, 0.28);
+  background: rgba(229, 35, 58, 0.24);
 }
 label.item.caution:hover {
-  background: rgba(197, 15, 31, 0.4);
+  background: rgba(229, 35, 58, 0.36);
 }
 .linkbutton {
   justify-self: start;
@@ -402,7 +426,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 22px;
+  padding: 14px 28px 18px;
   border-top: 1px solid var(--rule);
 }
 .remaining {
@@ -413,34 +437,34 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 button.action {
-  min-height: 36px;
-  padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  background: transparent;
+  min-height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
+  background: var(--wash-strong);
   color: var(--ink);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 120ms ease-out;
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out;
 }
 button.action:hover {
-  background: var(--wash);
+  background: rgba(255, 255, 255, 0.2);
 }
 /* 主となる操作は白の塗り。色ではなく明るさで目立たせる */
 button.action.primary {
-  min-width: 96px;
-  border-color: #ffffff;
+  min-width: 112px;
   background: #ffffff;
-  color: #0d1117;
+  color: #111113;
 }
 button.action.primary:hover {
   background: rgba(255, 255, 255, 0.86);
 }
 button.action.primary:disabled {
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
   cursor: not-allowed;
 }
 button:focus-visible,
@@ -468,12 +492,12 @@ input:focus-visible {
   align-items: flex-start;
   gap: 12px;
   max-width: 380px;
-  padding: 12px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px;
-  background-color: rgba(13, 17, 23, 0.35);
-  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(0.62);
-  backdrop-filter: blur(12px) saturate(1.8) brightness(0.62);
+  padding: 14px 14px 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background-color: rgba(24, 24, 26, 0.96);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
   color: #ffffff;
   color-scheme: dark;
   font: 13px/1.6 "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
@@ -482,10 +506,10 @@ input:focus-visible {
 .notice button {
   flex: none;
   min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 4px;
-  background: transparent;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
   color: #ffffff;
   font: inherit;
   cursor: pointer;

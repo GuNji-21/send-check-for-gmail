@@ -16,6 +16,7 @@ import {
   searchDirectory,
 } from '../../core/ledger/directory';
 import { type MessageKey, t } from '../../shared/i18n';
+import { createBeam } from '../beam';
 import { SEARCH_BUTTON_CSS, SEARCH_PANEL_CSS } from './styles';
 
 /** 作成画面に置いたボタンの目印 */
@@ -177,7 +178,7 @@ export function openRecipientSearch(
   const status = el(doc, 'p', 'status');
   status.setAttribute('role', 'status');
   const results = el(doc, 'div', 'results');
-  panel.append(header, query, status, results);
+  panel.append(createBeam(doc), header, query, status, results);
   root.append(panel);
 
   let directory: readonly DirectoryCompany[] | undefined;

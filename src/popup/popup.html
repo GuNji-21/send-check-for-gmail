@@ -7,13 +7,16 @@
     <link rel="stylesheet" href="pages.css" />
   </head>
   <body class="popup">
-    <h1 data-i18n="popupTitle"></h1>
-    <input id="query" type="search" data-i18n-placeholder="popupPlaceholder" autofocus />
-    <p id="status" class="status" role="status" aria-live="polite"></p>
-    <div id="results"></div>
-    <div class="links">
-      <button id="openManage" type="button" class="small" data-i18n="popupOpenManage"></button>
-      <button id="openOptions" type="button" class="small" data-i18n="popupOpenOptions"></button>
+    <!-- 枠を回る光の帯は、popup.ts が body の先頭に入れる -->
+    <div class="popup-inner">
+      <h1 data-i18n="popupTitle"></h1>
+      <input id="query" type="search" data-i18n-placeholder="popupPlaceholder" autofocus />
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="results"></div>
+      <div class="links">
+        <button id="openManage" type="button" class="small" data-i18n="popupOpenManage"></button>
+        <button id="openOptions" type="button" class="small" data-i18n="popupOpenOptions"></button>
+      </div>
     </div>
     <script src="popup.js"></script>
   </body>

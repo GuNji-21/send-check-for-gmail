@@ -17,6 +17,7 @@ import {
 import { applyMessages, byId, dateOf, el } from '../pages/page';
 import { type MessageKey, t } from '../shared/i18n';
 import { listLedger } from '../shared/ledger-client';
+import { BEAM_COLORFUL, BEAM_CSS, createBeam } from '../ui/beam';
 
 /** 一度に表示する会社と人物の上限（ポップアップは狭いため） */
 const MAX_COMPANIES = 10;
@@ -112,8 +113,23 @@ function openPage(path: string): void {
   });
 }
 
+/** 枠を回る光の帯を入れる（確認ダイアログと同じ飾り）。入れられなくても、検索には影響させない */
+function addBeam(): void {
+  try {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(BEAM_CSS);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    document.body.style.setProperty('--beam', BEAM_COLORFUL);
+    document.body.style.setProperty('--beam-duration', '5s');
+    document.body.prepend(createBeam(document));
+  } catch (error) {
+    console.error('[gmail-send-guard] failed to add the border beam', error);
+  }
+}
+
 function init(): void {
   applyMessages('popupTitle');
+  addBeam();
   byId('query').addEventListener('input', render);
   byId('openManage').addEventListener('click', () => {
     openPage('manage.html');

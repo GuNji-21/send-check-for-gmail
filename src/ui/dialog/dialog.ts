@@ -14,6 +14,7 @@ import type { ConfirmationModel, RecipientView } from '../../core/confirmation';
 import type { TypoCandidate, TypoCheckResult } from '../../core/typo/typo-check';
 import type { Detection, RecipientField } from '../../core/types';
 import { type MessageKey, t } from '../../shared/i18n';
+import { createBeam } from '../beam';
 import { DIALOG_CSS } from './styles';
 
 /** 確認ダイアログの結果 */
@@ -547,6 +548,8 @@ export function showConfirmationDialog(
     const update = (): void => {
       const count = checklist.remaining;
       send.disabled = count > 0;
+      // 枠の光の帯の色を、状態に合わせる（すべて確認が済んだら緑）
+      dialog.classList.toggle('ready', count === 0);
       remaining.textContent = count > 0 ? t('dialogRemaining', [String(count)]) : '';
     };
     checklist.onChange(update);
@@ -578,7 +581,7 @@ export function showConfirmationDialog(
       }
     });
 
-    dialog.append(header, main, footer);
+    dialog.append(createBeam(doc), header, main, footer);
     root.append(dialog);
     openDialog(dialog);
     (checklist.first ?? cancel).focus();
@@ -595,6 +598,7 @@ export function showCheckFailedDialog(doc: Document): Promise<void> {
     const dialog = el(doc, 'dialog');
     dialog.setAttribute('role', 'alertdialog');
     dialog.setAttribute('aria-label', t('errorCheckFailed'));
+    dialog.classList.add('failed');
 
     const main = el(doc, 'main');
     const section = el(doc, 'section', 'failure');
@@ -629,7 +633,7 @@ export function showCheckFailedDialog(doc: Document): Promise<void> {
       }
     });
 
-    dialog.append(main, footer);
+    dialog.append(createBeam(doc), main, footer);
     root.append(dialog);
     openDialog(dialog);
     close.focus();

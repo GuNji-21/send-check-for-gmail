@@ -8,9 +8,12 @@
     <link rel="stylesheet" href="pages.css" />
   </head>
   <body>
+    <!-- 背後の、光る曲線（飾り。CSS だけで描く） -->
+    <div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
     <main class="manage">
+      <span class="brand" data-i18n="extName"></span>
       <h1 data-i18n="manageTitle"></h1>
-      <p class="help" data-i18n="manageHelp"></p>
+      <p class="lead" data-i18n="manageHelp"></p>
 
       <div class="toolbar">
         <button id="export" type="button" data-i18n="manageExport"></button>
@@ -25,13 +28,13 @@
       </div>
       <p id="summary" class="help" role="status" aria-live="polite"></p>
 
-      <section class="block">
+      <section class="card">
         <h2 data-i18n="manageCompanies"></h2>
         <p class="help" data-i18n="manageCompaniesHelp"></p>
         <div id="companies"></div>
       </section>
 
-      <section class="block">
+      <section class="card">
         <h2 data-i18n="manageContacts"></h2>
         <div id="contacts"></div>
       </section>
