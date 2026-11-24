@@ -1,6 +1,6 @@
 {
   "name": "send-check-for-gmail",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Chrome extension that checks recipients, body and attachments before sending in Gmail to prevent mis-sends.",
   "license": "MIT",

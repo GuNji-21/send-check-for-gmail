@@ -113,7 +113,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 ### 今後の予定
 
-- AI による署名抽出の精度向上
+- いまのところ、予定している機能の追加はありません。AI による署名の読み取りは、誤った連絡先を登録するおそれと、届いたメールを AI に渡すことになる点から、当面は入れないことにしています。
 
 ### 開発環境の準備
 
@@ -256,7 +256,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 ### Roadmap
 
-- More accurate signature extraction with AI
+- No feature additions are planned at the moment. Reading signatures with AI is not planned for now, because it could record wrong contact details and would mean passing received email to an AI.
 
 ### Development setup
 

@@ -21,13 +21,13 @@
 **日本語**
 
 ```text
-Gmail™ の送信前に、宛先・本文・添付を確認。添付漏れや誤字を知らせて、誤送信を防ぎます。
+Gmail™ の送信前に、宛先・本文・添付を確認して誤送信を防止。メールの署名から、会社名や電話番号の台帳も自動で作れます。
 ```
 
 **English**
 
 ```text
-Review recipients, body and attachments before sending in Gmail™. Warns about missing attachments and typos to prevent mis-sends.
+Review recipients, body and attachments before sending in Gmail™. Also builds a contact directory from email signatures.
 ```
 
 ## 3. 詳細な説明
@@ -236,4 +236,4 @@ GitHub Pages を有効にした後（公開元：main ブランチの `/docs`）
 - [x] プライバシーポリシーの内容と、ダッシュボードの「データの使用」の申告が一致している
 - [x] `npm run lint`・`npm run typecheck`・`npm test` が通っている
 - [x] `npm run package` で作った zip を、まっさらな Chrome のプロファイルに読み込んで動作を確認した（まっさらなプロファイルでの確認は省略し、ふだんのプロファイルでの動作確認で完了とした。2026年11月25日）
-- [x] バージョン番号を決めた（1.1.0。1.0.0 は公開済み）
+- [x] バージョン番号を決めた（1.1.1。1.0.0 は公開済み、1.1.0 は審査に提出済み）
