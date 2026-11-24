@@ -35,7 +35,7 @@ Review recipients, body and attachments before sending in Gmail™. Warns about 
 **日本語**
 
 ```text
-Gmail™ でメールを送信する前に、宛先・件名・本文・添付ファイルを確認するための拡張機能です。送信ボタンを押すと確認の画面が開き、宛先と添付ファイルのすべてにチェックを入れるまで送信できません。
+Gmail™ でメールを送信する前に、宛先・件名・本文・添付ファイルを確認するための拡張機能です。送信ボタンを押すと確認の画面が開き、宛先と添付ファイルのすべてにチェックを入れるまで送信できません。さらに、送った相手と、届いたメールの署名（会社名・部署・役職・電話番号）から、連絡先の台帳を自動で作ることもできます。
 
 ■ できること
 ・送信ボタン、送信ショートカット（Ctrl + Enter）、予約送信の前に、確認の画面を表示します。
@@ -53,11 +53,14 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 　- 日付と曜日の不一致（「11月13日（木）」など）
 　- 社外の複数の会社が宛先に混ざっている
 ・AI を使って、誤字・脱字の候補を表示できます（任意。初期設定はオフ）。Chrome に内蔵された AI のほか、ご自身の API キーを登録して ChatGPT（OpenAI）または Claude（Anthropic）も選べます。候補はその場でメールに反映でき、元に戻すこともできます。
-・送信した相手を端末の中に記録して、初めて送るドメインと、いつも Cc に入れている人の入れ忘れを知らせることができます（任意。初期設定はオフ）。
-・記録した相手に氏名・会社名・電話番号などを書き足し、拡張機能のアイコンから会社名で検索できます。CSV の書き出し・取り込みもできます。
-・開いたメールの署名から、記録済みの相手の氏名・会社名・部署・役職・電話番号を補うこともできます（初期設定は無効）。
-・作成画面から、記録した相手を会社名で検索して、To・Cc に追加できます。
-・氏名・会社名を登録しておくと、本文の宛名と宛先の食い違い、別の会社の名前が本文や添付ファイル名に残っていること、会社名の書き方の誤りも知らせます。
+
+■ メールから、連絡先の台帳が自動でできます（任意。初期設定はオフ）
+・メールを送るだけで、送った相手が台帳にたまっていきます。名刺を見ながら入力する必要はありません。
+・届いたメールの署名から、会社名・部署・役職・電話番号・携帯番号を読み取って、台帳に書き足します（すでに台帳にある相手だけ。別の設定で有効にします）。
+・「あの会社の担当者の電話番号は？」というときは、拡張機能のアイコンから会社名で検索できます。氏名・部署・役職・電話番号・アドレスがその場で分かります。
+・メールの作成画面からも会社名で検索でき、見つけた相手をそのまま To・Cc に追加できます。
+・台帳は自分で編集でき、CSV での書き出し・取り込みにも対応しています。
+・台帳は誤送信の防止にも使います。初めて送るドメイン、いつも Cc に入れている人の入れ忘れ、本文の宛名と宛先の食い違い、別の会社の名前が本文や添付ファイル名に残っていること、会社名の書き方の誤りを知らせます。
 
 ■ プライバシー
 ・メールの内容や宛先は、お使いの端末の中だけで処理します。初期設定では、外部のサーバーには一切送信しません。
@@ -80,7 +83,7 @@ Gmail は Google LLC の商標です。この商標の使用は Google の使用
 **English**
 
 ```text
-An extension for reviewing recipients, subject, body and attachments before you send an email in Gmail™. When you press Send, a confirmation screen opens, and you cannot send until every recipient and attachment is ticked.
+An extension for reviewing recipients, subject, body and attachments before you send an email in Gmail™. When you press Send, a confirmation screen opens, and you cannot send until every recipient and attachment is ticked. It can also build a contact directory for you automatically, from the people you write to and from the signatures (company, department, title, phone numbers) of email you receive.
 
 ■ What it does
 - Shows a confirmation screen before the Send button, the send shortcut (Ctrl + Enter) and scheduled send.
@@ -98,11 +101,14 @@ An extension for reviewing recipients, subject, body and attachments before you 
   - Date and day-of-week mismatch (Japanese notation)
   - Recipients from multiple external companies
 - Can show possible typos using AI (optional, off by default). Besides the AI built into Chrome, you can choose ChatGPT (OpenAI) or Claude (Anthropic) with your own API key. A suggestion can be applied to your email in place, and undone.
-- Can record the people you send email to on your device, and warn you about a first-time domain or a person you usually Cc who is missing (optional, off by default).
-- Lets you add names, company names and phone numbers to recorded contacts, search them by company name from the extension icon, and export or import a CSV file.
-- Optionally fills in the name, company, department, title and phone numbers of recorded contacts from the signature of email you open (off by default).
-- Lets you search recorded contacts by company name from the compose window and add them to To or Cc.
-- With names and company names registered, it also warns when the salutation does not match the recipients, when another company's name is left in the body or an attachment name, and when a company name is written differently from your directory.
+
+■ A contact directory built from your email (optional, off by default)
+- Just by sending email, the people you write to are collected in a directory. No typing from business cards.
+- Reads the company name, department, title, phone number and mobile number from the signature of email you receive, and adds them to the directory (only for people already in it; turned on with a separate setting).
+- Need a phone number for someone at a company? Search by company name from the extension icon to see the name, department, title, phone numbers and address.
+- Search by company name from the compose window too, and add the person straight to To or Cc.
+- You can edit the directory yourself, and export or import it as a CSV file.
+- The directory also helps prevent mis-sends: it warns about a first-time domain, a person you usually Cc who is missing, a salutation that does not match the recipients, another company's name left in the body or an attachment name, and a company name written differently from your directory.
 
 ■ Privacy
 - The content of your email and your recipients are processed only on your device. By default, nothing is sent to any external server.
