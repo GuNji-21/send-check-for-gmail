@@ -699,6 +699,14 @@
     "message": "The subject and body of your email (without the quoted part of a reply or forward) are sent to the Anthropic API to be checked. Recipients, attachment names and contact records are not sent. You need your own Anthropic API key. The API is prepaid, so you need to add credit first (the lightest model, claude-haiku-5-5, is used, so the cost per email is very small). The API key is stored only on this device.",
     "description": "外部の AI（Anthropic）を選んだときの説明"
   },
+  "optionsAiGuide": {
+    "message": "See the setup guide (how to get an API key and add credit)",
+    "description": "外部の AI の設定の案内ページへのリンク"
+  },
+  "optionsAiGuideUrl": {
+    "message": "https://gunji-21.github.io/send-check-for-gmail/ai-setup.en",
+    "description": "外部の AI の設定の案内ページの URL（言語ごとのページ）"
+  },
   "optionsAiKey": {
     "message": "API key",
     "description": "API キーの入力欄の見出し"

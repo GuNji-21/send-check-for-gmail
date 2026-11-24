@@ -699,6 +699,14 @@
     "message": "メールの件名と本文（返信・転送の引用部分を除く）を、Anthropic の API に送信して調べます。宛先、添付ファイル名、連絡先の記録は送信しません。使うには、ご自身で取得した Anthropic の API キーが必要です。API の料金は前払い制で、最初にチャージが必要です（一番軽いモデル claude-haiku-5-5 を使うので、1通あたりの料金はごくわずかです）。API キーは、この端末の中にだけ保存します。",
     "description": "外部の AI（Anthropic）を選んだときの説明"
   },
+  "optionsAiGuide": {
+    "message": "設定の手順を見る（API キーの取得とチャージの方法）",
+    "description": "外部の AI の設定の案内ページへのリンク"
+  },
+  "optionsAiGuideUrl": {
+    "message": "https://gunji-21.github.io/send-check-for-gmail/ai-setup",
+    "description": "外部の AI の設定の案内ページの URL（言語ごとのページ）"
+  },
   "optionsAiKey": {
     "message": "API キー",
     "description": "API キーの入力欄の見出し"

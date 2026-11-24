@@ -246,6 +246,11 @@ textarea:hover,
 select:hover {
   border-color: rgba(255, 255, 255, 0.36);
 }
+.help a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 input::placeholder {
   color: var(--ink-faint);
 }

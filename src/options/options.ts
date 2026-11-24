@@ -312,6 +312,8 @@ function setUpRemoteAi(): void {
     select.append(option);
   }
   select.addEventListener('change', showAiProvider);
+  // 設定の案内ページ（GitHub Pages）へのリンク。開くのは、利用者がリンクを押したときだけ
+  byId<HTMLAnchorElement>('aiGuide').href = t('optionsAiGuideUrl');
 
   const input = byId<HTMLInputElement>('aiKey');
   byId<HTMLButtonElement>('aiKeySave').addEventListener('click', () => {

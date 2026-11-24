@@ -120,6 +120,8 @@ export const MESSAGE_KEYS = [
   'optionsAiDownloadFailed',
   'optionsAiRemoteHelpOpenai',
   'optionsAiRemoteHelpAnthropic',
+  'optionsAiGuide',
+  'optionsAiGuideUrl',
   'optionsAiKey',
   'optionsAiKeyStateNone',
   'optionsAiKeyStateReady',

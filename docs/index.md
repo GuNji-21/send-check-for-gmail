@@ -6,6 +6,8 @@ A Chrome extension that reviews recipients, body and attachments before sending 
 
 ## ドキュメント / Documents
 
+- [外部の AI（ChatGPT／Claude）で誤字・脱字チェックをする設定](ai-setup.md)
+- [Setting up the typo check with an external AI (English)](ai-setup.en.md)
 - [プライバシーポリシー](privacy-policy.md)
 - [Privacy Policy (English)](privacy-policy.en.md)
 - [要件定義書](requirements.md)
