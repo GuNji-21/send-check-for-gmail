@@ -31,6 +31,13 @@ export const SELECTORS = {
   recipientChip: '[role="option"][data-hovercard-id]',
   /** 宛先欄の、まだチップになっていない入力中の文字 */
   recipientInput: 'input[role="combobox"]',
+  /**
+   * Cc の欄を開くリンク（Cc の欄は、開くまで入力欄が無い）。
+   * 予備の手がかりは、ツールチップにあるショートカットの表記（表示言語に依存しない）
+   */
+  ccToggle: '.aB.gQ.pE, span[role="link"][data-tooltip*="Shift+C)"]',
+  /** 作成画面の下の操作列の、1枠（送信ボタンから上にたどって使う） */
+  toolbarCell: 'td',
   /** 添付ファイル1件分の入れ物 */
   attachment: '.dL',
   /** 添付ファイル名 */

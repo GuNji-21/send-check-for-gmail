@@ -723,6 +723,38 @@
     "message": "Recipients from multiple external companies",
     "description": "検知項目の名前：複数社混在"
   },
+  "composeSearchButton": {
+    "message": "Find recipients",
+    "description": "作成画面に置くボタン"
+  },
+  "composeSearchTitle": {
+    "message": "Add recipients from your records",
+    "description": "宛先検索のパネルの見出し"
+  },
+  "composeSearchAddTo": {
+    "message": "Add to To",
+    "description": "検索結果の人を To に追加するボタン"
+  },
+  "composeSearchAddCc": {
+    "message": "Add to Cc",
+    "description": "検索結果の人を Cc に追加するボタン"
+  },
+  "composeSearchAdded": {
+    "message": "Added",
+    "description": "宛先に追加したあとのボタンの表示"
+  },
+  "composeSearchAlready": {
+    "message": "Already there",
+    "description": "すでに同じ欄に入っていたときのボタンの表示"
+  },
+  "composeSearchBusy": {
+    "message": "There is unfinished text in the recipient field. Finish or clear it, then try again.",
+    "description": "宛先欄に入力中の文字があって追加しなかったときの表示"
+  },
+  "composeSearchFailed": {
+    "message": "Could not add the recipient. Please type it into the recipient field.",
+    "description": "宛先に追加できなかったときの表示"
+  },
   "optionsSave": {
     "message": "Save",
     "description": "設定の保存ボタン"

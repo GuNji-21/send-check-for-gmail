@@ -10,10 +10,16 @@
 
 import { preloadMessages } from '../shared/i18n';
 import { createTypoChecker } from '../shared/language-model';
-import { lookupLedger, recordReceivedToLedger, recordSendToLedger } from '../shared/ledger-client';
+import {
+  listLedger,
+  lookupLedger,
+  recordReceivedToLedger,
+  recordSendToLedger,
+} from '../shared/ledger-client';
 import { type Settings, loadSettings, watchSettings } from '../storage/settings';
 import { startInterceptor } from './interceptor';
 import { startReceivedReader } from './received';
+import { startRecipientSearch } from './recipient-search';
 
 /** 読み込み済みの設定。送信操作のたびに読み込みを待たないよう、ここに保持する */
 let cachedSettings: Settings | undefined;
@@ -52,6 +58,13 @@ startReceivedReader({
   view: window,
   getSettings,
   record: (mail) => recordReceivedToLedger(mail),
+});
+
+// 作成画面からの宛先検索（連絡先の記録が有効なときだけ、作成画面にボタンを置く）
+startRecipientSearch({
+  view: window,
+  getSettings,
+  loadLedger: () => listLedger(),
 });
 
 // 設定を先に読み込んでおく。失敗した場合は、送信操作のときに読み込み直す

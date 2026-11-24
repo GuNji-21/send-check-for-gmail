@@ -723,6 +723,38 @@
     "message": "社外の複数の会社が宛先に混在",
     "description": "検知項目の名前：複数社混在"
   },
+  "composeSearchButton": {
+    "message": "宛先を検索",
+    "description": "作成画面に置くボタン"
+  },
+  "composeSearchTitle": {
+    "message": "台帳から宛先を追加",
+    "description": "宛先検索のパネルの見出し"
+  },
+  "composeSearchAddTo": {
+    "message": "To に追加",
+    "description": "検索結果の人を To に追加するボタン"
+  },
+  "composeSearchAddCc": {
+    "message": "Cc に追加",
+    "description": "検索結果の人を Cc に追加するボタン"
+  },
+  "composeSearchAdded": {
+    "message": "追加済み",
+    "description": "宛先に追加したあとのボタンの表示"
+  },
+  "composeSearchAlready": {
+    "message": "入力済み",
+    "description": "すでに同じ欄に入っていたときのボタンの表示"
+  },
+  "composeSearchBusy": {
+    "message": "宛先欄に入力中の文字があります。確定するか消してから、もう一度押してください。",
+    "description": "宛先欄に入力中の文字があって追加しなかったときの表示"
+  },
+  "composeSearchFailed": {
+    "message": "宛先に追加できませんでした。宛先欄に直接入力してください。",
+    "description": "宛先に追加できなかったときの表示"
+  },
   "optionsSave": {
     "message": "保存",
     "description": "設定の保存ボタン"

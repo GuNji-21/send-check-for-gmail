@@ -56,6 +56,7 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 ・送信した相手を端末の中に記録して、初めて送るドメインと、いつも Cc に入れている人の入れ忘れを知らせることができます（任意。初期設定はオフ）。
 ・記録した相手に氏名・会社名・電話番号などを書き足し、拡張機能のアイコンから会社名で検索できます。CSV の書き出し・取り込みもできます。
 ・開いたメールの署名から、記録済みの相手の氏名・会社名・部署・役職・電話番号を補うこともできます（初期設定は無効）。
+・作成画面から、記録した相手を会社名で検索して、To・Cc に追加できます。
 ・氏名・会社名を登録しておくと、本文の宛名と宛先の食い違い、別の会社の名前が本文や添付ファイル名に残っていること、会社名の書き方の誤りも知らせます。
 
 ■ プライバシー
@@ -98,6 +99,7 @@ An extension for reviewing recipients, subject, body and attachments before you 
 - Can record the people you send email to on your device, and warn you about a first-time domain or a person you usually Cc who is missing (optional, off by default).
 - Lets you add names, company names and phone numbers to recorded contacts, search them by company name from the extension icon, and export or import a CSV file.
 - Optionally fills in the name, company, department, title and phone numbers of recorded contacts from the signature of email you open (off by default).
+- Lets you search recorded contacts by company name from the compose window and add them to To or Cc.
 - With names and company names registered, it also warns when the salutation does not match the recipients, when another company's name is left in the body or an attachment name, and when a company name is written differently from your directory.
 
 ■ Privacy

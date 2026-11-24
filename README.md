@@ -81,6 +81,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 - 台帳の画面（設定画面から開けます）で、記録した連絡先に氏名・会社名・部署・役職・電話番号を入力できます。CSV の書き出し・取り込みもできます。
 - ドメインに会社名を付けると、確認ダイアログに会社名が表示されます。
 - 拡張機能のアイコンを押すと、会社名・ドメイン・氏名・アドレスで連絡先を検索できます。
+- 作成画面の「宛先を検索」ボタンからも同じ検索ができ、見つけた人を To・Cc に追加できます。
 - 記録は、最後に送った日から一定の期間（初期値は1年）で自動的に削除します。設定画面から、いつでもすべて削除できます。
 
 **うまく動かないとき**
@@ -97,7 +98,6 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 ### 今後の予定
 
-- 作成画面から、会社名の検索結果を To・Cc に追加する
 - AI による署名抽出の精度向上
 
 ### 開発環境の準備
@@ -224,6 +224,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 - On the directory page (opened from the options page) you can add a name, company name, department, title and phone numbers to recorded contacts, and export or import a CSV file.
 - When you give a domain a company name, the confirmation dialog shows it.
 - Click the extension icon to search your contacts by company name, domain, name or address.
+- The "Find recipients" button in the compose window runs the same search and lets you add the people you find to To or Cc.
 - Records are deleted automatically after a set period from the last send (1 year by default). You can delete all of them at any time from the options page.
 
 **When something goes wrong**
@@ -240,7 +241,6 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 ### Roadmap
 
-- Adding company search results to To / Cc from the compose window
 - More accurate signature extraction with AI
 
 ### Development setup
