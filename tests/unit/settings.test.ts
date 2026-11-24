@@ -32,6 +32,8 @@ describe('normalizeSettings', () => {
     expect(DEFAULT_SETTINGS.treatDriveLinksAsAttachment).toBe(true);
     // AI による誤字・脱字チェックは、モデルのダウンロードが必要なので初期設定では無効
     expect(DEFAULT_SETTINGS.aiTypoCheckEnabled).toBe(false);
+    // 使う AI の初期値は、外部に送らない内蔵の AI
+    expect(DEFAULT_SETTINGS.typoCheckProvider).toBe('builtin');
     expect(DEFAULT_SETTINGS.attachmentKeywords).toContain('添付');
     expect(DEFAULT_SETTINGS.attachmentKeywords).toContain('attached');
   });
@@ -82,6 +84,13 @@ describe('normalizeSettings', () => {
     expect(normalizeSettings({ aiTypoCheckEnabled: true }).aiTypoCheckEnabled).toBe(true);
     expect(normalizeSettings({ aiTypoCheckEnabled: 1 }).aiTypoCheckEnabled).toBe(false);
     expect(normalizeSettings({}).aiTypoCheckEnabled).toBe(false);
+    // 使う AI：読めない値は、外部に送らない内蔵の AI にする
+    expect(normalizeSettings({ typoCheckProvider: 'openai' }).typoCheckProvider).toBe('openai');
+    expect(normalizeSettings({ typoCheckProvider: 'anthropic' }).typoCheckProvider).toBe(
+      'anthropic',
+    );
+    expect(normalizeSettings({ typoCheckProvider: 'other' }).typoCheckProvider).toBe('builtin');
+    expect(normalizeSettings({}).typoCheckProvider).toBe('builtin');
   });
 
   it('添付キーワードの初期値に「送付」「別紙」「ご査収」が入っている', () => {
@@ -324,6 +333,7 @@ describe('設定画面の入力内容の変換', () => {
       }),
       skipConfirmationEnabled: true,
       aiTypoCheckEnabled: true,
+      typoCheckProvider: 'anthropic',
       warningLevels: { ...DEFAULT_SETTINGS.warningLevels, placeholder: 'off' },
     };
     expect(parseFormValues(toFormValues(settings))).toEqual({ ok: true, settings });

@@ -8,7 +8,8 @@
  * - 添付キーワードの編集、Google ドライブのリンクを添付ありとみなすか
  * - 誤字の辞書、署名に必ず入る言葉
  * - 検知項目ごとの警告のオン・オフ
- * - AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックの有効・無効、モデルの状態の表示とダウンロード
+ * - AI による誤字・脱字チェックの有効・無効、使う AI の選択
+ *   （Chrome 内蔵の AI：モデルの状態の表示とダウンロード。外部の AI：API キーの登録と、通信の許可）
  * - 連絡先の記録（フェーズ2）の有効・無効、保存期間、記録の件数の表示と削除
  * - 保存データの削除
  *
@@ -17,7 +18,15 @@
 
 import type { DetectorId, WarningLevel } from '../core/types';
 import { MESSAGE_KEYS, type MessageKey, t } from '../shared/i18n';
+import {
+  REMOTE_ORIGINS,
+  REMOTE_PROVIDERS,
+  type RemoteProvider,
+  isRemoteProvider,
+  looksLikeApiKey,
+} from '../core/typo/remote-request';
 import { type AiAvailability, downloadAiModel, getAiAvailability } from '../shared/language-model';
+import { deleteApiKey, hasApiKey, saveApiKey } from '../storage/api-keys';
 import { clearLedger, getLedgerStats } from '../shared/ledger-client';
 import {
   DEFAULT_SETTINGS,
@@ -120,6 +129,8 @@ function showForm(settings: Settings): void {
     byId<HTMLInputElement>(levelCheckboxId(id)).checked = values.warningLevels[id] !== 'off';
   }
   byId<HTMLSelectElement>('ledgerRetentionDays').value = String(values.ledgerRetentionDays);
+  byId<HTMLSelectElement>('typoCheckProvider').value = values.typoCheckProvider;
+  showAiProvider();
 }
 
 function readLevel(id: DetectorId): WarningLevel {
@@ -143,6 +154,7 @@ function readForm(): OptionsFormValues {
     typoDictionary: text('typoDictionary'),
     signatureKeywords: text('signatureKeywords'),
     aiTypoCheckEnabled: checked('aiTypoCheckEnabled'),
+    typoCheckProvider: byId<HTMLSelectElement>('typoCheckProvider').value,
     ledgerEnabled: checked('ledgerEnabled'),
     ledgerReadReceived: checked('ledgerReadReceived'),
     ledgerRetentionDays: Number(byId<HTMLSelectElement>('ledgerRetentionDays').value),
@@ -220,8 +232,145 @@ function showAiStatus(state: AiAvailability, percent = 0): void {
       : t(AI_STATUS_MESSAGES[state]);
   // ダウンロードは、利用者がボタンを押したときにだけ始める（Chrome の決まり。数 GB の通信が発生するため）
   byId<HTMLButtonElement>('aiDownload').hidden = state !== 'downloadable';
-  // 使えない端末では、有効にしても意味がないので選べないようにする
-  byId<HTMLInputElement>('aiTypoCheckEnabled').disabled = state === 'unavailable';
+  builtinAiState = state;
+  updateAiCheckbox();
+}
+
+/** Chrome 内蔵の AI の状態（まだ調べ終わっていなければ undefined） */
+let builtinAiState: AiAvailability | undefined;
+
+/** 選択欄で選ばれている、外部の AI の提供元。内蔵の AI が選ばれていれば undefined */
+function selectedRemoteProvider(): RemoteProvider | undefined {
+  const value = byId<HTMLSelectElement>('typoCheckProvider').value;
+  return isRemoteProvider(value) ? value : undefined;
+}
+
+/** 内蔵の AI が使えない端末では、内蔵の AI を選んでいる間は、有効にできないようにする（有効にしても意味がないため） */
+function updateAiCheckbox(): void {
+  byId<HTMLInputElement>('aiTypoCheckEnabled').disabled =
+    selectedRemoteProvider() === undefined && builtinAiState === 'unavailable';
+}
+
+const REMOTE_HELP: Readonly<Record<RemoteProvider, MessageKey>> = {
+  openai: 'optionsAiRemoteHelpOpenai',
+  anthropic: 'optionsAiRemoteHelpAnthropic',
+};
+
+const PROVIDER_LABELS: Readonly<Record<RemoteProvider, MessageKey>> = {
+  openai: 'optionsAiProviderOpenai',
+  anthropic: 'optionsAiProviderAnthropic',
+};
+
+/** API キーの状態（登録済みか、通信が許可されているか）を表示する。キーそのものは表示しない */
+function showAiKeyState(): void {
+  const provider = selectedRemoteProvider();
+  if (provider === undefined) return;
+  const state = byId('aiKeyState');
+  Promise.all([
+    hasApiKey(provider),
+    chrome.permissions.contains({ origins: [REMOTE_ORIGINS[provider]] }),
+  ])
+    .then(([registered, allowed]) => {
+      // 調べている間に、別の AI が選ばれていたら表示しない
+      if (selectedRemoteProvider() !== provider) return;
+      state.textContent = !registered
+        ? t('optionsAiKeyStateNone')
+        : allowed
+          ? t('optionsAiKeyStateReady')
+          : t('optionsAiKeyStateNoPermission');
+      byId<HTMLButtonElement>('aiKeyDelete').hidden = !registered;
+    })
+    .catch((error: unknown) => {
+      console.error('[gmail-send-guard] failed to read the API key state', error);
+      state.textContent = t('optionsAiKeyFailed');
+    });
+}
+
+/** 選ばれている AI に合わせて、表示する欄を切り替える */
+function showAiProvider(): void {
+  const provider = selectedRemoteProvider();
+  byId('aiBuiltin').hidden = provider !== undefined;
+  byId('aiRemote').hidden = provider === undefined;
+  byId<HTMLInputElement>('aiKey').value = '';
+  updateAiCheckbox();
+  if (provider === undefined) return;
+  byId('aiRemoteHelp').textContent = t(REMOTE_HELP[provider]);
+  showAiKeyState();
+}
+
+/** 外部の AI の欄（AI の選択、API キーの保存・削除）を準備する */
+function setUpRemoteAi(): void {
+  const select = byId<HTMLSelectElement>('typoCheckProvider');
+  const builtin = document.createElement('option');
+  builtin.value = 'builtin';
+  builtin.textContent = t('optionsAiProviderBuiltin');
+  select.append(builtin);
+  for (const provider of REMOTE_PROVIDERS) {
+    const option = document.createElement('option');
+    option.value = provider;
+    option.textContent = t(PROVIDER_LABELS[provider]);
+    select.append(option);
+  }
+  select.addEventListener('change', showAiProvider);
+
+  const input = byId<HTMLInputElement>('aiKey');
+  byId<HTMLButtonElement>('aiKeySave').addEventListener('click', () => {
+    const provider = selectedRemoteProvider();
+    if (provider === undefined) return;
+    const apiKey = input.value.trim();
+    // 入力が空でも、登録済みのキーがあれば、通信の許可だけをやり直せるようにする
+    if (apiKey !== '' && !looksLikeApiKey(apiKey)) {
+      showStatus(t('optionsAiKeyInvalid'), true);
+      return;
+    }
+    // 通信の許可は、利用者の操作（クリック）の直後にしか求められないので、最初に求める
+    chrome.permissions
+      .request({ origins: [REMOTE_ORIGINS[provider]] })
+      .then(async (granted) => {
+        if (!granted) {
+          showStatus(t('optionsAiKeyDenied'), true);
+          return;
+        }
+        if (apiKey === '') {
+          if (!(await hasApiKey(provider))) showStatus(t('optionsAiKeyInvalid'), true);
+          return;
+        }
+        await saveApiKey(provider, apiKey);
+        input.value = '';
+        showStatus(t('optionsAiKeySaved'));
+      })
+      .catch((error: unknown) => {
+        // 例外の種類だけを記録する（API キーを記録に残さない）
+        console.error(
+          '[gmail-send-guard] failed to save the API key',
+          error instanceof Error ? error.name : 'unknown error',
+        );
+        showStatus(t('optionsAiKeyFailed'), true);
+      })
+      .finally(showAiKeyState);
+  });
+
+  byId<HTMLButtonElement>('aiKeyDelete').addEventListener('click', () => {
+    const provider = selectedRemoteProvider();
+    if (provider === undefined) return;
+    // キーを消したら、その提供元への通信の許可も取り下げる
+    Promise.all([
+      deleteApiKey(provider),
+      chrome.permissions.remove({ origins: [REMOTE_ORIGINS[provider]] }),
+    ])
+      .then(() => {
+        input.value = '';
+        showStatus(t('optionsAiKeyDeleted'));
+      })
+      .catch((error: unknown) => {
+        console.error(
+          '[gmail-send-guard] failed to delete the API key',
+          error instanceof Error ? error.name : 'unknown error',
+        );
+        showStatus(t('optionsAiKeyFailed'), true);
+      })
+      .finally(showAiKeyState);
+  });
 }
 
 function setUpAiSection(): void {
@@ -324,6 +473,7 @@ async function initOptionsPage(): Promise<void> {
   renderLevelRows();
   setUpClearButton();
   setUpAiSection();
+  setUpRemoteAi();
   setUpLedgerSection();
   const saveButton = byId<HTMLButtonElement>('save');
   saveButton.addEventListener('click', () => {

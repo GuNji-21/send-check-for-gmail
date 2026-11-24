@@ -10,6 +10,7 @@ import {
   normalizeDomain,
 } from '../core/text/address';
 import { parseLines } from '../core/text/normalize';
+import { isRemoteProvider } from '../core/typo/remote-request';
 import type { DetectorId, TypoDictionaryEntry, WarningLevel } from '../core/types';
 import { DETECTOR_IDS, type Settings, normalizeTypoDictionary } from '../storage/settings';
 
@@ -27,6 +28,8 @@ export interface OptionsFormValues {
   readonly typoDictionary: string;
   readonly signatureKeywords: string;
   readonly aiTypoCheckEnabled: boolean;
+  /** 誤字・脱字チェックに使う AI（選択欄の値） */
+  readonly typoCheckProvider: string;
   readonly ledgerEnabled: boolean;
   readonly ledgerReadReceived: boolean;
   readonly ledgerRetentionDays: number;
@@ -76,6 +79,7 @@ export function toFormValues(settings: Settings): OptionsFormValues {
     typoDictionary: formatTypoDictionary(settings.typoDictionary),
     signatureKeywords: lines(settings.signatureKeywords),
     aiTypoCheckEnabled: settings.aiTypoCheckEnabled,
+    typoCheckProvider: settings.typoCheckProvider,
     ledgerEnabled: settings.ledgerEnabled,
     ledgerReadReceived: settings.ledgerReadReceived,
     ledgerRetentionDays: settings.ledgerRetentionDays,
@@ -124,6 +128,9 @@ export function parseFormValues(values: OptionsFormValues): ParseResult {
     typoDictionary: parseTypoDictionary(values.typoDictionary),
     signatureKeywords: parseLines(values.signatureKeywords),
     aiTypoCheckEnabled: values.aiTypoCheckEnabled,
+    typoCheckProvider: isRemoteProvider(values.typoCheckProvider)
+      ? values.typoCheckProvider
+      : 'builtin',
     ledgerEnabled: values.ledgerEnabled,
     ledgerReadReceived: values.ledgerReadReceived,
     ledgerRetentionDays: values.ledgerRetentionDays,

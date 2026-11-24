@@ -2,7 +2,7 @@
 
 Applies to: the Chrome extension "Send Check for Gmail" (the "Extension")
 
-Last updated: November 24, 2026
+Last updated: November 25, 2026
 
 ## 1. Information the Extension handles
 
@@ -16,6 +16,7 @@ To perform pre-send checks in Gmail, the Extension reads the following informati
 The Extension also handles the following:
 
 - Settings you register on the options page (internal domains, recipients marked for caution or for skipping confirmation, attachment keywords, which warnings are turned on, etc.)
+- The API key of an external AI (only when you choose the external AI typo check on the options page and register a key)
 - Contact records (only when you turn the feature on in the options page; off by default)
   - Who: external recipients (To / Cc / Bcc) of email you send, and the people you put in Cc on email to an external recipient (including internal people)
   - What: email address, display name, domain, how many times the person was in To or Cc, the date of the last send, and which people were in Cc on email to which recipient, with a count
@@ -27,14 +28,21 @@ The Extension also handles the following:
 
 ## 2. Processing and transmission
 
-- Email content, recipients and contact information are processed only within your browser and are never sent to any external server.
-- The Extension does not communicate with any external server, including servers operated by the developer.
+- Email content, recipients and contact information are processed only within your browser and are not sent anywhere, except when you choose the "external AI typo check" described below.
+- The Extension does not communicate with any server operated by the developer. The developer never receives your data.
 - The Extension does not use the Gmail API.
-- The AI typo check (only when you turn it on) uses the AI built into Chrome (Gemini Nano) and runs on your device. Email content is never sent to any external AI service.
+- The AI typo check (only when you turn it on) uses the AI built into Chrome (Gemini Nano) by default and runs on your device. In that case, email content is not sent anywhere.
+- External AI typo check (only when you choose it on the options page, register your own API key and allow the connection; not used by default)
+  - Destination: the API of the provider you choose (OpenAI at `api.openai.com`, or Anthropic at `api.anthropic.com`). Nothing is sent anywhere else
+  - What is sent: the subject and body of the email you are composing (without the quoted part of a reply or forward; for a long email, about the first 4,000 characters), and your API key (only to that provider)
+  - What is not sent: recipients, the sender address, attachment names, contact records, and email you receive
+  - When: when you perform the send action and the confirmation screen opens
+  - What is sent is handled under the terms and privacy policy of each provider. You contract with the provider yourself and pay the API fees yourself
+  - Sending stops when you switch back to "AI built into Chrome" on the options page or delete the API key
 
 ## 3. Storage
 
-- Data is stored only on your device. Settings are stored in chrome.storage, and contact records in IndexedDB.
+- Data is stored only on your device. Settings and the API key of an external AI are stored in chrome.storage, and contact records in IndexedDB.
 - The subject, body and attachment information are not stored. They are read only while the check is shown. The body of email you receive is not stored either (only the company name, department, title and phone numbers read from the signature are saved in the contact records).
 - Contact records are deleted automatically once a set period has passed since the last send (1 year by default; you can choose from 6 months to 5 years in the options page).
 - The developer has no access to your data.
@@ -47,6 +55,7 @@ The Extension also handles the following:
 ## 5. Deleting your data
 
 - You can delete the settings you registered from the Extension's options page.
+- You can delete the API key of an external AI with "Delete API key" in the options page. It is also deleted by "Delete all saved data".
 - You can delete all contact records at any time with "Delete all contact records" in the options page. On the directory page you can delete them one by one.
 - You can export contact records to a CSV file. The exported file is only saved on your device; the Extension never sends it anywhere.
 - Data stored by the Extension is also removed when you uninstall the Extension.

@@ -127,6 +127,10 @@
     "message": "AI のモデルを使えません。設定画面で状態を確認してください。",
     "description": "AI のモデルが未ダウンロード・非対応のときの表示"
   },
+  "dialogTypoNoKey": {
+    "message": "外部の AI を使えません。API キーが未登録か、通信が許可されていません。設定画面で確認してください。",
+    "description": "外部の AI を選んでいるが、API キーが無い・通信が許可されていないときの表示"
+  },
   "dialogTypoArrow": {
     "message": "→",
     "description": "誤りの箇所と修正案の間に置く矢印"
@@ -643,6 +647,22 @@
     "message": "送信前に、AI で誤字・脱字の候補を調べる",
     "description": "AI による誤字・脱字チェックを有効にするチェックボックス"
   },
+  "optionsAiProvider": {
+    "message": "使う AI",
+    "description": "誤字・脱字チェックに使う AI を選ぶ欄の見出し"
+  },
+  "optionsAiProviderBuiltin": {
+    "message": "Chrome に内蔵された AI（外部に送信しない・無料）",
+    "description": "使う AI の選択肢：Chrome 内蔵の AI"
+  },
+  "optionsAiProviderOpenai": {
+    "message": "ChatGPT（OpenAI の API。ご自身の API キーが必要）",
+    "description": "使う AI の選択肢：OpenAI の API"
+  },
+  "optionsAiProviderAnthropic": {
+    "message": "Claude（Anthropic の API。ご自身の API キーが必要）",
+    "description": "使う AI の選択肢：Anthropic の API"
+  },
   "optionsAiHelp": {
     "message": "Chrome に内蔵された AI（Gemini Nano）を使います。処理はこの端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金はかかりません。使うには、空き容量 22GB 以上などの条件を満たす端末と、モデルのダウンロード（初回のみ）が必要です。結果は確認ダイアログを開いた後に表示され、結果を待たずに送信できます。",
     "description": "AI による誤字・脱字チェックの説明"
@@ -670,6 +690,58 @@
   "optionsAiDownloadFailed": {
     "message": "モデルをダウンロードできませんでした。空き容量と通信環境を確認して、もう一度お試しください。",
     "description": "AI のモデルのダウンロードに失敗したときの表示"
+  },
+  "optionsAiRemoteHelpOpenai": {
+    "message": "メールの件名と本文（返信・転送の引用部分を除く）を、OpenAI の API に送信して調べます。宛先、添付ファイル名、連絡先の記録は送信しません。使うには、ご自身で取得した OpenAI の API キーが必要です。API の料金は前払い制で、最初にチャージが必要です（一番軽いモデル gpt-6-luna を使うので、1通あたりの料金はごくわずかです）。API キーは、この端末の中にだけ保存します。",
+    "description": "外部の AI（OpenAI）を選んだときの説明"
+  },
+  "optionsAiRemoteHelpAnthropic": {
+    "message": "メールの件名と本文（返信・転送の引用部分を除く）を、Anthropic の API に送信して調べます。宛先、添付ファイル名、連絡先の記録は送信しません。使うには、ご自身で取得した Anthropic の API キーが必要です。API の料金は前払い制で、最初にチャージが必要です（一番軽いモデル claude-haiku-5-5 を使うので、1通あたりの料金はごくわずかです）。API キーは、この端末の中にだけ保存します。",
+    "description": "外部の AI（Anthropic）を選んだときの説明"
+  },
+  "optionsAiKey": {
+    "message": "API キー",
+    "description": "API キーの入力欄の見出し"
+  },
+  "optionsAiKeyStateNone": {
+    "message": "API キー：未登録です。",
+    "description": "API キーが登録されていないときの表示"
+  },
+  "optionsAiKeyStateReady": {
+    "message": "API キー：登録済みです（入力欄には表示しません）。",
+    "description": "API キーが登録済みで、通信も許可されているときの表示"
+  },
+  "optionsAiKeyStateNoPermission": {
+    "message": "API キー：登録済みですが、通信が許可されていません。「API キーを保存」を押して、通信を許可してください。",
+    "description": "API キーは登録済みだが、通信の許可が無いときの表示"
+  },
+  "optionsAiKeySave": {
+    "message": "API キーを保存",
+    "description": "API キーを保存するボタン"
+  },
+  "optionsAiKeyDelete": {
+    "message": "API キーを削除",
+    "description": "API キーを削除するボタン"
+  },
+  "optionsAiKeySaved": {
+    "message": "API キーを保存しました。",
+    "description": "API キーを保存したときの表示"
+  },
+  "optionsAiKeyDeleted": {
+    "message": "API キーを削除しました。",
+    "description": "API キーを削除したときの表示"
+  },
+  "optionsAiKeyInvalid": {
+    "message": "API キーの形が正しくありません。空白や改行が混ざっていないか確認してください。",
+    "description": "API キーの形が正しくないときの表示"
+  },
+  "optionsAiKeyDenied": {
+    "message": "通信が許可されなかったため、API キーを保存しませんでした。",
+    "description": "通信の許可が得られなかったときの表示"
+  },
+  "optionsAiKeyFailed": {
+    "message": "API キーを保存・削除できませんでした。",
+    "description": "API キーの保存・削除に失敗したときの表示"
   },
   "optionsSectionLevels": {
     "message": "警告する項目",

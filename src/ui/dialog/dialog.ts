@@ -441,6 +441,10 @@ function renderTypoCheck(
       body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoNotReady')));
       return;
     }
+    if (result.status === 'no-key') {
+      body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoNoKey')));
+      return;
+    }
     if (result.status === 'failed') {
       body.replaceChildren(el(doc, 'p', 'muted', t('dialogTypoFailed')));
       return;

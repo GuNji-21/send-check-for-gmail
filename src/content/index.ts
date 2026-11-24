@@ -17,6 +17,7 @@ import {
   recordSendToLedger,
 } from '../shared/ledger-client';
 import { type Settings, loadSettings, watchSettings } from '../storage/settings';
+import { checkTyposWithRemoteAi } from '../shared/typo-client';
 import { startInterceptor } from './interceptor';
 import { startReceivedReader } from './received';
 import { startRecipientSearch } from './recipient-search';
@@ -26,9 +27,11 @@ let cachedSettings: Settings | undefined;
 
 const typoChecker = createTypoChecker();
 
-/** AI による誤字・脱字チェックが有効なら、モデルを先に読み込んでおく（最初のチェックを速くするため） */
+/** 内蔵の AI による誤字・脱字チェックが有効なら、モデルを先に読み込んでおく（最初のチェックを速くするため） */
 function warmUpIfEnabled(settings: Settings): void {
-  if (settings.aiTypoCheckEnabled) void typoChecker.warmUp();
+  if (settings.aiTypoCheckEnabled && settings.typoCheckProvider === 'builtin') {
+    void typoChecker.warmUp();
+  }
 }
 
 /** 設定を返す。まだ読み込めていない（または前回失敗した）場合は読み込む */
@@ -44,8 +47,14 @@ preloadMessages();
 startInterceptor({
   view: window,
   getSettings,
-  checkTypos: (snapshot, signal) =>
-    typoChecker.check({ subject: snapshot.subject, bodyText: snapshot.bodyText }, signal),
+  // 件名と本文（引用部分を除く）だけを渡す。外部の AI を選んでいる場合は、background に通信を依頼する
+  checkTypos: (snapshot, signal) => {
+    const input = { subject: snapshot.subject, bodyText: snapshot.bodyText };
+    const provider = cachedSettings?.typoCheckProvider ?? 'builtin';
+    return provider === 'builtin'
+      ? typoChecker.check(input, signal)
+      : checkTyposWithRemoteAi(provider, input);
+  },
   // 連絡先の記録は background 側にあるので、メッセージで読み書きを依頼する
   ledger: {
     lookup: (query) => lookupLedger(query),

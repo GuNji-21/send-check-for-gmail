@@ -11,7 +11,7 @@ import { type LedgerStore, createMemoryLedgerStore } from '../../src/core/ledger
 import { MAX_HISTORY, type ReceivedMail, recordReceived } from '../../src/core/ledger/received';
 import { extractSignature } from '../../src/core/ledger/signature';
 import { readOpenMessages } from '../../src/gmail/message-view';
-import type { ExtensionMessage } from '../../src/shared/messages';
+import type { LedgerMessage } from '../../src/shared/messages';
 import { rules } from './helpers';
 
 const AT = '2026-11-24T10:00:00.000Z';
@@ -357,7 +357,7 @@ describe('ledger/received メッセージ', () => {
     const send = (mail: unknown) =>
       handleLedgerMessage(
         store,
-        { type: 'ledger/received', mail } as unknown as ExtensionMessage,
+        { type: 'ledger/received', mail } as unknown as LedgerMessage,
         new Date(AT),
       );
     expect(await send({ sender: { address: 'not an address' } })).toEqual({

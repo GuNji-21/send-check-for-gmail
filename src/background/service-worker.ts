@@ -6,7 +6,8 @@
  * - content script・設定画面からのメッセージを受け取って処理する（src/shared/messages.ts。フェーズ2で追加）
  * - 連絡先・会社台帳（フェーズ2）を拡張機能側の IndexedDB に保存・検索する
  *
- * 外部への通信は行わない。
+ * 外部への通信は、外部の AI による誤字・脱字チェック（src/background/remote-typo.ts）だけ。
+ * 利用者が設定画面で外部の AI を選び、API キーを登録し、通信を許可したときにだけ行う。
  *
  * 設定は content script と設定画面が chrome.storage.local を直接読み書きする。
  * 連絡先の記録（台帳）だけは、ここで IndexedDB に保存し、メッセージで読み書きを受け付ける。
@@ -15,6 +16,7 @@
 import { isExtensionMessage } from '../shared/messages';
 import { handleLedgerMessage } from './ledger-handler';
 import { createIndexedDbLedgerStore } from './ledger-idb';
+import { checkTyposRemotely } from './remote-typo';
 
 /**
  * インストール直後に設定画面を開く。
@@ -39,6 +41,13 @@ const ledgerStore = createIndexedDbLedgerStore();
  */
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id || !isExtensionMessage(message)) return false;
+  if (message.type === 'typo/check') {
+    // 失敗は結果（status）で返ってくる。例外は投げない
+    void checkTyposRemotely(message.provider, message.subject, message.bodyText).then((value) => {
+      sendResponse({ ok: true, value });
+    });
+    return true;
+  }
   handleLedgerMessage(ledgerStore, message, new Date()).then(sendResponse, (error: unknown) => {
     sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) });
   });

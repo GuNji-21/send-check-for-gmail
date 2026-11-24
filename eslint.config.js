@@ -10,7 +10,7 @@ const networkGlobals = ['fetch', 'XMLHttpRequest', 'WebSocket', 'EventSource', '
   (name) => ({
     name,
     message:
-      '外部への通信は禁止です（CLAUDE.md「禁止事項」）。必要な場合は事前に相談してください。',
+      '外部への通信は禁止です（CLAUDE.md「禁止事項」）。通信してよいのは src/background/remote-typo.ts だけです。',
   }),
 );
 
@@ -114,6 +114,15 @@ export default defineConfig(
     files: ['src/content/**/*.ts', 'src/gmail/**/*.ts', 'src/ui/**/*.ts'],
     rules: {
       'no-restricted-globals': ['error', ...networkGlobals, indexedDbInContent],
+    },
+  },
+
+  // 外部の AI による誤字・脱字チェックの通信。外部と通信してよいのは、このファイルだけ
+  // （利用者が外部の AI を選び、自分の API キーを登録し、通信を許可したときにだけ通信する）
+  {
+    files: ['src/background/remote-typo.ts'],
+    rules: {
+      'no-restricted-globals': ['error', ...networkGlobals.filter((item) => item.name !== 'fetch')],
     },
   },
 

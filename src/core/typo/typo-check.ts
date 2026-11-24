@@ -29,6 +29,8 @@ export type TypoCheckResult =
   | { readonly status: 'ok'; readonly candidates: readonly TypoCandidate[] }
   /** モデルがまだ使えない（未ダウンロード、ダウンロード中、端末が非対応） */
   | { readonly status: 'not-ready' }
+  /** 外部の AI を使う設定だが、API キーが登録されていない、または通信が許可されていない */
+  | { readonly status: 'no-key' }
   /** 解析に失敗した（時間切れ、返答が読めない、など） */
   | { readonly status: 'failed' };
 

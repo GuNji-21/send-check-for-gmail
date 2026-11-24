@@ -110,13 +110,34 @@
       <section class="card split">
         <h2 data-i18n="optionsSectionAi"></h2>
         <div class="content">
-          <p class="help" data-i18n="optionsAiHelp"></p>
           <label class="check">
             <input id="aiTypoCheckEnabled" type="checkbox" />
             <span data-i18n="optionsAiEnabled"></span>
           </label>
-          <p id="aiStatus" class="state" role="status" aria-live="polite"></p>
-          <button id="aiDownload" type="button" data-i18n="optionsAiDownload" hidden></button>
+          <label class="field">
+            <span data-i18n="optionsAiProvider"></span>
+            <select id="typoCheckProvider"></select>
+          </label>
+          <div id="aiBuiltin">
+            <p class="help" data-i18n="optionsAiHelp"></p>
+            <p id="aiStatus" class="state" role="status" aria-live="polite"></p>
+            <button id="aiDownload" type="button" data-i18n="optionsAiDownload" hidden></button>
+          </div>
+          <div id="aiRemote" hidden>
+            <p id="aiRemoteHelp" class="help"></p>
+            <label class="field">
+              <span data-i18n="optionsAiKey"></span>
+              <input id="aiKey" type="password" autocomplete="off" spellcheck="false" />
+            </label>
+            <p id="aiKeyState" class="state" role="status" aria-live="polite"></p>
+            <button id="aiKeySave" type="button" data-i18n="optionsAiKeySave"></button>
+            <button
+              id="aiKeyDelete"
+              type="button"
+              class="danger"
+              data-i18n="optionsAiKeyDelete"
+            ></button>
+          </div>
         </div>
       </section>
 

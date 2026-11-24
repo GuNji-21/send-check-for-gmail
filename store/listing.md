@@ -52,7 +52,7 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 　- 自分で登録した誤り（誤字の辞書）、署名の入れ忘れ
 　- 日付と曜日の不一致（「11月13日（木）」など）
 　- 社外の複数の会社が宛先に混ざっている
-・Chrome に内蔵された AI を使って、誤字・脱字の候補を表示できます（任意。初期設定はオフ）。候補はその場でメールに反映でき、元に戻すこともできます。
+・AI を使って、誤字・脱字の候補を表示できます（任意。初期設定はオフ）。Chrome に内蔵された AI のほか、ご自身の API キーを登録して ChatGPT（OpenAI）または Claude（Anthropic）も選べます。候補はその場でメールに反映でき、元に戻すこともできます。
 ・送信した相手を端末の中に記録して、初めて送るドメインと、いつも Cc に入れている人の入れ忘れを知らせることができます（任意。初期設定はオフ）。
 ・記録した相手に氏名・会社名・電話番号などを書き足し、拡張機能のアイコンから会社名で検索できます。CSV の書き出し・取り込みもできます。
 ・開いたメールの署名から、記録済みの相手の氏名・会社名・部署・役職・電話番号を補うこともできます（初期設定は無効）。
@@ -60,15 +60,17 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 ・氏名・会社名を登録しておくと、本文の宛名と宛先の食い違い、別の会社の名前が本文や添付ファイル名に残っていること、会社名の書き方の誤りも知らせます。
 
 ■ プライバシー
-・メールの内容や宛先は、お使いの端末の中だけで処理します。外部のサーバーには一切送信しません。
-・AI による誤字・脱字チェックも、Chrome に内蔵された AI を使って端末の中で処理します。
+・メールの内容や宛先は、お使いの端末の中だけで処理します。初期設定では、外部のサーバーには一切送信しません。
+・AI による誤字・脱字チェックも、初期設定では Chrome に内蔵された AI を使って端末の中で処理します。
+・設定画面で外部の AI（ChatGPT／Claude の API）を選び、ご自身の API キーを登録した場合に限り、件名と本文（返信の引用部分を除く）を、選んだ提供元に送信します。宛先、添付ファイル名、連絡先の記録は送信しません。開発者がデータを受け取ることはありません。
 ・設定は、お使いの端末の中にだけ保存します。
 ・送信した相手の記録は、有効にした場合だけ、お使いの端末の中に保存します。一定の期間で自動的に削除し、設定画面からいつでもすべて削除できます。
 ・Gmail API は使いません。ソースコードは GitHub で公開しています。
 
 ■ お使いになる前に
 ・インストールした直後は、開いている Gmail のタブを再読み込みしてください。再読み込みするまで、そのタブでは確認の画面が出ません。
-・AI による誤字・脱字チェックを使うには、Chrome の定める端末の条件（空き容量 22GB 以上など）を満たす端末と、モデルのダウンロード（初回のみ）が必要です。
+・Chrome に内蔵された AI による誤字・脱字チェックを使うには、Chrome の定める端末の条件（空き容量 22GB 以上など）を満たす端末と、モデルのダウンロード（初回のみ）が必要です。
+・外部の AI を使う場合は、各社の API キーと、API の料金の前払い（チャージ）が必要です。
 ・Gmail の設定で「送信取り消し」の時間を 30 秒にしておくことをおすすめします。
 ・Gmail の「送信してアーカイブ」ボタンには対応していません。
 
@@ -95,7 +97,7 @@ An extension for reviewing recipients, subject, body and attachments before you 
   - Mistakes you register yourself (typo dictionary), and a missing signature
   - Date and day-of-week mismatch (Japanese notation)
   - Recipients from multiple external companies
-- Can show possible typos using the AI built into Chrome (optional, off by default). A suggestion can be applied to your email in place, and undone.
+- Can show possible typos using AI (optional, off by default). Besides the AI built into Chrome, you can choose ChatGPT (OpenAI) or Claude (Anthropic) with your own API key. A suggestion can be applied to your email in place, and undone.
 - Can record the people you send email to on your device, and warn you about a first-time domain or a person you usually Cc who is missing (optional, off by default).
 - Lets you add names, company names and phone numbers to recorded contacts, search them by company name from the extension icon, and export or import a CSV file.
 - Optionally fills in the name, company, department, title and phone numbers of recorded contacts from the signature of email you open (off by default).
@@ -103,15 +105,17 @@ An extension for reviewing recipients, subject, body and attachments before you 
 - With names and company names registered, it also warns when the salutation does not match the recipients, when another company's name is left in the body or an attachment name, and when a company name is written differently from your directory.
 
 ■ Privacy
-- The content of your email and your recipients are processed only on your device. Nothing is sent to any external server.
-- The AI typo check also runs on your device, using the AI built into Chrome.
+- The content of your email and your recipients are processed only on your device. By default, nothing is sent to any external server.
+- By default, the AI typo check also runs on your device, using the AI built into Chrome.
+- Only when you choose an external AI (the ChatGPT or Claude API) on the options page and register your own API key, the subject and body (without the quoted part of a reply) are sent to the provider you chose. Recipients, attachment names and contact records are not sent. The developer never receives your data.
 - Settings are stored only on your device.
 - Records of the people you send email to are stored on your device, and only when you turn the feature on. They are deleted automatically after a set period, and you can delete all of them at any time from the options page.
 - The Gmail API is not used. The source code is published on GitHub.
 
 ■ Before you start
 - Right after installing, reload any Gmail tabs that are already open. The confirmation screen does not appear in a tab until it is reloaded.
-- The AI typo check needs a device that meets Chrome's requirements (such as 22 GB of free space) and a one-time model download.
+- The typo check with the AI built into Chrome needs a device that meets Chrome's requirements (such as 22 GB of free space) and a one-time model download.
+- To use an external AI, you need an API key from the provider and prepaid API credit.
 - We recommend setting Gmail's "Undo Send" cancellation period to 30 seconds.
 - Gmail's "Send & Archive" button is not supported.
 
@@ -168,13 +172,21 @@ To prevent mis-sent email by having the user review recipients, subject, body an
 | `storage`                              | 利用者の設定（社内として扱うドメイン、注意したい宛先、警告のオン・オフ、添付のキーワードなど）を、利用者の端末の中に保存するため。                   | To store the user's settings (internal domains, recipients that need care, which warnings are on, attachment keywords, etc.) on the user's device.                                                |
 | ホスト権限 `https://mail.google.com/*` | Gmail の作成画面で送信の操作を検知して確認の画面を表示し、確認のために宛先・件名・本文・添付ファイル名を読み取るため。ほかのサイトでは動作しません。 | To detect the send action on Gmail's compose screen, show the confirmation screen, and read the recipients, subject, body and attachment names for the review. It does not run on any other site. |
 
+### 任意のホスト権限（optional_host_permissions）
+
+| 権限                          | 理由（日本語）                                                                                                                                                                                                     | Reason (English)                                                                                                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `https://api.openai.com/*`    | 利用者が設定画面で ChatGPT（OpenAI の API）による誤字・脱字チェックを選び、自分の API キーを登録したときにだけ、件名と本文を送って候補を受け取るため。入れた時点では求めず、利用者が選んだときに許可を求めます。   | Only when the user chooses the typo check by ChatGPT (OpenAI API) on the options page and registers their own API key, to send the subject and body and receive suggestions. It is not requested at install time, only when the user chooses it.   |
+| `https://api.anthropic.com/*` | 利用者が設定画面で Claude（Anthropic の API）による誤字・脱字チェックを選び、自分の API キーを登録したときにだけ、件名と本文を送って候補を受け取るため。入れた時点では求めず、利用者が選んだときに許可を求めます。 | Only when the user chooses the typo check by Claude (Anthropic API) on the options page and registers their own API key, to send the subject and body and receive suggestions. It is not requested at install time, only when the user chooses it. |
+
 ### リモートコード
 
-「いいえ、リモートコードは使用していません」を選びます。すべてのコードは拡張機能のパッケージに含まれており、外部からスクリプトを読み込みません。
+「いいえ、リモートコードは使用していません」を選びます。すべてのコードは拡張機能のパッケージに含まれており、外部からスクリプトを読み込みません。外部の AI の API から受け取るのは、誤字・脱字の候補のデータ（JSON）だけで、コードとして実行することはありません。
 
 ### データの使用
 
-- この拡張機能は、メールの内容（宛先、件名、本文、添付ファイル名）を**端末の中で読み取って処理します**が、**外部には送信しません**。開発者がデータを受け取ることもありません。
+- この拡張機能は、メールの内容（宛先、件名、本文、添付ファイル名）を**端末の中で読み取って処理します**。初期設定では、**外部には送信しません**。開発者がデータを受け取ることはありません。
+- **外部の AI による誤字・脱字チェック**（利用者が設定画面で選び、自分の API キーを登録し、通信を許可した場合のみ）では、件名と本文（引用部分を除く）を、利用者が選んだ提供元（OpenAI または Anthropic）の API に送信します。宛先・添付ファイル名・連絡先の記録は送信しません。これは、利用者の指示による、単一用途（送信前の誤字の確認）のための転送です。「個人的なコミュニケーション」の項目にチェックを入れ、プライバシーポリシーに送信先と内容を明記しています。
 - 連絡先の記録を有効にした場合は、送信した相手のアドレス・表示名・回数・最後に送った日と、利用者が入力・取り込みした氏名・会社名・部署・役職・電話番号を、**端末の中（IndexedDB）に保存します**。「届いたメールからも連絡先を補う」も有効にした場合は、開いたメールの送信元・宛先・署名を読み取り、記録済みの相手の氏名・会社名・部署・役職・電話番号を補います（本文そのものは保存しません）。これも外部には送信しません。IndexedDB の利用に、追加の権限は必要ありません。
 - 拡張機能のアイコンから開くポップアップ（`action`）を追加していますが、権限は増えていません（`storage` と `https://mail.google.com/*` のまま）。
 - ダッシュボードの「収集するデータ」のチェック項目で、端末内だけの処理を「収集」に含めるかどうかは、確認した公式ドキュメントには書かれていませんでした。
@@ -197,9 +209,9 @@ GitHub Pages を有効にした後（公開元：main ブランチの `/docs`）
 
 ## 7. 提出前の確認
 
-- [x] 名前・説明・スクリーンショットが、実際の動作と一致している
+- [ ] 名前・説明・スクリーンショットが、実際の動作と一致している（外部の AI の追加後に、設定画面のスクリーンショットを撮り直して確認する）
 - [x] プライバシーポリシーの「下書き」の表示を外し、最終更新日と問い合わせ先を記入した
-- [x] プライバシーポリシーの内容と、ダッシュボードの「データの使用」の申告が一致している
+- [ ] プライバシーポリシーの内容と、ダッシュボードの「データの使用」の申告が一致している（外部の AI の追加後に、もう一度確認する）
 - [x] `npm run lint`・`npm run typecheck`・`npm test` が通っている
 - [ ] `npm run package` で作った zip を、まっさらな Chrome のプロファイルに読み込んで動作を確認した
 - [x] バージョン番号を決めた（1.0.0）

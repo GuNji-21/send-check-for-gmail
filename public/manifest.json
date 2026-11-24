@@ -12,6 +12,7 @@
   },
   "permissions": ["storage"],
   "host_permissions": ["https://mail.google.com/*"],
+  "optional_host_permissions": ["https://api.openai.com/*", "https://api.anthropic.com/*"],
   "background": {
     "service_worker": "background.js"
   },

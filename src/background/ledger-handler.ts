@@ -13,7 +13,7 @@ import {
   recordReceived,
 } from '../core/ledger/received';
 import { looksLikeAddress, normalizeAddress } from '../core/text/address';
-import type { ExtensionMessage, ExtensionResponse } from '../shared/messages';
+import type { ExtensionResponse, LedgerMessage } from '../shared/messages';
 
 /** 保存期間として受け付ける範囲（日）。壊れた値で記録が消えたり、消えなくなったりしないようにする */
 const MIN_RETENTION_DAYS = 30;
@@ -85,7 +85,7 @@ function sanitizeReceivedMail(value: unknown): ReceivedMail | undefined {
 /** メッセージを処理して、応答を返す。例外は応答（ok: false）にして返す */
 export async function handleLedgerMessage(
   store: LedgerStore,
-  message: ExtensionMessage,
+  message: LedgerMessage,
   now: Date,
 ): Promise<ExtensionResponse<unknown>> {
   try {

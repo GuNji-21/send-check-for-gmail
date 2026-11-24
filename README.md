@@ -11,7 +11,7 @@
 Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件名・本文・添付を確認させてから送信する Chrome 拡張機能（Manifest V3）です。添付漏れや書き換え忘れなどを自動で検知し、誤送信を防ぎます。
 
 - 対象：PC 版 Chrome 上の Gmail（mail.google.com）
-- Gmail API は使いません。外部への通信は一切行わず、設定は利用者の端末内にのみ保存します。
+- Gmail API は使いません。設定は利用者の端末内にのみ保存します。外部への通信は、利用者が「外部の AI による誤字・脱字チェック」を選んで自分の API キーを登録した場合にだけ行います（初期設定では、外部への通信は一切ありません）。
 - 現在はフェーズ1と、フェーズ2（連絡先の記録、初めて送るドメイン、Cc 漏れ、台帳の画面、会社名検索、届いたメールからの連絡先の補完）、フェーズ3の検知を実装済みです。Chrome Web Store への公開を準備しています。
 - Gmail は Google LLC の商標です。この拡張機能は Google が提供・公認するものではありません。
 
@@ -64,12 +64,27 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 **AI による誤字・脱字チェック**（初期設定は無効）
 
-- Chrome に内蔵された AI（Gemini Nano）で、件名と本文の誤字・脱字の候補を調べ、確認ダイアログに「誤りの箇所 → 修正案」と理由を表示します。
-- 処理は端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金もかかりません。
+- AI で、件名と本文の誤字・脱字の候補を調べ、確認ダイアログに「誤りの箇所 → 修正案」と理由を表示します。使う AI は、設定画面で次の3つから選べます。
+  - **Chrome に内蔵された AI（Gemini Nano）**（初期設定）：処理は端末の中だけで行われ、メールの内容が外部に送信されることはありません。料金もかかりません。
+  - **ChatGPT（OpenAI の API）**／**Claude（Anthropic の API）**：ご自身の API キーを登録して使います。件名と本文が、選んだ提供元に送信されます（下の「外部の AI を使う場合」を参照）。
 - 結果は確認ダイアログを開いた後に表示されます。結果を待たずに送信でき、解析に失敗しても送信は止まりません。
 - AI が返した候補のうち、意味を変えるもの（否定の入れ替え、数字・日付の変更など）や、言い回しを変えるだけのものは表示しません。そのため、すべての誤字を指摘できるわけではありません。修正案が正しいとは限らないので、反映する前に内容を確かめてください。
 - 候補ごとの「修正する」ボタンで、修正案をメールに反映できます（該当する箇所が1か所に決まる場合のみ）。反映後は、書き換えた行がその場に表示され、「元に戻す」で取り消したり、「メールで確認」で実際のメールの画面に戻って該当箇所を確かめたりできます。
-- 使うには、設定画面で有効にして、モデルをダウンロードします（初回のみ）。空き容量 22GB 以上、メモリ 16GB 以上または VRAM 4GB 超の GPU など、Chrome の定める端末の条件があります。対応していない端末では、設定画面にその旨が表示されます。
+- 内蔵の AI を使うには、設定画面で有効にして、モデルをダウンロードします（初回のみ）。空き容量 22GB 以上、メモリ 16GB 以上または VRAM 4GB 超の GPU など、Chrome の定める端末の条件があります。対応していない端末では、設定画面にその旨が表示されます。
+
+**外部の AI を使う場合**（ChatGPT／Claude の API）
+
+内蔵の AI が使えない端末でも、誤字・脱字チェックを使えます。各自が、自分の API キーを登録して使います。
+
+1. OpenAI（ChatGPT）または Anthropic（Claude）の開発者向けの画面で、API のアカウントを作り、API キーを発行します。
+2. API の料金は前払い制です。**最初に、各社の定める最低額をチャージする必要があります。** 月々の利用料はほぼゼロに近い金額ですが、チャージが無いと動きません。
+3. 拡張機能の設定画面の「AI による誤字・脱字チェック」で、「使う AI」を選び、API キーを貼り付けて「API キーを保存」を押します。Chrome が通信の許可を求めるので、許可します。
+4. 「送信前に、AI で誤字・脱字の候補を調べる」にチェックを入れて、保存します。
+
+- 送信するのは、件名と本文だけです。返信・転送の引用部分（過去のやり取り）は送りません。宛先、添付ファイル名、連絡先の記録も送りません。長いメールは、先頭の約4,000文字までを調べます。
+- 料金を抑えるため、それぞれの一番軽いモデル（OpenAI は `gpt-6-luna`、Anthropic は `claude-haiku-5-5`）を使い、推論（思考）は使わず、返答は「誤りの箇所 → 修正案」だけにしています。
+- API キーは端末の中にだけ保存し、選んだ提供元にだけ送ります。設定画面の「API キーを削除」でいつでも消せます。
+- 送信した文面の取り扱いは、各提供元の規約に従います。社内の決まりで外部の AI に文面を送れない場合は、内蔵の AI を使ってください。
 
 **連絡先の記録**（初期設定は無効）
 
@@ -154,7 +169,7 @@ npm install
 A Chrome extension (Manifest V3) that stops the send action in Gmail and makes you review recipients (To / Cc / Bcc), subject, body and attachments before the message goes out. It also detects missing attachments, leftover placeholders and similar mistakes to prevent mis-sends.
 
 - Target: Gmail (mail.google.com) on desktop Chrome
-- Does not use the Gmail API. Makes no external network requests; settings are stored only on your device.
+- Does not use the Gmail API. Settings are stored only on your device. It makes external network requests only when you choose the "external AI typo check" and register your own API key (by default it makes none).
 - Phase 1, Phase 2 (contact records, first-time domain, missing Cc, the directory page, company search, filling in contacts from received email) and the Phase 3 checks are implemented. Publication on the Chrome Web Store is being prepared.
 - Gmail is a trademark of Google LLC. This extension is not provided or endorsed by Google.
 
@@ -207,7 +222,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 **AI typo check** (off by default)
 
-- Uses the AI built into Chrome (Gemini Nano) to look for possible typos in the subject and body, and shows "wrong text → suggestion" with a reason in the confirmation dialog.
+- Uses AI to look for possible typos in the subject and body, and shows "wrong text → suggestion" with a reason in the confirmation dialog. By default it uses the AI built into Chrome (Gemini Nano), which runs on your device. You can instead choose ChatGPT (OpenAI API) or Claude (Anthropic API) with your own API key; then the subject and body (without the quoted part of a reply) are sent to that provider. The APIs are prepaid, so you need to add credit first. The lightest models (`gpt-6-luna`, `claude-haiku-5-5`) are used, without reasoning, and only "wrong text → suggestion" is returned, to keep the cost small.
 - Everything is processed on your device; the content of your email is never sent anywhere. It is free.
 - Results appear after the confirmation dialog opens. You can send without waiting, and a failed check never blocks sending.
 - Candidates from the AI that would change the meaning (swapping a negation, changing a number or date) or that only reword the text are not shown, so not every typo is reported. A suggestion is not guaranteed to be right; check it before you apply it.

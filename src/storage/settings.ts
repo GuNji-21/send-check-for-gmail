@@ -2,6 +2,7 @@
  * 利用者の設定の読み書き（chrome.storage）。
  *
  * 設定はすべて利用者の端末内に保存し、外部には送信しない。
+ * （外部の AI の API キーは、別のキーに保存する。src/storage/api-keys.ts）
  * 設定画面から保存データを削除できるようにする（docs/privacy-policy.md）。
  *
  * 保存先は chrome.storage.local。端末間の自動同期はしないため storage.sync は使わない
@@ -18,6 +19,7 @@ import {
   normalizeAddress,
   normalizeDomain,
 } from '../core/text/address';
+import { type RemoteProvider, isRemoteProvider } from '../core/typo/remote-request';
 import type {
   ClassificationRules,
   DetectorId,
@@ -28,6 +30,13 @@ import type {
 
 /** chrome.storage.local に保存するときのキー */
 const STORAGE_KEY = 'settings';
+
+/**
+ * AI による誤字・脱字チェックに使う AI。
+ * - builtin：Chrome に内蔵された AI（端末の中で処理する。外部には送らない）
+ * - openai・anthropic：利用者が自分の API キーを登録して使う外部の AI（件名と本文を、その提供元に送る）
+ */
+export type TypoCheckProvider = 'builtin' | RemoteProvider;
 
 /** 利用者の設定 */
 export interface Settings {
@@ -47,10 +56,13 @@ export interface Settings {
   /** 署名に必ず入る言葉（自分の名前など）。空なら、署名の有無は調べない */
   readonly signatureKeywords: readonly string[];
   /**
-   * AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックを行うか。初期設定では無効。
-   * モデルのダウンロード（数 GB）が必要なため、利用者が設定画面で有効にしたときだけ使う。
+   * AI による誤字・脱字チェックを行うか。初期設定では無効。
+   * 内蔵の AI はモデルのダウンロード（数 GB）が、外部の AI は API キーの登録が必要なため、
+   * 利用者が設定画面で有効にしたときだけ使う。
    */
   readonly aiTypoCheckEnabled: boolean;
+  /** 誤字・脱字チェックに使う AI。初期設定は、Chrome に内蔵された AI（外部に送らない） */
+  readonly typoCheckProvider: TypoCheckProvider;
   /**
    * 連絡先を記録するか（フェーズ2）。初期設定では無効。
    * 送った相手のアドレスなどを端末の中にためる機能なので、利用者が自分で有効にしたときだけ記録する。
@@ -126,6 +138,7 @@ export const DEFAULT_SETTINGS: Settings = {
   typoDictionary: [],
   signatureKeywords: [],
   aiTypoCheckEnabled: false,
+  typoCheckProvider: 'builtin',
   ledgerEnabled: false,
   ledgerReadReceived: false,
   ledgerRetentionDays: 365,
@@ -283,6 +296,8 @@ export function normalizeSettings(raw: unknown): Settings {
       () => true,
     ),
     aiTypoCheckEnabled: raw.aiTypoCheckEnabled === true,
+    // 読めない値は、外部に送らない側（内蔵の AI）にする
+    typoCheckProvider: isRemoteProvider(raw.typoCheckProvider) ? raw.typoCheckProvider : 'builtin',
     ledgerEnabled: raw.ledgerEnabled === true,
     ledgerReadReceived: raw.ledgerReadReceived === true,
     ledgerRetentionDays: LEDGER_RETENTION_CHOICES.find((days) => days === raw.ledgerRetentionDays)

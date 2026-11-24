@@ -4,11 +4,14 @@
  * chrome.runtime.sendMessage / onMessage で送受信するメッセージは、すべてここに型を定義する。
  * 連絡先の記録（台帳）は background 側の IndexedDB にあるため、
  * content と設定画面からは、ここで定義したメッセージで読み書きを依頼する。
+ * 外部の AI による誤字・脱字チェックも、通信は background で行うので、メッセージで依頼する。
  */
 
 import type { ImportResult, ImportRow } from '../core/ledger/csv';
 import type { CompanyEdit, ContactEdit } from '../core/ledger/directory';
 import type { ReceivedMail } from '../core/ledger/received';
+import type { RemoteProvider } from '../core/typo/remote-request';
+import type { TypoCheckResult } from '../core/typo/typo-check';
 import type {
   CcPairRecord,
   CompanyRecord,
@@ -62,7 +65,18 @@ export type ExtensionMessage =
   /** CSV から読んだ行を取り込む */
   | { readonly type: 'ledger/import'; readonly rows: readonly ImportRow[] }
   /** 画面に開いた、届いたメール1通の情報で台帳を補う */
-  | { readonly type: 'ledger/received'; readonly mail: ReceivedMail };
+  | { readonly type: 'ledger/received'; readonly mail: ReceivedMail }
+  /** 外部の AI（利用者が選んで API キーを登録した提供元）で、件名と本文の誤字・脱字を調べる */
+  | {
+      readonly type: 'typo/check';
+      readonly provider: RemoteProvider;
+      readonly subject: string;
+      /** 本文（引用部分を除いたもの） */
+      readonly bodyText: string;
+    };
+
+/** 連絡先の記録（台帳）へのメッセージ */
+export type LedgerMessage = Exclude<ExtensionMessage, { readonly type: 'typo/check' }>;
 
 /** メッセージの種類ごとの、返ってくる値 */
 export interface ExtensionResults {
@@ -78,6 +92,7 @@ export interface ExtensionResults {
   'ledger/import': ImportResult;
   /** 台帳を書き換えたか */
   'ledger/received': boolean;
+  'typo/check': TypoCheckResult;
 }
 
 /** background からの応答。失敗した場合は理由を返す（呼び出し側で例外にする） */
@@ -95,6 +110,7 @@ const MESSAGE_TYPES: readonly ExtensionMessage['type'][] = [
   'ledger/deleteContact',
   'ledger/import',
   'ledger/received',
+  'typo/check',
 ];
 
 /** 受け取った値が、この拡張機能のメッセージかどうか */

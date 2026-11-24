@@ -8,8 +8,9 @@
 - 目的：送信前に宛先（To / Cc / Bcc）・本文・添付を確認させ、添付漏れ、宛名と宛先の不一致、誤字脱字などを検知して誤送信をなくす。
 - 要件は **docs/requirements.md** を参照する。要件に書かれていない仕様を推測で決めず、不明点は相談する。
 - 配布：Chrome Web Store で一般公開、GitHub でソース公開（MIT ライセンス）。
-- 前提：Gmail API は使わない。外部への通信はしない。データは端末内にのみ保存する。
-  - AI による誤字・脱字チェックは、Chrome 内蔵の AI（Gemini Nano の Prompt API）だけを使う。処理は端末内で完結し、外部通信は発生しない。利用者の API キーを使う方式・外部の AI サービスは採用しない（決定済み）。
+- 前提：Gmail API は使わない。データは端末内にのみ保存する。外部への通信は、下の「外部の AI」だけ（初期設定では一切しない）。
+  - AI による誤字・脱字チェックは、初期設定では Chrome 内蔵の AI（Gemini Nano の Prompt API）を使う。処理は端末内で完結し、外部通信は発生しない。
+  - 利用者が設定画面で選んだ場合に限り、利用者自身の API キーで外部の AI（OpenAI・Anthropic の API）を使う（2026年11月25日に決定）。自前サーバーを経由する方式は採用しない。
 
 ### 開発フェーズ
 
@@ -104,12 +105,19 @@ store/            Chrome Web Store 掲載用の素材
 
 ## AI による誤字・脱字チェック
 
-- **Chrome 内蔵の AI（Prompt API）だけを使う。** 呼び出しは `src/shared/language-model.ts` にまとめる。AI に渡す文面の組み立てと、返ってきた JSON の検証は `src/core/typo/typo-check.ts`（純粋な処理）に置く。
+- **初期設定は Chrome 内蔵の AI（Prompt API）。** 呼び出しは `src/shared/language-model.ts` にまとめる。AI に渡す文面の組み立てと、返ってきた JSON の検証は `src/core/typo/typo-check.ts`（純粋な処理）に置く。
 - **初期設定は無効。** モデルのダウンロードは、設定画面のボタンから利用者が始める（Chrome の決まりで、利用者の操作の直後にしか始められない）。未ダウンロードの状態で `create()` を呼ばない。
 - **AI の返答をそのまま表示しない。** JSON スキーマで形を指定したうえで検証し、指摘された箇所が元の文面に無い候補は捨てる。
 - **意味を変える候補（肯定と否定の入れ替え、数字・日付の変更など）と言い換えの候補は表示しない。** 判定は `src/core/typo/typo-filter.ts`（純粋な処理）に置く。疑わしい候補は捨てる側に倒す。助詞1文字を別の助詞に入れ替えるだけの候補と、ひらがな2文字以上を別の文字に置き換える候補（言い回しの変更。置き換え先が漢字でも同じ）、2文字以上を削るだけの候補（隣と同じ文字の繰り返しを消すものを除く）、句読点などの記号や空白を足す・消すだけの候補も捨てる。
 - **同じ文字の重複（をを、まます など）は、AI に頼らず検知器（`src/core/detectors/repeated-characters.ts`）で拾う。** AI は長い文面の中の重複を取りこぼすため。
-- **AI に渡すのは、件名と本文（引用部分を除く）だけ。** 宛先や添付ファイル名は渡さない。
+- **AI に渡すのは、件名と本文（引用部分を除く）だけ。** 宛先や添付ファイル名は渡さない。外部の AI でも同じ。
+- **外部の AI（OpenAI・Anthropic の API）は、利用者が選び、自分の API キーを登録し、通信を許可したときだけ使う。**（`Settings.typoCheckProvider`。初期値は `builtin`）
+  - 通信するのは `src/background/remote-typo.ts` だけ（`fetch` を使えるのは、このファイルだけ。ESLint で検出）。通信先は、選んだ提供元の API だけ。送る内容の組み立てと返答の読み取りは `src/core/typo/remote-request.ts`（純粋な処理）に置く。
+  - content からは、メッセージ（`typo/check`）で background に依頼する（`src/shared/typo-client.ts`）。
+  - API キーは `src/storage/api-keys.ts` で、設定とは別のキーに保存する。content script では読まない。ログ・例外・画面に出さない（テストデータにも本物のキーを書かない）。
+  - 費用を抑える決まり：一番軽いモデルを使う、推論（思考）を使わない、返答は「誤り → 修正案」の JSON だけにする、長いメールは先頭 `MAX_INPUT_LENGTH` 文字まで。モデル名や API の形を変えるときは、公式の資料で確かめる。
+  - 返ってきた候補は、内蔵の AI と同じ検証（`parseTypoResponse`）を通す。
+  - 通信の許可は、任意の権限（`optional_host_permissions`）として、設定画面で API キーを保存するときに求める。入れた時点の権限は増やさない。
 - **修正案をメールに反映するのは、利用者が「修正する」を押したときだけ。** 該当する箇所が件名と本文（引用を除く）を通して1か所に決まる場合にだけ書き換える（`src/gmail/compose.ts` の `replaceComposeText`）。
 
 ## 連絡先の記録（台帳）
@@ -127,10 +135,10 @@ store/            Chrome Web Store 掲載用の素材
 
 ## 禁止事項（変更が必要な場合は必ず事前に相談すること）
 
-- 外部への通信（`fetch`、`XMLHttpRequest`、`WebSocket` 等）
+- 外部への通信（`fetch`、`XMLHttpRequest`、`WebSocket` 等）。例外は、外部の AI による誤字・脱字チェック（`src/background/remote-typo.ts`）だけ。通信先・送る内容を増やす場合は相談する
 - 外部スクリプトの読み込み・`eval` 等のリモートコード実行
 - Gmail API の使用
-- `manifest.json` の権限追加（現在は `permissions: ["storage"]`、`host_permissions: ["https://mail.google.com/*"]` のみ）
+- `manifest.json` の権限追加（現在は `permissions: ["storage"]`、`host_permissions: ["https://mail.google.com/*"]`、任意の権限として `optional_host_permissions: ["https://api.openai.com/*", "https://api.anthropic.com/*"]`）
 - 実行時に使う外部ライブラリ（`dependencies`）の追加
 - テストデータ・コードへの実在のメールアドレス・氏名・会社名の記載（架空のもの、`example.com` 等を使う）
 
@@ -140,7 +148,7 @@ store/            Chrome Web Store 掲載用の素材
 - 例外を握りつぶして送信を通す実装（`catch` で何もせず続行する等）は不可。Gmail の画面変更で要素が見つからない場合も同様に扱う。
 - 表示文言は `_locales` の `errorCheckFailed` を使う。
 - **例外：連絡先の記録（台帳）の読み書きの失敗では送信を止めない。** 読めなかった場合は、台帳を使うチェックを行えなかったことを確認ダイアログに表示する（`dialogLedgerUnavailable`）。記録の失敗は、すでに始まった送信に影響させない。
-- **例外：AI による誤字・脱字チェックの失敗では送信を止めない。** 補助の機能であり、解析には時間がかかるため、確認ダイアログを先に表示して結果を後から差し込む。解析の失敗・時間切れ・モデルが使えない場合は、ダイアログの欄にその旨を表示するだけにする（`dialogTypoFailed`・`dialogTypoNotReady`）。
+- **例外：AI による誤字・脱字チェックの失敗では送信を止めない。** 補助の機能であり、解析には時間がかかるため、確認ダイアログを先に表示して結果を後から差し込む。解析の失敗・時間切れ・モデルが使えない場合は、ダイアログの欄にその旨を表示するだけにする（`dialogTypoFailed`・`dialogTypoNotReady`）。外部の AI で、API キーが無い・通信が許可されていない場合（`dialogTypoNoKey`）、通信や API の失敗（`dialogTypoFailed`）も同じ。
 
 ## 作業の進め方
 
