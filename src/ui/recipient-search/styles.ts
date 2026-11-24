@@ -10,32 +10,64 @@
 
 import { BEAM_COLORFUL, BEAM_CSS } from '../beam';
 
-/** 作成画面の下の操作列に置くボタン（Gmail の白い画面に合わせる） */
+/**
+ * 作成画面の下の操作列に置くボタン。確認ダイアログ・検索パネルと同じく、枠に光の帯を回す。
+ * 面は、Gmail の白い操作列になじむよう、白に近い薄いグレーの半透明（透過度 70%）にして、背後をぼかす。文字は濃い色。
+ *
+ * 縦の位置は、隣の送信ボタン（高さ 36px）にそろえる。
+ * Gmail の操作列は文字の並び（インライン）で配置されていて、送信ボタンは行の下端を基準に置かれる。
+ * そのため、入れ物を送信ボタンと同じ高さにして、行の下端にそろえ（vertical-align: bottom）、
+ * その中でボタンを上下の中央に置く。中央ぞろえ（middle）だと、送信ボタンより数 px 上にずれる。
+ */
 export const SEARCH_BUTTON_CSS = `
 :host {
   all: initial;
   display: inline-flex;
-  vertical-align: middle;
+  align-items: center;
+  height: 36px;
+  vertical-align: bottom;
   margin-left: 8px;
 }
 button {
+  --beam: ${BEAM_COLORFUL};
+  --beam-duration: 5s;
+  position: relative;
   box-sizing: border-box;
   height: 32px;
-  padding: 0 12px;
-  border: 1px solid #747775;
-  border-radius: 16px;
-  background: #ffffff;
-  color: #0b57d0;
-  font: 500 13px/1 "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+  padding: 0 14px;
+  border: 1px solid rgba(31, 31, 31, 0.14);
+  border-radius: 999px;
+  background: rgba(236, 238, 241, 0.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  color: #1f1f1f;
+  font: 700 13px/1 "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+  font-feature-settings: "palt";
   white-space: nowrap;
+  overflow: hidden;
   cursor: pointer;
+  transition: background-color 120ms ease-out;
 }
 button:hover {
-  background: #f0f4f9;
+  background: rgba(222, 225, 230, 0.55);
 }
 button:focus-visible {
   outline: 2px solid #0b57d0;
   outline-offset: 2px;
+}
+${BEAM_CSS}
+/* 小さいボタンなので、内側の光は細く、控えめにする */
+.beam-glow {
+  opacity: 0.6;
+  filter: blur(4px);
+}
+.beam-glow > .beam-ring {
+  padding: 3px;
+}
+/* 文字は、光の帯より手前に置く */
+.label {
+  position: relative;
+  z-index: 1;
 }
 `;
 

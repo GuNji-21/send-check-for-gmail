@@ -167,17 +167,33 @@ To prevent mis-sent email by having the user review recipients, subject, body an
 
 ### 権限を使う理由
 
-| 権限                                   | 理由（日本語）                                                                                                                                       | Reason (English)                                                                                                                                                                                  |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `storage`                              | 利用者の設定（社内として扱うドメイン、注意したい宛先、警告のオン・オフ、添付のキーワードなど）を、利用者の端末の中に保存するため。                   | To store the user's settings (internal domains, recipients that need care, which warnings are on, attachment keywords, etc.) on the user's device.                                                |
-| ホスト権限 `https://mail.google.com/*` | Gmail の作成画面で送信の操作を検知して確認の画面を表示し、確認のために宛先・件名・本文・添付ファイル名を読み取るため。ほかのサイトでは動作しません。 | To detect the send action on Gmail's compose screen, show the confirmation screen, and read the recipients, subject, body and attachment names for the review. It does not run on any other site. |
+ダッシュボードの欄は、`storage` と「ホスト権限」の2つ。ホスト権限は、任意の権限（`optional_host_permissions`）も含めて、1つの欄にまとめて書く（2026年11月25日に実際の画面で確認）。
 
-### 任意のホスト権限（optional_host_permissions）
+**storage が必要な理由**
 
-| 権限                          | 理由（日本語）                                                                                                                                                                                                     | Reason (English)                                                                                                                                                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `https://api.openai.com/*`    | 利用者が設定画面で ChatGPT（OpenAI の API）による誤字・脱字チェックを選び、自分の API キーを登録したときにだけ、件名と本文を送って候補を受け取るため。入れた時点では求めず、利用者が選んだときに許可を求めます。   | Only when the user chooses the typo check by ChatGPT (OpenAI API) on the options page and registers their own API key, to send the subject and body and receive suggestions. It is not requested at install time, only when the user chooses it.   |
-| `https://api.anthropic.com/*` | 利用者が設定画面で Claude（Anthropic の API）による誤字・脱字チェックを選び、自分の API キーを登録したときにだけ、件名と本文を送って候補を受け取るため。入れた時点では求めず、利用者が選んだときに許可を求めます。 | Only when the user chooses the typo check by Claude (Anthropic API) on the options page and registers their own API key, to send the subject and body and receive suggestions. It is not requested at install time, only when the user chooses it. |
+```text
+利用者の設定（社内として扱うドメイン、注意したい宛先、警告のオン・オフ、添付のキーワードなど）を、利用者の端末の中に保存するため。利用者が外部の AI による誤字・脱字チェックを選んだ場合は、利用者自身が登録した API キーも、端末の中に保存します。
+```
+
+**ホスト権限が必要な理由**
+
+```text
+【https://mail.google.com/*】Gmail の作成画面で送信の操作を検知して確認の画面を表示し、確認のために宛先・件名・本文・添付ファイル名を読み取るため。ほかのサイトでは動作しません。
+
+【https://api.openai.com/* と https://api.anthropic.com/*（任意の権限）】利用者が設定画面で、ChatGPT（OpenAI の API）または Claude（Anthropic の API）による誤字・脱字チェックを選び、自分の API キーを登録したときにだけ、件名と本文（返信・転送の引用部分を除く）を送って、誤字・脱字の候補を受け取るため。インストール時には求めず、利用者が API キーを保存するときに許可を求めます。初期設定では、外部とは通信しません。
+```
+
+**English**（英語で入力する場合）
+
+```text
+storage: To store the user's settings (internal domains, recipients that need care, which warnings are on, attachment keywords, etc.) on the user's device. If the user chooses the external AI typo check, the API key the user registers is also stored on the device.
+```
+
+```text
+Host permissions: [https://mail.google.com/*] To detect the send action on Gmail's compose screen, show the confirmation screen, and read the recipients, subject, body and attachment names for the review. It does not run on any other site.
+
+[https://api.openai.com/* and https://api.anthropic.com/* (optional)] Only when the user chooses the typo check by ChatGPT (OpenAI API) or Claude (Anthropic API) on the options page and registers their own API key, to send the subject and body (without the quoted part of a reply or forward) and receive typo suggestions. It is not requested at install time, only when the user saves an API key. By default, nothing is sent out.
+```
 
 ### リモートコード
 

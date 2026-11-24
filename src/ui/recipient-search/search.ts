@@ -108,8 +108,10 @@ function createHost(
 /** 作成画面に置く「宛先を検索」のボタンを作る */
 export function createSearchButton(doc: Document, onClick: () => void): HTMLElement {
   const { host, root } = createHost(doc, SEARCH_BUTTON_ATTRIBUTE, SEARCH_BUTTON_CSS);
-  const button = el(doc, 'button', undefined, t('composeSearchButton'));
+  const button = el(doc, 'button');
   button.type = 'button';
+  // 光の帯（飾り）を先に入れ、文字はその手前に置く
+  button.append(createBeam(doc), el(doc, 'span', 'label', t('composeSearchButton')));
   button.title = t('composeSearchTitle');
   button.addEventListener('click', onClick);
   root.append(button);
