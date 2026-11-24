@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>tile</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 440px;
+        height: 280px;
+        overflow: hidden;
+        background: #050506;
+        color: #ffffff;
+        font-family: 'BIZ UDPGothic', 'Yu Gothic UI', Meiryo, sans-serif;
+        font-feature-settings: 'palt';
+      }
+      .aura i {
+        position: absolute;
+        display: block;
+        background: radial-gradient(closest-side, rgba(96, 88, 255, 0.14), transparent 72%);
+        box-shadow:
+          0 0 46px 3px rgba(255, 122, 61, 0.2),
+          inset 0 0 52px 4px rgba(90, 110, 255, 0.2);
+      }
+      .aura i::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        padding: 2px;
+        border-radius: inherit;
+        background: conic-gradient(
+          from var(--from, 210deg),
+          #ff7a3d,
+          #ffb36b 8%,
+          #ff4d8d 22%,
+          #8a5cff 40%,
+          #3b82ff 55%,
+          rgba(59, 130, 255, 0.15) 70%,
+          rgba(255, 122, 61, 0.1) 86%,
+          #ff7a3d
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        mask-composite: exclude;
+      }
+      .aura i:nth-child(1) {
+        top: -150px;
+        right: -110px;
+        width: 330px;
+        height: 290px;
+        border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%;
+      }
+      .aura i:nth-child(2) {
+        --from: 40deg;
+        bottom: -190px;
+        left: -120px;
+        width: 300px;
+        height: 280px;
+        border-radius: 44% 56% 38% 62% / 58% 42% 58% 42%;
+      }
+      main {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 34px;
+      }
+      .icon {
+        width: 58px;
+        height: 58px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        margin: 0;
+        font:
+          700 34px/1.12 'Segoe UI',
+          'BIZ UDPGothic',
+          sans-serif;
+        letter-spacing: -0.02em;
+      }
+      h1 span {
+        display: block;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0;
+        margin-top: 4px;
+      }
+      p {
+        margin: 16px 0 0;
+        font:
+          700 14px/1.5 'BIZ UDPGothic',
+          'Yu Gothic UI',
+          Meiryo,
+          sans-serif;
+      }
+      .pill {
+        display: inline-block;
+        padding: 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="aura"><i></i><i></i></div>
+    <main>
+      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="16 16 96 96">
+        <rect
+          x="17"
+          y="17"
+          width="94"
+          height="94"
+          rx="22"
+          fill="#0D1117"
+          stroke="#3a4250"
+          stroke-width="2"
+        />
+        <rect
+          x="33"
+          y="43"
+          width="62"
+          height="44"
+          rx="7"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="6"
+        />
+        <path
+          d="M36 48 64 68 92 48"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle cx="91" cy="86" r="19" fill="#0D1117" />
+        <circle cx="91" cy="86" r="14.5" fill="#F9F1A5" />
+        <path
+          d="M84 86.5l5 5 9.5-10.5"
+          fill="none"
+          stroke="#0D1117"
+          stroke-width="5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <h1>Send Check<span>for Gmail™</span></h1>
+      <p><span class="pill" id="tag"></span></p>
+    </main>
+    <script>
+      const en = new URLSearchParams(location.search).get('lang') === 'en';
+      document.documentElement.lang = en ? 'en' : 'ja';
+      document.getElementById('tag').textContent = en
+        ? 'Review before you send'
+        : '送信前に、宛先と添付を確認';
+    </script>
+  </body>
+</html>
