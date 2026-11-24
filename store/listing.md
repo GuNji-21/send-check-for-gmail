@@ -55,6 +55,7 @@ Gmail™ でメールを送信する前に、宛先・件名・本文・添付�
 ・Chrome に内蔵された AI を使って、誤字・脱字の候補を表示できます（任意。初期設定はオフ）。候補はその場でメールに反映でき、元に戻すこともできます。
 ・送信した相手を端末の中に記録して、初めて送るドメインと、いつも Cc に入れている人の入れ忘れを知らせることができます（任意。初期設定はオフ）。
 ・記録した相手に氏名・会社名・電話番号などを書き足し、拡張機能のアイコンから会社名で検索できます。CSV の書き出し・取り込みもできます。
+・開いたメールの署名から、記録済みの相手の氏名・会社名・部署・役職・電話番号を補うこともできます（初期設定は無効）。
 ・氏名・会社名を登録しておくと、本文の宛名と宛先の食い違い、別の会社の名前が本文や添付ファイル名に残っていること、会社名の書き方の誤りも知らせます。
 
 ■ プライバシー
@@ -96,6 +97,7 @@ An extension for reviewing recipients, subject, body and attachments before you 
 - Can show possible typos using the AI built into Chrome (optional, off by default). A suggestion can be applied to your email in place, and undone.
 - Can record the people you send email to on your device, and warn you about a first-time domain or a person you usually Cc who is missing (optional, off by default).
 - Lets you add names, company names and phone numbers to recorded contacts, search them by company name from the extension icon, and export or import a CSV file.
+- Optionally fills in the name, company, department, title and phone numbers of recorded contacts from the signature of email you open (off by default).
 - With names and company names registered, it also warns when the salutation does not match the recipients, when another company's name is left in the body or an attachment name, and when a company name is written differently from your directory.
 
 ■ Privacy
@@ -171,7 +173,7 @@ To prevent mis-sent email by having the user review recipients, subject, body an
 ### データの使用
 
 - この拡張機能は、メールの内容（宛先、件名、本文、添付ファイル名）を**端末の中で読み取って処理します**が、**外部には送信しません**。開発者がデータを受け取ることもありません。
-- 連絡先の記録を有効にした場合は、送信した相手のアドレス・表示名・回数・最後に送った日と、利用者が入力・取り込みした氏名・会社名・部署・役職・電話番号を、**端末の中（IndexedDB）に保存します**。これも外部には送信しません。IndexedDB の利用に、追加の権限は必要ありません。
+- 連絡先の記録を有効にした場合は、送信した相手のアドレス・表示名・回数・最後に送った日と、利用者が入力・取り込みした氏名・会社名・部署・役職・電話番号を、**端末の中（IndexedDB）に保存します**。「届いたメールからも連絡先を補う」も有効にした場合は、開いたメールの送信元・宛先・署名を読み取り、記録済みの相手の氏名・会社名・部署・役職・電話番号を補います（本文そのものは保存しません）。これも外部には送信しません。IndexedDB の利用に、追加の権限は必要ありません。
 - 拡張機能のアイコンから開くポップアップ（`action`）を追加していますが、権限は増えていません（`storage` と `https://mail.google.com/*` のまま）。
 - ダッシュボードの「収集するデータ」のチェック項目で、端末内だけの処理を「収集」に含めるかどうかは、確認した公式ドキュメントには書かれていませんでした。
 - 推奨：審査で説明と申告が食い違うと判断されるのを避けるため、読み取っている情報に当たる項目（**個人を特定できる情報**、**個人的なコミュニケーション**）にチェックを入れ、プライバシーポリシーで「端末内でのみ処理し、外部に送信しない」と明記します。提出時に、ダッシュボードの各項目の説明文を読んで最終判断します。

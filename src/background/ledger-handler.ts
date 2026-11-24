@@ -6,6 +6,12 @@
 import { MAX_IMPORT_ROWS, type ImportRow, importRows } from '../core/ledger/csv';
 import { updateCompany, updateContact } from '../core/ledger/directory';
 import { type LedgerStore, lookupLedger, pruneLedger, recordSend } from '../core/ledger/ledger';
+import {
+  MAX_RECEIVED_OTHERS,
+  type ReceivedMail,
+  type ReceivedPerson,
+  recordReceived,
+} from '../core/ledger/received';
 import { looksLikeAddress, normalizeAddress } from '../core/text/address';
 import type { ExtensionMessage, ExtensionResponse } from '../shared/messages';
 
@@ -41,6 +47,39 @@ function sanitizeImportRows(rows: unknown): ImportRow[] {
     });
   }
   return result;
+}
+
+/** 届いたメールの人物1件を確かめ直す。アドレスの形が正しくなければ undefined */
+function sanitizePerson(value: unknown): ReceivedPerson | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const person = value as Record<string, unknown>;
+  if (typeof person.address !== 'string') return undefined;
+  const address = normalizeAddress(person.address);
+  if (!looksLikeAddress(address) || address.length > 254) return undefined;
+  return typeof person.name === 'string' ? { address, name: person.name } : { address };
+}
+
+/**
+ * 届いたメールの情報を確かめ直す。メッセージの中身は信頼しない。
+ * 送信元のアドレスの形が正しくなければ undefined（値の長さは、記録の処理で制限する）。
+ */
+function sanitizeReceivedMail(value: unknown): ReceivedMail | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const mail = value as Record<string, unknown>;
+  const sender = sanitizePerson(mail.sender);
+  if (sender === undefined) return undefined;
+  const others = (Array.isArray(mail.others) ? mail.others.slice(0, MAX_RECEIVED_OTHERS) : [])
+    .map(sanitizePerson)
+    .filter((person): person is ReceivedPerson => person !== undefined);
+  const raw = (
+    typeof mail.signature === 'object' && mail.signature !== null ? mail.signature : {}
+  ) as Record<string, unknown>;
+  const signature: Record<string, string> = {};
+  for (const field of ['companyName', 'department', 'title', 'phone', 'mobile'] as const) {
+    const text = raw[field];
+    if (typeof text === 'string') signature[field] = text;
+  }
+  return { sender, others, signature };
 }
 
 /** メッセージを処理して、応答を返す。例外は応答（ok: false）にして返す */
@@ -96,6 +135,13 @@ export async function handleLedgerMessage(
           ok: true,
           value: await importRows(store, sanitizeImportRows(message.rows), now.toISOString()),
         };
+      case 'ledger/received': {
+        const mail = sanitizeReceivedMail(message.mail);
+        return {
+          ok: true,
+          value: mail === undefined ? false : await recordReceived(store, mail, now.toISOString()),
+        };
+      }
     }
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };

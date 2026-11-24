@@ -303,6 +303,14 @@
     "message": "Record the people I send email to",
     "description": "連絡先の記録を有効にするチェックボックス"
   },
+  "optionsLedgerReadReceived": {
+    "message": "Also fill in contacts from email I receive",
+    "description": "届いたメールの読み取りを有効にするチェックボックス"
+  },
+  "optionsLedgerReadReceivedHelp": {
+    "message": "Reads the sender, recipients and signature of email you open in Gmail, and fills in the name, company, department, title and phone numbers of people already in your records. Works only while \"Record the people I send email to\" is on. Email from people who are not in your records (such as newsletters) is not recorded. Nothing that is read is sent anywhere.",
+    "description": "届いたメールの読み取りの説明"
+  },
   "optionsLedgerRetention": {
     "message": "How long to keep records (from the last send)",
     "description": "連絡先の記録を残す期間の選択欄"

@@ -28,6 +28,7 @@ export interface OptionsFormValues {
   readonly signatureKeywords: string;
   readonly aiTypoCheckEnabled: boolean;
   readonly ledgerEnabled: boolean;
+  readonly ledgerReadReceived: boolean;
   readonly ledgerRetentionDays: number;
   readonly warningLevels: Readonly<Record<DetectorId, WarningLevel>>;
 }
@@ -76,6 +77,7 @@ export function toFormValues(settings: Settings): OptionsFormValues {
     signatureKeywords: lines(settings.signatureKeywords),
     aiTypoCheckEnabled: settings.aiTypoCheckEnabled,
     ledgerEnabled: settings.ledgerEnabled,
+    ledgerReadReceived: settings.ledgerReadReceived,
     ledgerRetentionDays: settings.ledgerRetentionDays,
     warningLevels: { ...settings.warningLevels },
   };
@@ -123,6 +125,7 @@ export function parseFormValues(values: OptionsFormValues): ParseResult {
     signatureKeywords: parseLines(values.signatureKeywords),
     aiTypoCheckEnabled: values.aiTypoCheckEnabled,
     ledgerEnabled: values.ledgerEnabled,
+    ledgerReadReceived: values.ledgerReadReceived,
     ledgerRetentionDays: values.ledgerRetentionDays,
   };
 

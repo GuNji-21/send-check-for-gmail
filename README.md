@@ -12,7 +12,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 - 対象：PC 版 Chrome 上の Gmail（mail.google.com）
 - Gmail API は使いません。外部への通信は一切行わず、設定は利用者の端末内にのみ保存します。
-- 現在はフェーズ1と、フェーズ2の一部（連絡先の記録、初めて送るドメイン、Cc 漏れ、台帳の画面、会社名検索）、フェーズ3の一部を実装済みです。Chrome Web Store への公開を準備しています。
+- 現在はフェーズ1と、フェーズ2（連絡先の記録、初めて送るドメイン、Cc 漏れ、台帳の画面、会社名検索、届いたメールからの連絡先の補完）、フェーズ3の検知を実装済みです。Chrome Web Store への公開を準備しています。
 - Gmail は Google LLC の商標です。この拡張機能は Google が提供・公認するものではありません。
 
 ### できること（実装済み）
@@ -97,12 +97,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 ### 今後の予定
 
-**フェーズ2**（連絡先の記録、初めて送るドメインの警告、Cc 漏れの通知、台帳の画面、会社名検索、会社名での宛先表示は実装済み）
-
-- 会社台帳の自動作成（届いたメールの Cc・署名を画面から読み取って蓄積）
-
-**フェーズ3**
-
+- 作成画面から、会社名の検索結果を To・Cc に追加する
 - AI による署名抽出の精度向上
 
 ### 開発環境の準備
@@ -160,7 +155,7 @@ A Chrome extension (Manifest V3) that stops the send action in Gmail and makes y
 
 - Target: Gmail (mail.google.com) on desktop Chrome
 - Does not use the Gmail API. Makes no external network requests; settings are stored only on your device.
-- Phase 1, part of Phase 2 (contact records, first-time domain, missing Cc, the directory page, company search) and part of Phase 3 are implemented. Publication on the Chrome Web Store is being prepared.
+- Phase 1, Phase 2 (contact records, first-time domain, missing Cc, the directory page, company search, filling in contacts from received email) and the Phase 3 checks are implemented. Publication on the Chrome Web Store is being prepared.
 - Gmail is a trademark of Google LLC. This extension is not provided or endorsed by Google.
 
 ### What it does (implemented)
@@ -245,12 +240,7 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 ### Roadmap
 
-**Phase 2** (contact records, the first-time domain warning, the missing Cc notification, the directory page, company search and company names in the dialog are implemented)
-
-- Automatically built company directory (from the Cc lines and signatures of email you receive, read from the screen)
-
-**Phase 3**
-
+- Adding company search results to To / Cc from the compose window
 - More accurate signature extraction with AI
 
 ### Development setup

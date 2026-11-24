@@ -56,6 +56,11 @@ export interface Settings {
    * 送った相手のアドレスなどを端末の中にためる機能なので、利用者が自分で有効にしたときだけ記録する。
    */
   readonly ledgerEnabled: boolean;
+  /**
+   * 届いたメールからも連絡先を補うか（フェーズ2b）。初期設定では無効。連絡先の記録が有効なときだけ働く。
+   * 画面に開いたメールの送信元・宛先・署名を読むので、送信した相手の記録とは別に、利用者が有効にする。
+   */
+  readonly ledgerReadReceived: boolean;
   /** 連絡先の記録を残す日数。最終やりとり日からこの日数を過ぎた記録は削除する */
   readonly ledgerRetentionDays: number;
 }
@@ -122,6 +127,7 @@ export const DEFAULT_SETTINGS: Settings = {
   signatureKeywords: [],
   aiTypoCheckEnabled: false,
   ledgerEnabled: false,
+  ledgerReadReceived: false,
   ledgerRetentionDays: 365,
 };
 
@@ -278,6 +284,7 @@ export function normalizeSettings(raw: unknown): Settings {
     ),
     aiTypoCheckEnabled: raw.aiTypoCheckEnabled === true,
     ledgerEnabled: raw.ledgerEnabled === true,
+    ledgerReadReceived: raw.ledgerReadReceived === true,
     ledgerRetentionDays: LEDGER_RETENTION_CHOICES.find((days) => days === raw.ledgerRetentionDays)
       ? (raw.ledgerRetentionDays as number)
       : DEFAULT_SETTINGS.ledgerRetentionDays,

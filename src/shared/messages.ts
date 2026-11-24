@@ -8,6 +8,7 @@
 
 import type { ImportResult, ImportRow } from '../core/ledger/csv';
 import type { CompanyEdit, ContactEdit } from '../core/ledger/directory';
+import type { ReceivedMail } from '../core/ledger/received';
 import type {
   CcPairRecord,
   CompanyRecord,
@@ -59,7 +60,9 @@ export type ExtensionMessage =
   /** 連絡先を1件削除する */
   | { readonly type: 'ledger/deleteContact'; readonly address: string }
   /** CSV から読んだ行を取り込む */
-  | { readonly type: 'ledger/import'; readonly rows: readonly ImportRow[] };
+  | { readonly type: 'ledger/import'; readonly rows: readonly ImportRow[] }
+  /** 画面に開いた、届いたメール1通の情報で台帳を補う */
+  | { readonly type: 'ledger/received'; readonly mail: ReceivedMail };
 
 /** メッセージの種類ごとの、返ってくる値 */
 export interface ExtensionResults {
@@ -73,6 +76,8 @@ export interface ExtensionResults {
   'ledger/updateCompany': null;
   'ledger/deleteContact': null;
   'ledger/import': ImportResult;
+  /** 台帳を書き換えたか */
+  'ledger/received': boolean;
 }
 
 /** background からの応答。失敗した場合は理由を返す（呼び出し側で例外にする） */
@@ -89,6 +94,7 @@ const MESSAGE_TYPES: readonly ExtensionMessage['type'][] = [
   'ledger/updateCompany',
   'ledger/deleteContact',
   'ledger/import',
+  'ledger/received',
 ];
 
 /** 受け取った値が、この拡張機能のメッセージかどうか */

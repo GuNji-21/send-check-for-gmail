@@ -182,7 +182,7 @@ const BLOCK_TAGS: ReadonlySet<string> = new Set([
  * 要素の中身を、改行を保ったプレーンテキストにする。
  * （innerText に近い結果を、jsdom でも同じように得るために自前で行う）
  */
-function toPlainText(root: Node): string {
+export function toPlainText(root: Node): string {
   let text = '';
   const appendNewline = (): void => {
     if (text !== '' && !text.endsWith('\n')) text += '\n';

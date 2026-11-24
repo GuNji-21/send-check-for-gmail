@@ -20,7 +20,8 @@ The Extension also handles the following:
   - Who: external recipients (To / Cc / Bcc) of email you send, and the people you put in Cc on email to an external recipient (including internal people)
   - What: email address, display name, domain, how many times the person was in To or Cc, the date of the last send, and which people were in Cc on email to which recipient, with a count
   - Items you enter on the directory page or import from a CSV file: name, company name, other names of the company, department, title, phone number and mobile number
-  - Source: the recipient fields of email you compose, what you enter yourself, and a CSV file you choose. The content of email you receive is not read
+  - Source: the recipient fields of email you compose, what you enter yourself, and a CSV file you choose
+  - Filling in from received email (only when you turn on "Also fill in contacts from email I receive" in the options page; off by default): the Extension reads the sender (address, display name), the people in the recipient fields (address, display name) and the signature (company name, department, title, phone number, mobile number) of email you open in Gmail, and fills in the details of people who are already in your records. Email from people who are not in your records (such as newsletters) is not recorded. The body itself is not stored
   - Purpose: to warn you about a domain you are sending to for the first time and about a person you usually Cc who is not included, to compare the salutation and company names in the body with your recipients, to show company names on the confirmation screen, and to let you search by company name
   - Email sent before you turned the feature on, and email sent only to internal recipients, is not recorded
 
@@ -34,7 +35,7 @@ The Extension also handles the following:
 ## 3. Storage
 
 - Data is stored only on your device. Settings are stored in chrome.storage, and contact records in IndexedDB.
-- The subject, body and attachment information are not stored. They are read only while the check is shown.
+- The subject, body and attachment information are not stored. They are read only while the check is shown. The body of email you receive is not stored either (only the company name, department, title and phone numbers read from the signature are saved in the contact records).
 - Contact records are deleted automatically once a set period has passed since the last send (1 year by default; you can choose from 6 months to 5 years in the options page).
 - The developer has no access to your data.
 

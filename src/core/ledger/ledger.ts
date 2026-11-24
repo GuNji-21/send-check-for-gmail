@@ -61,6 +61,17 @@ export interface ContactRecord {
   readonly mobile?: string;
   /** 利用者が確認・修正した情報か（無ければ、自動で記録しただけの情報） */
   readonly confirmed?: boolean;
+  /** 届いたメールの署名で上書きした項目の、変更前の値（古い順。異動・転職の前の情報） */
+  readonly history?: readonly ContactHistoryEntry[];
+}
+
+/** 連絡先の、変更前の値1件 */
+export interface ContactHistoryEntry {
+  /** 上書きした日時（ISO 8601） */
+  readonly at: string;
+  /** 項目名（name、companyName、department、title、phone、mobile） */
+  readonly field: string;
+  readonly value: string;
 }
 
 /** 会社（ドメイン）1件。「送ったことがあるドメインか」の判断と、会社名の表示に使う */

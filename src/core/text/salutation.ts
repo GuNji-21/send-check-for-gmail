@@ -21,7 +21,7 @@ const NAME_WITH_HONORIFIC =
   /([^\s　、,，・/／()（）「」:：]{1,15})[ 　]*(?:様|さま|さん|殿|先生)/gu;
 
 /** 名前の後ろに付く役職（名前の照合の前に取り除く） */
-const TITLES: readonly string[] = [
+export const TITLES: readonly string[] = [
   '代表取締役社長',
   '代表取締役',
   '取締役',

@@ -66,6 +66,7 @@ const CHECK_FIELDS = [
   'treatDriveLinksAsAttachment',
   'aiTypoCheckEnabled',
   'ledgerEnabled',
+  'ledgerReadReceived',
 ] as const;
 
 // 呼び出し側が要素の種類を指定できるようにするための型引数（戻り値の型にだけ使う）
@@ -143,6 +144,7 @@ function readForm(): OptionsFormValues {
     signatureKeywords: text('signatureKeywords'),
     aiTypoCheckEnabled: checked('aiTypoCheckEnabled'),
     ledgerEnabled: checked('ledgerEnabled'),
+    ledgerReadReceived: checked('ledgerReadReceived'),
     ledgerRetentionDays: Number(byId<HTMLSelectElement>('ledgerRetentionDays').value),
     warningLevels: Object.fromEntries(DETECTOR_IDS.map((id) => [id, readLevel(id)])) as Record<
       DetectorId,

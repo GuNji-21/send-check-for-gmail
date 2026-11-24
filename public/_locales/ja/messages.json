@@ -303,6 +303,14 @@
     "message": "送信した相手を記録する",
     "description": "連絡先の記録を有効にするチェックボックス"
   },
+  "optionsLedgerReadReceived": {
+    "message": "届いたメールからも連絡先を補う",
+    "description": "届いたメールの読み取りを有効にするチェックボックス"
+  },
+  "optionsLedgerReadReceivedHelp": {
+    "message": "Gmail で開いたメールの送信元・宛先・署名を読み、記録済みの相手の氏名・会社名・部署・役職・電話番号を補います。「送信した相手を記録する」が有効なときだけ働きます。記録に無い相手から届いたメール（メールマガジンなど）は記録しません。読み取った内容を外部に送信することはありません。",
+    "description": "届いたメールの読み取りの説明"
+  },
   "optionsLedgerRetention": {
     "message": "記録を残す期間（最後に送った日から）",
     "description": "連絡先の記録を残す期間の選択欄"

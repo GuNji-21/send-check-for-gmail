@@ -45,6 +45,18 @@ export const SELECTORS = {
   menu: '[role="menu"]',
   /** 送信ボタン横のメニューにある「送信日時を設定」（予約送信）の項目 */
   scheduleMenuItem: '[role="menuitem"][selector="scheduledSend"]',
+  /** 開いたメール1通分の入れ物（届いたメールの表示画面）。メールの識別子は data-legacy-message-id */
+  message: '.adn[data-legacy-message-id]',
+  /** メールの送信元。アドレスは email、表示名は name */
+  messageSender: '.gD[email]',
+  /** メールの宛先（To・Cc）に入っている人。アドレスは email、表示名は name */
+  messageRecipient: '.g2[email]',
+  /** メールの本文 */
+  messageBody: '.a3s',
+  /** 本文の中の引用部分（過去メール） */
+  messageQuote: '.gmail_quote, blockquote',
+  /** 本文の中の署名（Gmail から送られたメールに付く印） */
+  messageSignature: '.gmail_signature',
 } as const satisfies Record<string, string>;
 
 /** 宛先欄の入れ物（To / Cc / Bcc）。name 属性で欄の種類が分かる */

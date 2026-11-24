@@ -8,6 +8,7 @@
 import type { ImportResult, ImportRow } from '../core/ledger/csv';
 import type { CompanyEdit, ContactEdit } from '../core/ledger/directory';
 import type { LedgerInsight, LedgerQuery, SendRecord } from '../core/ledger/ledger';
+import type { ReceivedMail } from '../core/ledger/received';
 import type {
   ExtensionMessage,
   ExtensionResponse,
@@ -91,4 +92,9 @@ export async function deleteLedgerContact(address: string): Promise<void> {
 /** CSV から読んだ行を取り込む */
 export function importLedgerRows(rows: readonly ImportRow[]): Promise<ImportResult> {
   return request({ type: 'ledger/import', rows });
+}
+
+/** 画面に開いた、届いたメール1通の情報で台帳を補う。台帳を書き換えたら true */
+export function recordReceivedToLedger(mail: ReceivedMail): Promise<boolean> {
+  return request({ type: 'ledger/received', mail });
 }

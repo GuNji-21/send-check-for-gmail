@@ -135,6 +135,8 @@ export const MESSAGE_KEYS = [
   'optionsSectionLedger',
   'optionsLedgerHelp',
   'optionsLedgerEnabled',
+  'optionsLedgerReadReceived',
+  'optionsLedgerReadReceivedHelp',
   'optionsLedgerRetention',
   'optionsLedgerRetentionHalf',
   'optionsLedgerRetention1',
