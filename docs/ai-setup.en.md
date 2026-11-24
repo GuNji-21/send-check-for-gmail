@@ -48,7 +48,17 @@ Prices are as of November 2026. Check each provider's page for current prices.
 1. Open the options page of "Send Check for Gmail" (right-click the extension icon → Options).
 2. Under "AI typo check", choose ChatGPT or Claude in "AI to use".
 3. Paste the key into "API key" and press "Save API key".
+
+   ![ChatGPT chosen in "AI to use" with an API key pasted in. The key is shown as dots](images/ai-setup-options-openai-key.en.png)
+
 4. Chrome asks whether to allow the connection. Allow it. The setup is done when "API key: registered" is shown.
+
+   ![After saving the key: "API key: registered" is shown, and a "Delete API key" button appears](images/ai-setup-options-openai-ready.en.png)
+
+   It looks the same when you choose Claude.
+
+   ![Claude chosen in "AI to use", after saving the key](images/ai-setup-options-anthropic-ready.en.png)
+
 5. Tick "Look for possible typos with AI before sending".
 6. Press "Save" at the bottom of the page.
 7. Reload any open Gmail tabs.
@@ -96,5 +106,7 @@ In every case, sending itself is not blocked.
 - Treat the API key like a password. Do not share it or paste it into email or chat. Anyone who has it can spend your balance.
 - The key is stored only in Chrome on your device.
 - If the key may have leaked, delete it in the provider's console, create a new one and register it again.
+
+The images are made for this guide. Screens of the OpenAI and Anthropic consoles are not included, because they may change; follow what each console shows.
 
 Related: [Privacy Policy](privacy-policy.en.md)
