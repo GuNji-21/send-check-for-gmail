@@ -130,7 +130,10 @@ export interface LedgerStore {
   listContacts(): Promise<readonly ContactRecord[]>;
   listCompanies(): Promise<readonly CompanyRecord[]>;
   listAllCcPairs(): Promise<readonly CcPairRecord[]>;
-  /** 連絡先を1件削除する。その相手に関する Cc の記録（To 側・Cc 側の両方）も削除する */
+  /**
+   * 連絡先を1件削除する。その相手に関する Cc の記録（To 側・Cc 側の両方）も削除する。
+   * その会社（ドメイン）の連絡先が1件も残らなければ、会社の記録（会社名、送ったことがあるという記録）も削除する
+   */
   deleteContact(address: string): Promise<void>;
 }
 
@@ -417,7 +420,14 @@ export function createMemoryLedgerStore(): LedgerStore {
     listCompanies: () => Promise.resolve([...companies.values()]),
     listAllCcPairs: () => Promise.resolve([...ccPairs.values()]),
     deleteContact: (address) => {
+      const companyKey = contacts.get(address)?.companyKey;
       contacts.delete(address);
+      if (
+        companyKey !== undefined &&
+        ![...contacts.values()].some((contact) => contact.companyKey === companyKey)
+      ) {
+        companies.delete(companyKey);
+      }
       for (const [id, pair] of ccPairs) {
         if (pair.toAddress === address || pair.address === address) ccPairs.delete(id);
       }

@@ -150,6 +150,27 @@ describe('台帳の編集', () => {
     expect(await store.listCcPairs('taro@client.example')).toEqual([]);
     expect(await store.getContact('taro@client.example')).toBeDefined();
   });
+
+  it('会社の最後の連絡先を削除すると、会社の記録も消える（次は、初めて送るドメインになる）', async () => {
+    await recordSend(
+      store,
+      send('2026-11-16T00:00:00.000Z', ['a@two.example', 'b@two.example', 'c@one.example']),
+    );
+    await updateCompany(store, 'one.example', { name: '一人商事', aliases: [] }, NOW);
+    await updateCompany(store, 'two.example', { name: '二人商事', aliases: [] }, NOW);
+
+    await store.deleteContact('a@two.example');
+    expect(await store.getCompany('two.example')).toMatchObject({ name: '二人商事' });
+
+    await store.deleteContact('c@one.example');
+    expect(await store.getCompany('one.example')).toBeUndefined();
+    const insight = await lookupLedger(store, {
+      companies: ['one.example', 'two.example'],
+      toAddresses: [],
+    });
+    expect(insight.knownCompanies).toEqual(['two.example']);
+    expect(insight.companyNames).toEqual({ 'two.example': '二人商事' });
+  });
 });
 
 describe('会社ごとのまとめと検索', () => {

@@ -159,8 +159,21 @@ export function createIndexedDbLedgerStore(): LedgerStore {
     listAllCcPairs: () => getAll<CcPairRecord>(CC_PAIRS),
     async deleteContact(address) {
       const db = await database();
-      const transaction = db.transaction([CONTACTS, CC_PAIRS], 'readwrite');
-      transaction.objectStore(CONTACTS).delete(address);
+      const transaction = db.transaction([CONTACTS, COMPANIES, CC_PAIRS], 'readwrite');
+      const contactStore = transaction.objectStore(CONTACTS);
+      const found = contactStore.get(address) as IDBRequest<ContactRecord | undefined>;
+      found.onsuccess = () => {
+        const companyKey = found.result?.companyKey;
+        contactStore.delete(address);
+        if (companyKey === undefined) return;
+        // その会社の連絡先が1件も残らなければ、会社の記録も消す
+        const rest = contactStore.getAll() as IDBRequest<ContactRecord[]>;
+        rest.onsuccess = () => {
+          if (!rest.result.some((contact) => contact.companyKey === companyKey)) {
+            transaction.objectStore(COMPANIES).delete(companyKey);
+          }
+        };
+      };
       const request = transaction.objectStore(CC_PAIRS).openCursor();
       request.onsuccess = () => {
         const cursor = request.result;
