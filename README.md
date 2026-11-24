@@ -12,7 +12,7 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 - 対象：PC 版 Chrome 上の Gmail（mail.google.com）
 - Gmail API は使いません。外部への通信は一切行わず、設定は利用者の端末内にのみ保存します。
-- 現在はフェーズ1と、フェーズ2の一部（連絡先の記録、初めて送るドメイン、Cc 漏れ）を実装済みです。Chrome Web Store への公開を準備しています。
+- 現在はフェーズ1と、フェーズ2の一部（連絡先の記録、初めて送るドメイン、Cc 漏れ、台帳の画面、会社名検索）、フェーズ3の一部を実装済みです。Chrome Web Store への公開を準備しています。
 - Gmail は Google LLC の商標です。この拡張機能は Google が提供・公認するものではありません。
 
 ### できること（実装済み）
@@ -48,6 +48,14 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 | 添付漏れ           | 本文に「添付」「送付」「見積書」などのキーワードがあるのに、添付ファイルがない（相手への依頼の文などは除く） |
 | 書き換え忘れの記号 | 〇〇、●●、XX、【 】、{name} などが件名・本文に残っている                                                     |
 | 同じ文字の重複     | 「をを」「まます」「くだださい」のように、同じ文字が重なっている（AI を使わずに調べます）                    |
+| 本文が空           | 本文（引用部分を除く）に何も書かれていない                                                                   |
+| 敬称の誤り         | 「各位様」、同じ行での「御中」と「様」の併用、会社名で始まる宛名に敬称がない                                 |
+| 登録した誤り       | 設定画面の「誤字の辞書」に登録した誤りが、件名・本文にある（辞書は初期設定では空）                           |
+| 全角・半角の混在   | 「1０月」「ＡBC」のように、ひと続きの英数字の中に全角と半角が混ざっている                                    |
+| 署名がない         | 設定画面で登録した「署名に必ず入る言葉」が本文に無い（登録するまで調べません）                               |
+| 宛名と宛先の不一致 | 本文の宛名（「株式会社〇〇 △△様」）が、To の宛先の名前・会社名と合っていない（連絡先の記録が必要）           |
+| 宛先に無い会社名   | 台帳に登録した別の会社の名前が、件名・本文・添付ファイル名にある（連絡先の記録と会社名の登録が必要）         |
+| 会社名の書き方     | 宛先の会社名の、前株・後株の誤りや（株）などの略（連絡先の記録と会社名の登録が必要）                         |
 | 日付と曜日の不一致 | 「11月13日（木）」のように、日付と曜日が合っていない。存在しない日付も検知                                   |
 
 - 警告は表示するだけで、警告が出ていてもそのまま送信できます。
@@ -70,6 +78,9 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
   - 初めて送るドメイン（似たドメインへの誤送信に気づくため）
   - Cc 漏れ（その相手へのメールで、よく Cc に入れている人が今回入っていない）
 - 2つの確認は、項目ごとにオン・オフを選べます。警告は表示するだけで、送信は止めません。
+- 台帳の画面（設定画面から開けます）で、記録した連絡先に氏名・会社名・部署・役職・電話番号を入力できます。CSV の書き出し・取り込みもできます。
+- ドメインに会社名を付けると、確認ダイアログに会社名が表示されます。
+- 拡張機能のアイコンを押すと、会社名・ドメイン・氏名・アドレスで連絡先を検索できます。
 - 記録は、最後に送った日から一定の期間（初期値は1年）で自動的に削除します。設定画面から、いつでもすべて削除できます。
 
 **うまく動かないとき**
@@ -86,17 +97,12 @@ Gmail の送信操作をいったん止めて、宛先（To / Cc / Bcc）・件�
 
 ### 今後の予定
 
-**フェーズ2**（連絡先の記録、初めて送るドメインの警告、Cc 漏れの通知は実装済み）
+**フェーズ2**（連絡先の記録、初めて送るドメインの警告、Cc 漏れの通知、台帳の画面、会社名検索、会社名での宛先表示は実装済み）
 
 - 会社台帳の自動作成（届いたメールの Cc・署名を画面から読み取って蓄積）
-- 会社名検索
-- 宛名と宛先の照合
-- 添付ファイル名・本文中の他社名のチェック
-- 会社名での宛先表示
 
 **フェーズ3**
 
-- 誤字辞書の拡充（同じ文字の重複は実装済み）
 - AI による署名抽出の精度向上
 
 ### 開発環境の準備
@@ -154,7 +160,7 @@ A Chrome extension (Manifest V3) that stops the send action in Gmail and makes y
 
 - Target: Gmail (mail.google.com) on desktop Chrome
 - Does not use the Gmail API. Makes no external network requests; settings are stored only on your device.
-- Phase 1 and part of Phase 2 (contact records, first-time domain, missing Cc) are implemented. Publication on the Chrome Web Store is being prepared.
+- Phase 1, part of Phase 2 (contact records, first-time domain, missing Cc, the directory page, company search) and part of Phase 3 are implemented. Publication on the Chrome Web Store is being prepared.
 - Gmail is a trademark of Google LLC. This extension is not provided or endorsed by Google.
 
 ### What it does (implemented)
@@ -183,14 +189,22 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 **Automatic checks** (each can be turned on or off; all are on by default)
 
-| Check                       | What it detects                                                                    |
-| --------------------------- | ---------------------------------------------------------------------------------- |
-| Multiple external companies | External recipients span two or more domains                                       |
-| Empty subject               | The subject is empty                                                               |
-| Missing attachment          | The body mentions an attachment keyword, but nothing is attached                   |
-| Leftover placeholders       | 〇〇, ●●, XX, 【 】, {name} and similar remain in the subject or body              |
-| Repeated characters         | Doubled characters in Japanese text, such as をを or まます (checked without AI)   |
-| Date / day-of-week mismatch | A date and its day of the week do not match (Japanese notation); invalid dates too |
+| Check                       | What it detects                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Multiple external companies | External recipients span two or more domains                                                                                            |
+| Empty subject               | The subject is empty                                                                                                                    |
+| Missing attachment          | The body mentions an attachment keyword, but nothing is attached                                                                        |
+| Leftover placeholders       | 〇〇, ●●, XX, 【 】, {name} and similar remain in the subject or body                                                                   |
+| Repeated characters         | Doubled characters in Japanese text, such as をを or まます (checked without AI)                                                        |
+| Empty body                  | Nothing is written in the body (quoted text excluded)                                                                                   |
+| Honorific mistakes          | 各位様, 御中 and 様 on the same line, or a salutation starting with a company name without an honorific                                 |
+| Registered mistakes         | Text registered in the "Typo dictionary" on the options page appears in the subject or body (empty by default)                          |
+| Mixed character widths      | Full-width and half-width letters or digits mixed in one run, such as 1０月 or ＡBC                                                     |
+| Missing signature           | None of the "words always in your signature" registered on the options page is in the body (not checked until you register one)         |
+| Salutation mismatch         | The salutation in the body does not match the names or companies of the To recipients (needs contact records)                           |
+| Other company names         | The name of another company in your directory appears in the subject, body or an attachment name (needs company names in the directory) |
+| Company name notation       | The recipient company is written with 株式会社 on the wrong side or abbreviated as (株) (needs company names in the directory)          |
+| Date / day-of-week mismatch | A date and its day of the week do not match (Japanese notation); invalid dates too                                                      |
 
 - Warnings are only shown; you can still send when a warning appears.
 - Quoted text in replies and forwards is not checked.
@@ -212,6 +226,9 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
   - First-time domain (to notice look-alike domains)
   - Missing Cc (people you usually Cc on email to that recipient are not included this time)
 - Each of the two checks can be turned on or off. Warnings are only shown; they never block sending.
+- On the directory page (opened from the options page) you can add a name, company name, department, title and phone numbers to recorded contacts, and export or import a CSV file.
+- When you give a domain a company name, the confirmation dialog shows it.
+- Click the extension icon to search your contacts by company name, domain, name or address.
 - Records are deleted automatically after a set period from the last send (1 year by default). You can delete all of them at any time from the options page.
 
 **When something goes wrong**
@@ -228,17 +245,12 @@ Free email services (gmail.com, yahoo.co.jp, etc.) are judged per address, not p
 
 ### Roadmap
 
-**Phase 2** (contact records, the first-time domain warning and the missing Cc notification are implemented)
+**Phase 2** (contact records, the first-time domain warning, the missing Cc notification, the directory page, company search and company names in the dialog are implemented)
 
 - Automatically built company directory (from the Cc lines and signatures of email you receive, read from the screen)
-- Company name search
-- Salutation vs. recipient matching
-- Attachment file name and other-company-name checks
-- Showing recipients grouped by company name
 
 **Phase 3**
 
-- Expanded typo dictionary (repeated characters are implemented)
 - More accurate signature extraction with AI
 
 ### Development setup

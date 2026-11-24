@@ -139,7 +139,13 @@ function renderRecipients(
 
   if (model.externalCompanies.length > 0) {
     const list = model.externalCompanies
-      .map((company) => t('dialogCompanyCount', [company.companyKey, String(company.count)]))
+      .map((company) =>
+        t('dialogCompanyCount', [
+          // 台帳に会社名があれば、会社名とドメインを並べる（ドメインの確認もできるようにする）
+          company.name === undefined ? company.companyKey : `${company.name} ${company.companyKey}`,
+          String(company.count),
+        ]),
+      )
       .join(' / ');
     section.append(el(doc, 'p', 'summary', t('dialogExternalSummary', [list])));
   }

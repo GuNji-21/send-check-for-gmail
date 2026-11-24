@@ -15,6 +15,7 @@ import type {
   Detection,
   Recipient,
   RecipientCategory,
+  TypoDictionaryEntry,
   WarningLevels,
 } from './types';
 
@@ -28,6 +29,8 @@ export interface ConfirmationSettings {
   readonly warningLevels: WarningLevels;
   readonly attachmentKeywords: readonly string[];
   readonly treatDriveLinksAsAttachment: boolean;
+  readonly typoDictionary: readonly TypoDictionaryEntry[];
+  readonly signatureKeywords: readonly string[];
 }
 
 /** 宛先1件の表示内容 */
@@ -41,6 +44,8 @@ export interface RecipientView extends Recipient {
 export interface CompanyCount {
   readonly companyKey: string;
   readonly count: number;
+  /** 台帳に登録されている会社名。無ければ省略（ドメインで表示する） */
+  readonly name?: string;
 }
 
 /** 確認ダイアログの表示内容 */
@@ -87,7 +92,10 @@ export function buildConfirmationModel(
     counts.set(recipient.companyKey, (counts.get(recipient.companyKey) ?? 0) + 1);
   }
   const externalCompanies = [...counts.entries()]
-    .map(([companyKey, count]) => ({ companyKey, count }))
+    .map(([companyKey, count]) => {
+      const name = ledger?.companyNames?.[companyKey];
+      return name === undefined ? { companyKey, count } : { companyKey, count, name };
+    })
     .sort((a, b) => b.count - a.count || a.companyKey.localeCompare(b.companyKey));
 
   const detections = runDetectors(
@@ -96,6 +104,8 @@ export function buildConfirmationModel(
       rules: settings.rules,
       attachmentKeywords: settings.attachmentKeywords,
       treatDriveLinksAsAttachment: settings.treatDriveLinksAsAttachment,
+      typoDictionary: settings.typoDictionary,
+      signatureKeywords: settings.signatureKeywords,
       ...(ledger === undefined ? {} : { ledger }),
     },
     settings.warningLevels,

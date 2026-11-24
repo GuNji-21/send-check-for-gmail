@@ -842,12 +842,14 @@ describe('連絡先の記録（台帳）', () => {
     setUp();
     userClick(sendButton);
     await settle();
-    expect(queries).toEqual([
+    expect(queries).toMatchObject([
       {
         companies: ['example.com', 'example.org', 'example.net'],
         toAddresses: ['taro.yamada@example.com', 'hanako.sato@example.org'],
       },
     ]);
+    // 氏名・会社名の照合のために、社外の宛先すべて（To / Cc / Bcc）のアドレスも渡す
+    expect(queries[0]?.addresses).toHaveLength(4);
     expect(warnings()).toContain('detectFirstTimeDomain:example.org、example.net');
   });
 

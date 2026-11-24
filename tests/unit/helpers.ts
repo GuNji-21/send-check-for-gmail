@@ -44,6 +44,8 @@ export function context(overrides: Partial<DetectorContext> = {}): DetectorConte
     rules: rules(),
     attachmentKeywords: ['添付', '添付ファイル', '見積書', 'PDF', 'attached'],
     treatDriveLinksAsAttachment: true,
+    typoDictionary: [],
+    signatureKeywords: [],
     ...overrides,
   };
 }

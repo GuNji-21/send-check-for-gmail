@@ -94,6 +94,12 @@ export function createIndexedDbLedgerStore(): LedgerStore {
       >,
     );
   };
+  const getAll = async <T>(storeName: string): Promise<T[]> => {
+    const db = await database();
+    return asPromise(
+      db.transaction(storeName, 'readonly').objectStore(storeName).getAll() as IDBRequest<T[]>,
+    );
+  };
   const put = async (storeName: string, value: unknown, key?: string): Promise<void> => {
     const db = await database();
     const transaction = db.transaction(storeName, 'readwrite');
@@ -147,6 +153,23 @@ export function createIndexedDbLedgerStore(): LedgerStore {
     async countContacts() {
       const db = await database();
       return asPromise(db.transaction(CONTACTS, 'readonly').objectStore(CONTACTS).count());
+    },
+    listContacts: () => getAll<ContactRecord>(CONTACTS),
+    listCompanies: () => getAll<CompanyRecord>(COMPANIES),
+    listAllCcPairs: () => getAll<CcPairRecord>(CC_PAIRS),
+    async deleteContact(address) {
+      const db = await database();
+      const transaction = db.transaction([CONTACTS, CC_PAIRS], 'readwrite');
+      transaction.objectStore(CONTACTS).delete(address);
+      const request = transaction.objectStore(CC_PAIRS).openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (cursor === null) return;
+        const pair = cursor.value as CcPairRecord;
+        if (pair.toAddress === address || pair.address === address) cursor.delete();
+        cursor.continue();
+      };
+      await done(transaction);
     },
   };
 }

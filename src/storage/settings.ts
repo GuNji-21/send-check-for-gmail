@@ -18,7 +18,13 @@ import {
   normalizeAddress,
   normalizeDomain,
 } from '../core/text/address';
-import type { ClassificationRules, DetectorId, WarningLevel, WarningLevels } from '../core/types';
+import type {
+  ClassificationRules,
+  DetectorId,
+  TypoDictionaryEntry,
+  WarningLevel,
+  WarningLevels,
+} from '../core/types';
 
 /** chrome.storage.local に保存するときのキー */
 const STORAGE_KEY = 'settings';
@@ -36,6 +42,10 @@ export interface Settings {
   readonly attachmentKeywords: readonly string[];
   /** Google ドライブのリンクを添付ありとみなすか */
   readonly treatDriveLinksAsAttachment: boolean;
+  /** 利用者が登録した誤り（誤字の辞書）。初期設定では空 */
+  readonly typoDictionary: readonly TypoDictionaryEntry[];
+  /** 署名に必ず入る言葉（自分の名前など）。空なら、署名の有無は調べない */
+  readonly signatureKeywords: readonly string[];
   /**
    * AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックを行うか。初期設定では無効。
    * モデルのダウンロード（数 GB）が必要なため、利用者が設定画面で有効にしたときだけ使う。
@@ -49,6 +59,10 @@ export interface Settings {
   /** 連絡先の記録を残す日数。最終やりとり日からこの日数を過ぎた記録は削除する */
   readonly ledgerRetentionDays: number;
 }
+
+/** 誤字の辞書に登録できる件数と、1件の文字数の上限 */
+export const MAX_TYPO_DICTIONARY_ENTRIES = 200;
+export const MAX_TYPO_DICTIONARY_LENGTH = 100;
 
 /** 連絡先の記録を残す日数として選べる値（6か月・1年・2年・5年） */
 export const LEDGER_RETENTION_CHOICES: readonly number[] = [180, 365, 730, 1825];
@@ -70,9 +84,18 @@ export const DEFAULT_SETTINGS: Settings = {
     'repeated-characters': 'warn',
     'date-weekday-mismatch': 'warn',
     'subject-empty': 'warn',
+    'body-empty': 'warn',
+    honorific: 'warn',
+    'custom-typo': 'warn',
+    'width-mix': 'warn',
+    'signature-missing': 'warn',
     'multiple-external-companies': 'warn',
     'first-time-domain': 'warn',
     'cc-missing': 'warn',
+    'salutation-mismatch': 'warn',
+    'attachment-company': 'warn',
+    'other-company-in-body': 'warn',
+    'company-notation': 'warn',
   },
   attachmentKeywords: [
     // 添付・送付を表す語（「送付」は「送付します」「送付いたします」「ご送付」を含む）
@@ -95,6 +118,8 @@ export const DEFAULT_SETTINGS: Settings = {
     'enclosed',
   ],
   treatDriveLinksAsAttachment: true,
+  typoDictionary: [],
+  signatureKeywords: [],
   aiTypoCheckEnabled: false,
   ledgerEnabled: false,
   ledgerRetentionDays: 365,
@@ -134,11 +159,20 @@ export const DETECTOR_IDS: readonly DetectorId[] = [
   'first-time-domain',
   'multiple-external-companies',
   'cc-missing',
+  'salutation-mismatch',
   'subject-empty',
+  'body-empty',
   'attachment-missing',
+  'attachment-company',
+  'other-company-in-body',
+  'honorific',
+  'company-notation',
   'placeholder',
+  'custom-typo',
   'repeated-characters',
+  'width-mix',
   'date-weekday-mismatch',
+  'signature-missing',
 ];
 
 const WARNING_LEVELS: readonly WarningLevel[] = ['warn', 'off'];
@@ -181,6 +215,28 @@ function readKeywords(value: unknown): readonly string[] {
 }
 
 /**
+ * 誤字の辞書を、正しい形にする。
+ * 誤りが空のもの、誤りと正しい書き方が同じもの、長すぎるもの、誤りが重複するものは除く。
+ */
+export function normalizeTypoDictionary(value: unknown): TypoDictionaryEntry[] {
+  if (!Array.isArray(value)) return [];
+  const result: TypoDictionaryEntry[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.wrong !== 'string') continue;
+    const wrong = item.wrong.trim();
+    const right = typeof item.right === 'string' ? item.right.trim() : '';
+    if (wrong === '' || wrong === right) continue;
+    if (wrong.length > MAX_TYPO_DICTIONARY_LENGTH || right.length > MAX_TYPO_DICTIONARY_LENGTH) {
+      continue;
+    }
+    if (result.some((entry) => entry.wrong === wrong)) continue;
+    result.push({ wrong, right });
+    if (result.length >= MAX_TYPO_DICTIONARY_ENTRIES) break;
+  }
+  return result;
+}
+
+/**
  * 保存されていた値（形が壊れている可能性がある）を、正しい形の設定にする。
  * 読めない項目は初期値にする。保存データが無い場合（undefined）は初期値を返す。
  */
@@ -214,6 +270,12 @@ export function normalizeSettings(raw: unknown): Settings {
       typeof raw.treatDriveLinksAsAttachment === 'boolean'
         ? raw.treatDriveLinksAsAttachment
         : DEFAULT_SETTINGS.treatDriveLinksAsAttachment,
+    typoDictionary: normalizeTypoDictionary(raw.typoDictionary),
+    signatureKeywords: readList(
+      raw.signatureKeywords,
+      (item) => item.trim(),
+      () => true,
+    ),
     aiTypoCheckEnabled: raw.aiTypoCheckEnabled === true,
     ledgerEnabled: raw.ledgerEnabled === true,
     ledgerRetentionDays: LEDGER_RETENTION_CHOICES.find((days) => days === raw.ledgerRetentionDays)

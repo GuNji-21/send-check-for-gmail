@@ -6,6 +6,7 @@
  * - 要注意のドメイン・アドレス
  * - 確認省略のアドレス（アドレス単位のみ）と、確認省略の有効・無効（初期設定は無効）
  * - 添付キーワードの編集、Google ドライブのリンクを添付ありとみなすか
+ * - 誤字の辞書、署名に必ず入る言葉
  * - 検知項目ごとの警告のオン・オフ
  * - AI（Chrome 内蔵の Gemini Nano）による誤字・脱字チェックの有効・無効、モデルの状態の表示とダウンロード
  * - 連絡先の記録（フェーズ2）の有効・無効、保存期間、記録の件数の表示と削除
@@ -32,12 +33,21 @@ import { type OptionsFormValues, parseFormValues, toFormValues } from './form';
 const DETECTOR_NAMES: Readonly<Record<DetectorId, MessageKey>> = {
   'multiple-external-companies': 'detectorNameMultipleCompanies',
   'subject-empty': 'detectorNameSubjectEmpty',
+  'body-empty': 'detectorNameBodyEmpty',
+  honorific: 'detectorNameHonorific',
+  'custom-typo': 'detectorNameCustomTypo',
+  'width-mix': 'detectorNameWidthMix',
+  'signature-missing': 'detectorNameSignatureMissing',
   'attachment-missing': 'detectorNameAttachmentMissing',
   placeholder: 'detectorNamePlaceholder',
   'repeated-characters': 'detectorNameRepeatedCharacters',
   'date-weekday-mismatch': 'detectorNameDateWeekday',
   'first-time-domain': 'detectorNameFirstTimeDomain',
   'cc-missing': 'detectorNameCcMissing',
+  'salutation-mismatch': 'detectorNameSalutationMismatch',
+  'attachment-company': 'detectorNameAttachmentCompany',
+  'other-company-in-body': 'detectorNameOtherCompanyInBody',
+  'company-notation': 'detectorNameCompanyNotation',
 };
 
 const TEXT_FIELDS = [
@@ -47,6 +57,8 @@ const TEXT_FIELDS = [
   'cautionAddresses',
   'skipAddresses',
   'attachmentKeywords',
+  'typoDictionary',
+  'signatureKeywords',
 ] as const;
 
 const CHECK_FIELDS = [
@@ -127,6 +139,8 @@ function readForm(): OptionsFormValues {
     skipConfirmationEnabled: checked('skipConfirmationEnabled'),
     attachmentKeywords: text('attachmentKeywords'),
     treatDriveLinksAsAttachment: checked('treatDriveLinksAsAttachment'),
+    typoDictionary: text('typoDictionary'),
+    signatureKeywords: text('signatureKeywords'),
     aiTypoCheckEnabled: checked('aiTypoCheckEnabled'),
     ledgerEnabled: checked('ledgerEnabled'),
     ledgerRetentionDays: Number(byId<HTMLSelectElement>('ledgerRetentionDays').value),
@@ -293,6 +307,12 @@ function setUpLedgerSection(): void {
       });
   });
   button.addEventListener('blur', disarm);
+  // 一覧・編集・CSV は、別の画面（台帳の画面）にある
+  byId<HTMLButtonElement>('ledgerManage').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('manage.html') }).catch((error: unknown) => {
+      console.error('[gmail-send-guard] failed to open the ledger page', error);
+    });
+  });
   showLedgerStats();
 }
 

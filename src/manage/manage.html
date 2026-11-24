@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- タイトル・文言は manage.ts が _locales（data-i18n のキー）から差し込む -->
+    <title></title>
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <main class="manage">
+      <h1 data-i18n="manageTitle"></h1>
+      <p class="help" data-i18n="manageHelp"></p>
+
+      <div class="toolbar">
+        <button id="export" type="button" data-i18n="manageExport"></button>
+        <button id="import" type="button" data-i18n="manageImport"></button>
+        <input id="importFile" type="file" accept=".csv,text/csv" hidden />
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </div>
+      <p class="help" data-i18n="manageImportHelp"></p>
+
+      <div class="filter">
+        <input id="filter" type="search" data-i18n-placeholder="manageFilter" />
+      </div>
+      <p id="summary" class="help" role="status" aria-live="polite"></p>
+
+      <section class="block">
+        <h2 data-i18n="manageCompanies"></h2>
+        <p class="help" data-i18n="manageCompaniesHelp"></p>
+        <div id="companies"></div>
+      </section>
+
+      <section class="block">
+        <h2 data-i18n="manageContacts"></h2>
+        <div id="contacts"></div>
+      </section>
+    </main>
+    <script src="manage.js"></script>
+  </body>
+</html>

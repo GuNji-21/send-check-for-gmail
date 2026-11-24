@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <!-- タイトル・文言は popup.ts が _locales（data-i18n のキー）から差し込む -->
+    <title></title>
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body class="popup">
+    <h1 data-i18n="popupTitle"></h1>
+    <input id="query" type="search" data-i18n-placeholder="popupPlaceholder" autofocus />
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <div id="results"></div>
+    <div class="links">
+      <button id="openManage" type="button" class="small" data-i18n="popupOpenManage"></button>
+      <button id="openOptions" type="button" class="small" data-i18n="popupOpenOptions"></button>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

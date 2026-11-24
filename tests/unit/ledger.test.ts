@@ -95,6 +95,7 @@ describe('buildSendRecord', () => {
     expect(buildLedgerQuery(record)).toEqual({
       companies: ['client.example', 'partner.example'],
       toAddresses: ['a@client.example', 'b@client.example'],
+      addresses: ['a@client.example', 'b@client.example', 'x@partner.example'],
     });
   });
 });

@@ -16,6 +16,7 @@
 
 import { companyKeyOf, isInternalAddress } from '../classify';
 import { normalizeAddress } from '../text/address';
+import { companySearchKey } from '../text/company';
 import type { ClassificationRules, ComposeSnapshot, RecipientField } from '../types';
 
 /** 送信1回分の記録の元になる情報（content 側で作り、background に渡す） */
@@ -46,12 +47,36 @@ export interface ContactRecord {
   readonly ccCount: number;
   /** 最終やりとり日（ISO 8601） */
   readonly lastAt: string;
+  /** 氏名（利用者が登録したもの。無ければ displayName を表示に使う） */
+  readonly name?: string;
+  /**
+   * この連絡先だけの会社名。フリーメールの相手や、1つのドメインに複数の会社がある場合に使う。
+   * 無ければ、ドメインに付けた会社名（CompanyRecord.name）を使う。
+   */
+  readonly companyName?: string;
+  readonly department?: string;
+  readonly title?: string;
+  /** 電話番号（代表・固定）と携帯番号は別の項目にする */
+  readonly phone?: string;
+  readonly mobile?: string;
+  /** 利用者が確認・修正した情報か（無ければ、自動で記録しただけの情報） */
+  readonly confirmed?: boolean;
 }
 
-/** 会社（ドメイン）1件。「送ったことがあるドメインか」の判断に使う */
+/** 会社（ドメイン）1件。「送ったことがあるドメインか」の判断と、会社名の表示に使う */
 export interface CompanyRecord {
   readonly companyKey: string;
   readonly lastAt: string;
+  /** 会社名（利用者が登録したもの）。同じ会社名のドメインは、1つの会社としてまとめる */
+  readonly name?: string;
+  /** 会社の別名（表記ゆれ。検索に使う） */
+  readonly aliases?: readonly string[];
+  readonly confirmed?: boolean;
+  /**
+   * まだ送ったことがないドメインか。会社名を付けただけ、CSV から取り込んだだけのドメインに付ける。
+   * 付いている間は「送ったことがあるドメイン」として扱わない。送信を記録すると外れる。
+   */
+  readonly neverSent?: boolean;
 }
 
 /** 「この相手（To のアドレス）へのメールで、この人を Cc に入れた」の記録 */
@@ -90,6 +115,12 @@ export interface LedgerStore {
   clear(): Promise<void>;
   /** 記録している連絡先の件数 */
   countContacts(): Promise<number>;
+  /** すべての連絡先・会社・Cc の記録（台帳の閲覧・検索・書き出しに使う） */
+  listContacts(): Promise<readonly ContactRecord[]>;
+  listCompanies(): Promise<readonly CompanyRecord[]>;
+  listAllCcPairs(): Promise<readonly CcPairRecord[]>;
+  /** 連絡先を1件削除する。その相手に関する Cc の記録（To 側・Cc 側の両方）も削除する */
+  deleteContact(address: string): Promise<void>;
 }
 
 /** 台帳から読み取った、今回の送信の判断に使う情報 */
@@ -100,7 +131,21 @@ export interface LedgerInsight {
   readonly knownCompanies: readonly string[];
   /** 今回の To の相手について、過去に Cc に入れたことのある人 */
   readonly ccHistory: readonly CcHistory[];
+  /** 今回の宛先の会社（ドメイン）のうち、会社名が登録されているものの会社名 */
+  readonly companyNames?: Readonly<Record<string, string>>;
+  /** 今回の宛先（アドレス）のうち、氏名が登録されている人の氏名 */
+  readonly recipientNames?: Readonly<Record<string, string>>;
+  /**
+   * 今回の宛先（アドレス）ごとの会社名。1つ目が登録した会社名で、2つ目以降は別名。
+   * 連絡先ごとの会社名があれば、それだけを返す。会社名が分からない宛先は入らない。
+   */
+  readonly recipientCompanyNames?: Readonly<Record<string, readonly string[]>>;
+  /** 台帳に登録されている会社名・別名のうち、今回の宛先の会社ではないもの */
+  readonly otherCompanyNames?: readonly string[];
 }
+
+/** 「今回の宛先ではない会社名」として返す件数の上限 */
+export const MAX_OTHER_COMPANY_NAMES = 1000;
 
 export interface CcHistory {
   /** To に入れた相手のアドレス */
@@ -119,6 +164,8 @@ export interface LedgerQuery {
   readonly companies: readonly string[];
   /** 今回の To に入っている社外の相手のアドレス */
   readonly toAddresses: readonly string[];
+  /** 今回の社外の宛先すべて（To / Cc / Bcc）のアドレス。氏名・会社名の照合に使う */
+  readonly addresses?: readonly string[];
 }
 
 function ccPairId(toAddress: string, address: string): string {
@@ -157,6 +204,7 @@ export function buildLedgerQuery(record: SendRecord): LedgerQuery {
     toAddresses: unique(
       external.filter((recipient) => recipient.field === 'to').map((r) => r.address),
     ),
+    addresses: unique(external.map((recipient) => recipient.address)),
   };
 }
 
@@ -174,6 +222,8 @@ export async function recordSend(store: LedgerStore, record: SendRecord): Promis
     const existing = await store.getContact(recipient.address);
     const displayName = recipient.displayName ?? existing?.displayName;
     const next = {
+      // 利用者が登録した氏名・会社名・電話番号などは、そのまま残す
+      ...existing,
       address: recipient.address,
       companyKey: recipient.companyKey,
       toCount: (existing?.toCount ?? 0) + (recipient.field === 'to' ? 1 : 0),
@@ -185,7 +235,9 @@ export async function recordSend(store: LedgerStore, record: SendRecord): Promis
 
   // 会社（送ったことがあるドメインか、の判断に使う）
   for (const companyKey of unique(external.map((recipient) => recipient.companyKey))) {
-    await store.putCompany({ companyKey, lastAt: record.at });
+    // 会社名・別名は残し、「まだ送ったことがない」の印は外す
+    const { neverSent: _neverSent, ...kept } = (await store.getCompany(companyKey)) ?? {};
+    await store.putCompany({ ...kept, companyKey, lastAt: record.at });
   }
 
   // 「この相手（To のアドレス）へのメールで、この人を Cc に入れた」。Cc の人は社内も含める
@@ -214,8 +266,13 @@ export async function recordSend(store: LedgerStore, record: SendRecord): Promis
 export async function lookupLedger(store: LedgerStore, query: LedgerQuery): Promise<LedgerInsight> {
   const meta = await store.getMeta();
   const knownCompanies: string[] = [];
+  const companyNames: Record<string, string> = {};
   for (const companyKey of unique(query.companies)) {
-    if ((await store.getCompany(companyKey)) !== undefined) knownCompanies.push(companyKey);
+    const company = await store.getCompany(companyKey);
+    if (company === undefined) continue;
+    // 会社名を付けただけ・取り込んだだけのドメインは、送ったことがある扱いにしない
+    if (company.neverSent !== true) knownCompanies.push(companyKey);
+    if (company.name !== undefined && company.name !== '') companyNames[companyKey] = company.name;
   }
   const ccHistory: CcHistory[] = [];
   for (const toAddress of unique(query.toAddresses)) {
@@ -231,7 +288,55 @@ export async function lookupLedger(store: LedgerStore, query: LedgerQuery): Prom
       });
     }
   }
-  return { totalSends: meta.totalSends, knownCompanies, ccHistory };
+  const names = await lookupNames(store, unique(query.addresses ?? []));
+  return { totalSends: meta.totalSends, knownCompanies, ccHistory, companyNames, ...names };
+}
+
+/** 宛先の氏名・会社名と、宛先ではない会社名を読み取る（宛名の照合と、他社名の検知に使う） */
+async function lookupNames(
+  store: LedgerStore,
+  addresses: readonly string[],
+): Promise<Pick<LedgerInsight, 'recipientNames' | 'recipientCompanyNames' | 'otherCompanyNames'>> {
+  if (addresses.length === 0) return {};
+  const companies = await store.listCompanies();
+  const companyByKey = new Map(companies.map((company) => [company.companyKey, company]));
+  const namesOf = (company: CompanyRecord | undefined): string[] =>
+    company?.name === undefined || company.name === ''
+      ? []
+      : [company.name, ...(company.aliases ?? [])];
+
+  const recipientNames: Record<string, string> = {};
+  const recipientCompanyNames: Record<string, readonly string[]> = {};
+  const recipientKeys = new Set<string>();
+  for (const address of addresses) {
+    const contact = await store.getContact(address);
+    if (contact?.name !== undefined && contact.name !== '') recipientNames[address] = contact.name;
+    const own = contact?.companyName;
+    const names =
+      own !== undefined && own !== '' ? [own] : namesOf(companyByKey.get(companyKeyOf(address)));
+    if (names.length === 0) continue;
+    recipientCompanyNames[address] = names;
+    for (const name of names) recipientKeys.add(companySearchKey(name));
+  }
+
+  // 台帳に会社名が1件も無ければ、連絡先を全部読む必要はない
+  const contacts = await store.listContacts();
+  const all = [
+    ...companies.flatMap(namesOf),
+    ...contacts.flatMap((contact) =>
+      contact.companyName === undefined || contact.companyName === '' ? [] : [contact.companyName],
+    ),
+  ];
+  const otherCompanyNames: string[] = [];
+  const seen = new Set<string>();
+  for (const name of all) {
+    const key = companySearchKey(name);
+    if (recipientKeys.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    otherCompanyNames.push(name);
+    if (otherCompanyNames.length >= MAX_OTHER_COMPANY_NAMES) break;
+  }
+  return { recipientNames, recipientCompanyNames, otherCompanyNames };
 }
 
 /** 保存期間を過ぎた記録を削除する。削除した件数を返す */
@@ -297,5 +402,15 @@ export function createMemoryLedgerStore(): LedgerStore {
       return Promise.resolve();
     },
     countContacts: () => Promise.resolve(contacts.size),
+    listContacts: () => Promise.resolve([...contacts.values()]),
+    listCompanies: () => Promise.resolve([...companies.values()]),
+    listAllCcPairs: () => Promise.resolve([...ccPairs.values()]),
+    deleteContact: (address) => {
+      contacts.delete(address);
+      for (const [id, pair] of ccPairs) {
+        if (pair.toAddress === address || pair.address === address) ccPairs.delete(id);
+      }
+      return Promise.resolve();
+    },
   };
 }

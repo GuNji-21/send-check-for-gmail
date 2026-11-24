@@ -94,7 +94,7 @@ export interface ClassificationRules {
  */
 export type WarningLevel = 'warn' | 'off';
 
-/** 検知項目のID（フェーズ1）。検知項目を追加したらここにも追加する */
+/** 検知項目のID。検知項目を追加したらここにも追加する */
 export type DetectorId =
   /** 添付漏れ */
   | 'attachment-missing'
@@ -106,12 +106,30 @@ export type DetectorId =
   | 'repeated-characters'
   /** 件名が空 */
   | 'subject-empty'
+  /** 本文が空 */
+  | 'body-empty'
+  /** 敬称の誤り（各位様、御中と様の併用、宛名に敬称がない） */
+  | 'honorific'
+  /** 利用者が登録した誤り（よくある誤変換） */
+  | 'custom-typo'
+  /** 全角・半角の英数字の混在 */
+  | 'width-mix'
+  /** 署名がない */
+  | 'signature-missing'
   /** 社外の会社が2社以上含まれる（複数社混在） */
   | 'multiple-external-companies'
   /** 初めて送るドメイン（連絡先の記録を使う） */
   | 'first-time-domain'
   /** Cc 漏れ（連絡先の記録を使う） */
-  | 'cc-missing';
+  | 'cc-missing'
+  /** 宛名と宛先の不一致（台帳の氏名・会社名を使う） */
+  | 'salutation-mismatch'
+  /** 添付ファイル名に、宛先に無い会社名がある（台帳の会社名を使う） */
+  | 'attachment-company'
+  /** 件名・本文に、宛先に無い会社名がある（台帳の会社名を使う） */
+  | 'other-company-in-body'
+  /** 社名表記（前株・後株、略した書き方。台帳の会社名を使う） */
+  | 'company-notation';
 
 /**
  * 検知結果の表示文言のキー（public/_locales の messages.json に定義する）。
@@ -129,12 +147,35 @@ export type DetectionMessageKey =
   /** $1 = 重複が見つかった箇所の一覧 */
   | 'detectRepeatedCharacters'
   | 'detectSubjectEmpty'
+  | 'detectBodyEmpty'
+  /** $1 = 見つかった表記（各位様 など） */
+  | 'detectHonorificKakui'
+  /** $1 = 見つかった箇所 */
+  | 'detectHonorificOnchuSama'
+  /** $1 = 宛名の行 */
+  | 'detectHonorificMissing'
+  /** $1 = 見つかった誤り（正しい書き方があれば「誤り → 正しい書き方」）の一覧 */
+  | 'detectCustomTypo'
+  /** $1 = 全角と半角が混ざっている箇所の一覧 */
+  | 'detectWidthMix'
+  /** $1 = 登録してある署名の言葉の一覧 */
+  | 'detectSignatureMissing'
   /** $1 = 社外の会社（ドメイン）の数、$2 = その一覧 */
   | 'detectMultipleExternalCompanies'
   /** $1 = 初めて送るドメインの一覧 */
   | 'detectFirstTimeDomain'
   /** $1 = 今回入っていない人のアドレスの一覧 */
-  | 'detectCcMissing';
+  | 'detectCcMissing'
+  /** $1 = 宛名の名前、$2 = To の宛先の名前 */
+  | 'detectSalutationName'
+  /** $1 = 宛名の会社名の行、$2 = To の宛先の会社名 */
+  | 'detectSalutationCompany'
+  /** $1 = 添付ファイルの名前、$2 = 見つかった会社名 */
+  | 'detectAttachmentCompany'
+  /** $1 = 見つかった会社名の一覧 */
+  | 'detectOtherCompanyInBody'
+  /** $1 = 見つかった書き方、$2 = 登録した会社名 */
+  | 'detectCompanyNotation';
 
 /** 検知項目ごとの警告のオン・オフ */
 export type WarningLevels = Readonly<Record<DetectorId, WarningLevel>>;
@@ -151,6 +192,14 @@ export interface Detection {
   readonly substitutions?: readonly string[];
 }
 
+/** 利用者が登録した誤り1件（誤字の辞書） */
+export interface TypoDictionaryEntry {
+  /** 誤った書き方（件名・本文からそのまま探す） */
+  readonly wrong: string;
+  /** 正しい書き方。登録されていなければ空文字 */
+  readonly right: string;
+}
+
 /** 検知器が参照する設定など、スナップショット以外の入力 */
 export interface DetectorContext {
   readonly rules: ClassificationRules;
@@ -158,6 +207,10 @@ export interface DetectorContext {
   readonly attachmentKeywords: readonly string[];
   /** Google ドライブのリンクを添付ありとみなすか */
   readonly treatDriveLinksAsAttachment: boolean;
+  /** 利用者が登録した誤り（誤字の辞書）。登録が無ければ空 */
+  readonly typoDictionary: readonly TypoDictionaryEntry[];
+  /** 署名に必ず入る言葉（自分の名前など）。登録が無ければ空で、署名の有無は調べない */
+  readonly signatureKeywords: readonly string[];
   /**
    * 連絡先の記録（台帳）から読み取った情報。
    * 台帳が無効な場合や、読み込めなかった場合は省略する（台帳を使う検知器は、何も検知しない）。

@@ -6,7 +6,16 @@
  * content と設定画面からは、ここで定義したメッセージで読み書きを依頼する。
  */
 
-import type { LedgerInsight, LedgerQuery, SendRecord } from '../core/ledger/ledger';
+import type { ImportResult, ImportRow } from '../core/ledger/csv';
+import type { CompanyEdit, ContactEdit } from '../core/ledger/directory';
+import type {
+  CcPairRecord,
+  CompanyRecord,
+  ContactRecord,
+  LedgerInsight,
+  LedgerQuery,
+  SendRecord,
+} from '../core/ledger/ledger';
 
 /** 台帳の状況（設定画面に表示する） */
 export interface LedgerStats {
@@ -14,6 +23,13 @@ export interface LedgerStats {
   readonly contactCount: number;
   /** 記録した送信の回数 */
   readonly totalSends: number;
+}
+
+/** 台帳のすべての記録（台帳の画面・検索のポップアップで使う） */
+export interface LedgerSnapshot {
+  readonly contacts: readonly ContactRecord[];
+  readonly companies: readonly CompanyRecord[];
+  readonly ccPairs: readonly CcPairRecord[];
 }
 
 /** 拡張機能内のメッセージ */
@@ -25,7 +41,25 @@ export type ExtensionMessage =
   /** 台帳の記録をすべて削除する */
   | { readonly type: 'ledger/clear' }
   /** 台帳の状況を返す */
-  | { readonly type: 'ledger/stats' };
+  | { readonly type: 'ledger/stats' }
+  /** 台帳のすべての記録を返す */
+  | { readonly type: 'ledger/list' }
+  /** 連絡先を編集する（氏名、会社名、部署・役職、電話番号） */
+  | {
+      readonly type: 'ledger/updateContact';
+      readonly address: string;
+      readonly edit: ContactEdit;
+    }
+  /** ドメインに会社名・別名を付ける */
+  | {
+      readonly type: 'ledger/updateCompany';
+      readonly companyKey: string;
+      readonly edit: CompanyEdit;
+    }
+  /** 連絡先を1件削除する */
+  | { readonly type: 'ledger/deleteContact'; readonly address: string }
+  /** CSV から読んだ行を取り込む */
+  | { readonly type: 'ledger/import'; readonly rows: readonly ImportRow[] };
 
 /** メッセージの種類ごとの、返ってくる値 */
 export interface ExtensionResults {
@@ -33,6 +67,12 @@ export interface ExtensionResults {
   'ledger/record': null;
   'ledger/clear': null;
   'ledger/stats': LedgerStats;
+  'ledger/list': LedgerSnapshot;
+  /** 該当する連絡先があって、編集できたか */
+  'ledger/updateContact': boolean;
+  'ledger/updateCompany': null;
+  'ledger/deleteContact': null;
+  'ledger/import': ImportResult;
 }
 
 /** background からの応答。失敗した場合は理由を返す（呼び出し側で例外にする） */
@@ -44,6 +84,11 @@ const MESSAGE_TYPES: readonly ExtensionMessage['type'][] = [
   'ledger/record',
   'ledger/clear',
   'ledger/stats',
+  'ledger/list',
+  'ledger/updateContact',
+  'ledger/updateCompany',
+  'ledger/deleteContact',
+  'ledger/import',
 ];
 
 /** 受け取った値が、この拡張機能のメッセージかどうか */

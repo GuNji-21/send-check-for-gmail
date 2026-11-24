@@ -333,6 +333,22 @@
       </section>
 
       <section>
+        <h2 data-i18n="optionsSectionWording"></h2>
+        <div class="content">
+          <label class="field">
+            <span data-i18n="optionsTypoDictionary"></span>
+            <textarea id="typoDictionary" rows="5" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsTypoDictionaryHelp"></p>
+          <label class="field">
+            <span data-i18n="optionsSignatureKeywords"></span>
+            <textarea id="signatureKeywords" rows="2" spellcheck="false"></textarea>
+          </label>
+          <p class="help" data-i18n="optionsSignatureHelp"></p>
+        </div>
+      </section>
+
+      <section>
         <h2 data-i18n="optionsSectionLevels"></h2>
         <div class="content">
           <p class="help" data-i18n="optionsLevelsHelp"></p>
@@ -366,6 +382,7 @@
             <select id="ledgerRetentionDays"></select>
           </label>
           <p id="ledgerStats" class="state" role="status" aria-live="polite"></p>
+          <button id="ledgerManage" type="button" data-i18n="optionsLedgerManage"></button>
           <button
             id="ledgerClear"
             type="button"

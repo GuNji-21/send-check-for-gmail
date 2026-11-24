@@ -16,9 +16,18 @@ const LEVELS: WarningLevels = {
   'repeated-characters': 'warn',
   'date-weekday-mismatch': 'warn',
   'subject-empty': 'warn',
+  'body-empty': 'warn',
+  honorific: 'warn',
+  'custom-typo': 'warn',
+  'width-mix': 'warn',
+  'signature-missing': 'warn',
   'multiple-external-companies': 'warn',
   'first-time-domain': 'warn',
   'cc-missing': 'warn',
+  'salutation-mismatch': 'warn',
+  'attachment-company': 'warn',
+  'other-company-in-body': 'warn',
+  'company-notation': 'warn',
 };
 
 describe('添付漏れ', () => {

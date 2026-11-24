@@ -19,8 +19,9 @@ The Extension also handles the following:
 - Contact records (only when you turn the feature on in the options page; off by default)
   - Who: external recipients (To / Cc / Bcc) of email you send, and the people you put in Cc on email to an external recipient (including internal people)
   - What: email address, display name, domain, how many times the person was in To or Cc, the date of the last send, and which people were in Cc on email to which recipient, with a count
-  - Source: the recipient fields of email you compose. The content of email you receive is not read
-  - Purpose: to warn you about a domain you are sending to for the first time, and about a person you usually Cc who is not included
+  - Items you enter on the directory page or import from a CSV file: name, company name, other names of the company, department, title, phone number and mobile number
+  - Source: the recipient fields of email you compose, what you enter yourself, and a CSV file you choose. The content of email you receive is not read
+  - Purpose: to warn you about a domain you are sending to for the first time and about a person you usually Cc who is not included, to compare the salutation and company names in the body with your recipients, to show company names on the confirmation screen, and to let you search by company name
   - Email sent before you turned the feature on, and email sent only to internal recipients, is not recorded
 
 ## 2. Processing and transmission
@@ -45,7 +46,8 @@ The Extension also handles the following:
 ## 5. Deleting your data
 
 - You can delete the settings you registered from the Extension's options page.
-- You can delete all contact records at any time with "Delete all contact records" in the options page.
+- You can delete all contact records at any time with "Delete all contact records" in the options page. On the directory page you can delete them one by one.
+- You can export contact records to a CSV file. The exported file is only saved on your device; the Extension never sends it anywhere.
 - Data stored by the Extension is also removed when you uninstall the Extension.
 
 ## 6. Changes to this policy

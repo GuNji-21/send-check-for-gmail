@@ -5,11 +5,14 @@
  * （content script で IndexedDB を使うと、Gmail 側の保存領域に入ってしまうため）。
  */
 
+import type { ImportResult, ImportRow } from '../core/ledger/csv';
+import type { CompanyEdit, ContactEdit } from '../core/ledger/directory';
 import type { LedgerInsight, LedgerQuery, SendRecord } from '../core/ledger/ledger';
 import type {
   ExtensionMessage,
   ExtensionResponse,
   ExtensionResults,
+  LedgerSnapshot,
   LedgerStats,
 } from './messages';
 
@@ -63,4 +66,29 @@ export async function clearLedger(): Promise<void> {
 /** 台帳の状況を返す */
 export function getLedgerStats(): Promise<LedgerStats> {
   return request({ type: 'ledger/stats' });
+}
+
+/** 台帳のすべての記録を返す */
+export function listLedger(): Promise<LedgerSnapshot> {
+  return request({ type: 'ledger/list' });
+}
+
+/** 連絡先を編集する。該当する連絡先が無ければ false */
+export function updateLedgerContact(address: string, edit: ContactEdit): Promise<boolean> {
+  return request({ type: 'ledger/updateContact', address, edit });
+}
+
+/** ドメインに会社名・別名を付ける */
+export async function updateLedgerCompany(companyKey: string, edit: CompanyEdit): Promise<void> {
+  await request({ type: 'ledger/updateCompany', companyKey, edit });
+}
+
+/** 連絡先を1件削除する */
+export async function deleteLedgerContact(address: string): Promise<void> {
+  await request({ type: 'ledger/deleteContact', address });
+}
+
+/** CSV から読んだ行を取り込む */
+export function importLedgerRows(rows: readonly ImportRow[]): Promise<ImportResult> {
+  return request({ type: 'ledger/import', rows });
 }

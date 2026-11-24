@@ -10,8 +10,8 @@ import {
   normalizeDomain,
 } from '../core/text/address';
 import { parseLines } from '../core/text/normalize';
-import type { DetectorId, WarningLevel } from '../core/types';
-import { DETECTOR_IDS, type Settings } from '../storage/settings';
+import type { DetectorId, TypoDictionaryEntry, WarningLevel } from '../core/types';
+import { DETECTOR_IDS, type Settings, normalizeTypoDictionary } from '../storage/settings';
 
 /** 設定画面の入力内容（テキスト欄は1行1件の文字列のまま持つ） */
 export interface OptionsFormValues {
@@ -23,10 +23,36 @@ export interface OptionsFormValues {
   readonly skipConfirmationEnabled: boolean;
   readonly attachmentKeywords: string;
   readonly treatDriveLinksAsAttachment: boolean;
+  /** 誤字の辞書。1行1件で「誤り=正しい書き方」（「=」より後ろは省略できる） */
+  readonly typoDictionary: string;
+  readonly signatureKeywords: string;
   readonly aiTypoCheckEnabled: boolean;
   readonly ledgerEnabled: boolean;
   readonly ledgerRetentionDays: number;
   readonly warningLevels: Readonly<Record<DetectorId, WarningLevel>>;
+}
+
+/** 誤字の辞書の1行を、誤りと正しい書き方に分ける区切り（最初に現れたものを使う） */
+const DICTIONARY_SEPARATOR = /=|＝|→/u;
+
+/** 1行1件の「誤り=正しい書き方」を、誤字の辞書にする */
+export function parseTypoDictionary(text: string): TypoDictionaryEntry[] {
+  const entries = parseLines(text).map((line) => {
+    const match = DICTIONARY_SEPARATOR.exec(line);
+    if (match === null) return { wrong: line, right: '' };
+    return {
+      wrong: line.slice(0, match.index),
+      right: line.slice(match.index + match[0].length),
+    };
+  });
+  return normalizeTypoDictionary(entries);
+}
+
+/** 誤字の辞書を、1行1件の「誤り=正しい書き方」にする */
+export function formatTypoDictionary(entries: readonly TypoDictionaryEntry[]): string {
+  return entries
+    .map((entry) => (entry.right === '' ? entry.wrong : `${entry.wrong}=${entry.right}`))
+    .join('\n');
 }
 
 /** 入力内容を設定に変換した結果。形式が正しくない行があれば invalid に入る */
@@ -46,6 +72,8 @@ export function toFormValues(settings: Settings): OptionsFormValues {
     skipConfirmationEnabled: settings.skipConfirmationEnabled,
     attachmentKeywords: lines(settings.attachmentKeywords),
     treatDriveLinksAsAttachment: settings.treatDriveLinksAsAttachment,
+    typoDictionary: formatTypoDictionary(settings.typoDictionary),
+    signatureKeywords: lines(settings.signatureKeywords),
     aiTypoCheckEnabled: settings.aiTypoCheckEnabled,
     ledgerEnabled: settings.ledgerEnabled,
     ledgerRetentionDays: settings.ledgerRetentionDays,
@@ -91,6 +119,8 @@ export function parseFormValues(values: OptionsFormValues): ParseResult {
     ) as Record<DetectorId, WarningLevel>,
     attachmentKeywords: parseLines(values.attachmentKeywords),
     treatDriveLinksAsAttachment: values.treatDriveLinksAsAttachment,
+    typoDictionary: parseTypoDictionary(values.typoDictionary),
+    signatureKeywords: parseLines(values.signatureKeywords),
     aiTypoCheckEnabled: values.aiTypoCheckEnabled,
     ledgerEnabled: values.ledgerEnabled,
     ledgerRetentionDays: values.ledgerRetentionDays,

@@ -4,7 +4,7 @@
 //   node scripts/build.mjs --watch  監視ビルド（ソース変更のたびに再ビルド）
 //
 // - 各エントリを IIFE 形式で dist/ に出力する（content script / service worker は ES Modules を前提にしない）
-// - public/ の中身と src/options/options.html を dist/ にコピーする
+// - public/ の中身と、各画面の HTML・CSS（options / manage / popup）を dist/ にコピーする
 // - 外部へのリモートコード読み込みが混入しないよう、バンドルはすべてローカルで完結させる
 
 import { context, build } from 'esbuild';
@@ -23,10 +23,17 @@ const entryPoints = {
   content: 'src/content/index.ts',
   background: 'src/background/service-worker.ts',
   options: 'src/options/options.ts',
+  manage: 'src/manage/manage.ts',
+  popup: 'src/popup/popup.ts',
 };
 
 /** dist/ にそのままコピーする静的ファイル（コピー元 → dist/ からの相対パス） */
-const staticFiles = [{ from: 'src/options/options.html', to: 'options.html' }];
+const staticFiles = [
+  { from: 'src/options/options.html', to: 'options.html' },
+  { from: 'src/manage/manage.html', to: 'manage.html' },
+  { from: 'src/popup/popup.html', to: 'popup.html' },
+  { from: 'src/pages/pages.css', to: 'pages.css' },
+];
 
 async function copyStaticFiles() {
   await cp(publicDir, distDir, { recursive: true });

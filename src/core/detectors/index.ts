@@ -19,25 +19,43 @@ import type {
   DetectorContext,
   WarningLevels,
 } from '../types';
+import { attachmentCompanyDetector } from './attachment-company';
 import { attachmentMissingDetector } from './attachment-missing';
+import { bodyEmptyDetector } from './body-empty';
 import { ccMissingDetector } from './cc-missing';
+import { companyNotationDetector } from './company-notation';
+import { customTypoDetector } from './custom-typo';
 import { dateWeekdayMismatchDetector } from './date-weekday-mismatch';
 import { firstTimeDomainDetector } from './first-time-domain';
+import { honorificDetector } from './honorific';
 import { multipleExternalCompaniesDetector } from './multiple-external-companies';
+import { otherCompanyInBodyDetector } from './other-company-in-body';
 import { placeholderDetector } from './placeholder';
 import { repeatedCharactersDetector } from './repeated-characters';
+import { salutationMismatchDetector } from './salutation-mismatch';
+import { signatureMissingDetector } from './signature-missing';
 import { subjectEmptyDetector } from './subject-empty';
+import { widthMixDetector } from './width-mix';
 
 /** 登録済みの検知器（確認ダイアログでの表示順） */
 export const DETECTORS: readonly Detector[] = [
   firstTimeDomainDetector,
   multipleExternalCompaniesDetector,
   ccMissingDetector,
+  salutationMismatchDetector,
   subjectEmptyDetector,
+  bodyEmptyDetector,
   attachmentMissingDetector,
+  attachmentCompanyDetector,
+  otherCompanyInBodyDetector,
+  honorificDetector,
+  companyNotationDetector,
   placeholderDetector,
+  customTypoDetector,
   repeatedCharactersDetector,
+  widthMixDetector,
   dateWeekdayMismatchDetector,
+  signatureMissingDetector,
 ];
 
 /** 登録済みの検知器のうち「オフ」以外を実行し、検知結果をまとめて返す */

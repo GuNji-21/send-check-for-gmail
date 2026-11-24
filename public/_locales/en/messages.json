@@ -203,6 +203,34 @@
     "message": "The subject is empty.",
     "description": "件名が空の検知結果"
   },
+  "detectBodyEmpty": {
+    "message": "The body is empty.",
+    "description": "本文が空の検知結果"
+  },
+  "detectHonorificKakui": {
+    "message": "\"$1\" doubles the honorific. 各位 is already an honorific.",
+    "description": "敬称の誤りの検知結果（各位に敬称を重ねた）。$1 は見つかった表記"
+  },
+  "detectHonorificOnchuSama": {
+    "message": "御中 and 様 are used together: $1",
+    "description": "敬称の誤りの検知結果（御中と様の併用）。$1 は見つかった箇所"
+  },
+  "detectHonorificMissing": {
+    "message": "The salutation may be missing an honorific (様, 御中, etc.): $1",
+    "description": "敬称の誤りの検知結果（宛名に敬称がない）。$1 は宛名の行"
+  },
+  "detectCustomTypo": {
+    "message": "Registered mistakes found: $1",
+    "description": "登録した誤りの検知結果。$1 は見つかった誤りの一覧"
+  },
+  "detectWidthMix": {
+    "message": "Full-width and half-width characters are mixed: $1",
+    "description": "全角・半角の混在の検知結果。$1 は見つかった箇所"
+  },
+  "detectSignatureMissing": {
+    "message": "The signature may be missing (the body does not contain \"$1\").",
+    "description": "署名がないことの検知結果。$1 は登録してある署名の言葉"
+  },
   "detectMultipleExternalCompanies": {
     "message": "External recipients span $1 companies (domains): $2",
     "description": "複数社混在の検知結果。$1 は社外のドメインの数、$2 はその一覧"
@@ -215,6 +243,26 @@
     "message": "People you usually Cc on email to this recipient are missing this time: $1",
     "description": "Cc 漏れの検知結果。$1 は入っていない人のアドレスの一覧"
   },
+  "detectSalutationName": {
+    "message": "The salutation \"$1\" may not match the To recipients ($2).",
+    "description": "検知結果（detectSalutationName）"
+  },
+  "detectSalutationCompany": {
+    "message": "The company in the salutation \"$1\" may not match the company of the To recipients ($2).",
+    "description": "検知結果（detectSalutationCompany）"
+  },
+  "detectAttachmentCompany": {
+    "message": "The name of the attachment \"$1\" contains a company that is not among the recipients ($2).",
+    "description": "検知結果（detectAttachmentCompany）"
+  },
+  "detectOtherCompanyInBody": {
+    "message": "The subject or body mentions a company that is not among the recipients: $1",
+    "description": "検知結果（detectOtherCompanyInBody）"
+  },
+  "detectCompanyNotation": {
+    "message": "A company name is written differently from the directory: $1 (registered: $2)",
+    "description": "検知結果（detectCompanyNotation）"
+  },
   "dialogLedgerUnavailable": {
     "message": "The contact records could not be read, so \"first-time domain\" and \"missing Cc\" were not checked.",
     "description": "連絡先の記録を読み込めなかったときに、確認ダイアログに出す注記"
@@ -226,6 +274,22 @@
   "detectorNameCcMissing": {
     "message": "Missing Cc (needs contact records)",
     "description": "検知項目の名前：Cc 漏れ"
+  },
+  "detectorNameSalutationMismatch": {
+    "message": "Salutation does not match the recipients (needs names in the directory)",
+    "description": "検知項目の名前（detectorNameSalutationMismatch）"
+  },
+  "detectorNameAttachmentCompany": {
+    "message": "Another company in an attachment name (needs company names in the directory)",
+    "description": "検知項目の名前（detectorNameAttachmentCompany）"
+  },
+  "detectorNameOtherCompanyInBody": {
+    "message": "Another company in the body (needs company names in the directory)",
+    "description": "検知項目の名前（detectorNameOtherCompanyInBody）"
+  },
+  "detectorNameCompanyNotation": {
+    "message": "Company name notation (needs company names in the directory)",
+    "description": "検知項目の名前（detectorNameCompanyNotation）"
   },
   "optionsSectionLedger": {
     "message": "Contact records",
@@ -274,6 +338,206 @@
   "optionsLedgerCleared": {
     "message": "Contact records were deleted.",
     "description": "連絡先の記録を削除したときの表示"
+  },
+  "optionsLedgerManage": {
+    "message": "Open the directory (list, edit, CSV)",
+    "description": "台帳の画面・会社名検索のポップアップの文言（optionsLedgerManage）"
+  },
+  "manageTitle": {
+    "message": "Contact directory",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageTitle）"
+  },
+  "manageHelp": {
+    "message": "Records of the people you have sent email to. You can enter names, company names, departments and phone numbers here, or import them from a CSV file. The records stay on this device and are never sent anywhere.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageHelp）"
+  },
+  "manageExport": {
+    "message": "Export to CSV",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageExport）"
+  },
+  "manageExported": {
+    "message": "Exported $1 records.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageExported）"
+  },
+  "manageImport": {
+    "message": "Import from CSV",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageImport）"
+  },
+  "manageImportHelp": {
+    "message": "The CSV file needs a header row (メールアドレス, 氏名, 会社名, 部署, 役職, 電話番号, 携帯番号, or address, name, company, department, title, phone, mobile). It is the same format as the exported file. Empty values do not erase existing records.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageImportHelp）"
+  },
+  "manageImported": {
+    "message": "Imported ($1 added, $2 updated, $3 skipped).",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageImported）"
+  },
+  "manageImportNoHeader": {
+    "message": "The header row has no email address column.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageImportNoHeader）"
+  },
+  "manageImportTooLarge": {
+    "message": "The file is too large (up to 5,000 rows).",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageImportTooLarge）"
+  },
+  "manageFailed": {
+    "message": "The directory could not be read or written.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageFailed）"
+  },
+  "manageFilter": {
+    "message": "Filter (company, name, address)",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageFilter）"
+  },
+  "manageCount": {
+    "message": "$1 records",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageCount）"
+  },
+  "manageEmpty": {
+    "message": "There are no records. Turn on \"Record the people I send email to\" in the options page to start recording.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageEmpty）"
+  },
+  "manageNoMatch": {
+    "message": "No matching records.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageNoMatch）"
+  },
+  "manageTruncated": {
+    "message": "Showing the $1 most recent of $2 records. Filter to see the others.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageTruncated）"
+  },
+  "manageCompanies": {
+    "message": "Companies (domains)",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageCompanies）"
+  },
+  "manageCompaniesHelp": {
+    "message": "Give a domain a company name to show it in the confirmation dialog and in search. Domains with the same company name are grouped as one company.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageCompaniesHelp）"
+  },
+  "manageContacts": {
+    "message": "Contacts",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageContacts）"
+  },
+  "manageCompanyName": {
+    "message": "Company name",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageCompanyName）"
+  },
+  "manageAliases": {
+    "message": "Other names (comma-separated)",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageAliases）"
+  },
+  "manageName": {
+    "message": "Name",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageName）"
+  },
+  "manageOwnCompany": {
+    "message": "Company name for this person only",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageOwnCompany）"
+  },
+  "manageDepartment": {
+    "message": "Department",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageDepartment）"
+  },
+  "manageFieldTitle": {
+    "message": "Title",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageFieldTitle）"
+  },
+  "managePhone": {
+    "message": "Phone",
+    "description": "台帳の画面・会社名検索のポップアップの文言（managePhone）"
+  },
+  "manageMobile": {
+    "message": "Mobile",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageMobile）"
+  },
+  "manageLastAt": {
+    "message": "Last sent $1",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageLastAt）"
+  },
+  "manageBadgeConfirmed": {
+    "message": "Confirmed",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageBadgeConfirmed）"
+  },
+  "manageBadgeAuto": {
+    "message": "Auto",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageBadgeAuto）"
+  },
+  "manageSave": {
+    "message": "Save",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageSave）"
+  },
+  "manageSaved": {
+    "message": "Saved.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageSaved）"
+  },
+  "manageDelete": {
+    "message": "Delete",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageDelete）"
+  },
+  "manageDeleteConfirm": {
+    "message": "Press again to delete",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageDeleteConfirm）"
+  },
+  "manageDeleted": {
+    "message": "Deleted.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（manageDeleted）"
+  },
+  "directoryRoleTo": {
+    "message": "Usually in To",
+    "description": "台帳の画面・会社名検索のポップアップの文言（directoryRoleTo）"
+  },
+  "directoryRoleCc": {
+    "message": "Usually in Cc",
+    "description": "台帳の画面・会社名検索のポップアップの文言（directoryRoleCc）"
+  },
+  "directoryRoleBoth": {
+    "message": "In both To and Cc",
+    "description": "台帳の画面・会社名検索のポップアップの文言（directoryRoleBoth）"
+  },
+  "popupTitle": {
+    "message": "Company search",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupTitle）"
+  },
+  "popupPlaceholder": {
+    "message": "Company, domain, name or address",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupPlaceholder）"
+  },
+  "popupHint": {
+    "message": "Search by company name, domain, name or address.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupHint）"
+  },
+  "popupEmpty": {
+    "message": "There are no contact records. Turn on \"Record the people I send email to\" in the options page to start recording.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupEmpty）"
+  },
+  "popupNoMatch": {
+    "message": "No matching records.",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupNoMatch）"
+  },
+  "popupMore": {
+    "message": "$1 more",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupMore）"
+  },
+  "popupAliases": {
+    "message": "Other names: $1",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupAliases）"
+  },
+  "popupRelated": {
+    "message": "Often together with: $1",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupRelated）"
+  },
+  "popupCopy": {
+    "message": "Copy",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupCopy）"
+  },
+  "popupCopied": {
+    "message": "Copied",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupCopied）"
+  },
+  "popupOpenManage": {
+    "message": "Open the directory",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupOpenManage）"
+  },
+  "popupOpenOptions": {
+    "message": "Open options",
+    "description": "台帳の画面・会社名検索のポップアップの文言（popupOpenOptions）"
   },
   "optionsTitle": {
     "message": "Send Check for Gmail Settings",
@@ -343,6 +607,26 @@
     "message": "Treat a Google Drive link in the body as an attachment",
     "description": "ドライブのリンクを添付とみなすチェックボックス"
   },
+  "optionsSectionWording": {
+    "message": "Wording checks",
+    "description": "設定画面の、文面のチェックの見出し"
+  },
+  "optionsTypoDictionary": {
+    "message": "Typo dictionary",
+    "description": "誤字の辞書の入力欄"
+  },
+  "optionsTypoDictionaryHelp": {
+    "message": "Enter one item per line as \"wrong=right\". The part from \"=\" on can be left out. A warning is shown when the subject or body contains the wrong text.",
+    "description": "誤字の辞書の入力方法の説明"
+  },
+  "optionsSignatureKeywords": {
+    "message": "Words always in your signature",
+    "description": "署名に必ず入る言葉の入力欄"
+  },
+  "optionsSignatureHelp": {
+    "message": "Enter words that are always in your signature, such as your name, one per line. A warning is shown when the body contains none of them. Leave it empty to skip this check.",
+    "description": "署名に必ず入る言葉の説明"
+  },
   "optionsSectionAi": {
     "message": "AI typo check",
     "description": "設定画面の、AI による誤字・脱字チェックの見出し"
@@ -406,6 +690,26 @@
   "detectorNameSubjectEmpty": {
     "message": "Empty subject",
     "description": "検知項目の名前：件名が空"
+  },
+  "detectorNameBodyEmpty": {
+    "message": "Empty body",
+    "description": "検知項目の名前：本文が空"
+  },
+  "detectorNameHonorific": {
+    "message": "Honorific mistakes in Japanese salutations",
+    "description": "検知項目の名前：敬称の誤り"
+  },
+  "detectorNameCustomTypo": {
+    "message": "Registered mistakes (typo dictionary)",
+    "description": "検知項目の名前：登録した誤り"
+  },
+  "detectorNameWidthMix": {
+    "message": "Mixed full-width and half-width letters and digits",
+    "description": "検知項目の名前：全角・半角の混在"
+  },
+  "detectorNameSignatureMissing": {
+    "message": "Missing signature (only when signature words are registered)",
+    "description": "検知項目の名前：署名がない"
   },
   "detectorNameMultipleCompanies": {
     "message": "Recipients from multiple external companies",
